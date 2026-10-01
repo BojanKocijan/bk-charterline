@@ -124,6 +124,14 @@ describe('ExampleCard', () => {
 });
 ```
 
+### PR-screenshot root scoping (Law 34)
+
+When a PR-screenshot tool decides which screens to capture by following the import graph from each screen's root component file (the pattern used by `scripts/relevant-screens.mjs` in sports-training-ui, #286), **one screenshot key must map to one root file that renders exactly one screen.**
+
+**Failure mode (found in sports-training-ui, issue #361):** a tabbed dashboard built as one file with internal tab state (`const [selected, setSelected] = useState(TAB_A)`) gets pointed at by several screenshot keys — one per tab — all sharing that same root file. Editing *any* tab, or a hook only one tab uses, trips every screenshot key that shares the file, because the walk is file-level and can't see which tab changed. A new tab added without ever giving it its own screenshot key is silently invisible to reviewers even when it's the only thing a PR actually changed.
+
+**Rule:** split a multi-tab/multi-view container into one component per tab/view (a thin shell + `TabAPanel.tsx`, `TabBPanel.tsx`, …), and give each its own screenshot key rooted at its own panel component — never at the shared shell. This is the same instinct as Law 12's four-file component split, applied to screenshot tooling: a root file that renders more than one reviewable state is a signal the component itself should split, not just the test config.
+
 ---
 
 ## 4. WCAG 2.2 AA
