@@ -1,7 +1,7 @@
 # Master Claude Laws — Design Forge
 
-**Version:** 2.10.0
-**Last Updated:** 2026-06-29
+**Version:** 2.11.0
+**Last Updated:** 2026-10-01
 **Rules Repo:** https://github.com/bojankocijan/design-forge
 **Inspired by:** Asimov's Three Laws of Robotics
 
@@ -86,6 +86,7 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
     - **Report cleanup in every response after a merge**, e.g.: `Branch \`feat/my-feature\` deleted (remote + local). Issue #N closed.`
     - **Never delete an unmerged branch.** If the ancestor check fails and the PR is not `MERGED`, leave the branch and report it.
     - At session start (Law 25), Claude also sweeps for orphaned merged branches and clears them without being asked.
+    - **Pull the default branch immediately after, unprompted.** The moment a PR merges, Claude runs `git checkout <default-branch> && git pull origin <default-branch>` right away as part of the same cleanup — not just at the next branch-creation moment (Law 5). This keeps local `main` continuously current as work lands instead of going stale between sessions.
 
 10. **Every new project Claude builds ships with CI and tests.** Before any scaffold step, Claude runs `gh auth status` to verify authentication. Non-negotiable per project:
     - CI on every push + every PR: ESLint, `tsc --noEmit`, Vitest unit + component, `vitest-axe` accessibility, Playwright + `@axe-core/playwright` E2E smoke + full-page axe, and `vite build`.
@@ -280,6 +281,32 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
     - `RELEASES.md` / changelog is updated with every `feat:` and `fix:` PR — not batched.
 
     **Why this is binding.** Small PRs get reviewed faster, catch more defects per line, merge with fewer conflicts, revert cleanly, and keep the default branch's history readable. A 1000-line PR is not a feature — it's a review burden that hides bugs. Claude's job is to make the human reviewer's life easy, not to minimize the number of PRs.
+
+32. **Hook-enforced guardrails — a `PreToolUse` hook mechanically blocks the tool calls that would break Law 5, 7, 13, or 14.** Every other law in this document relies on Claude reading and following instructions — reliable most of the time, but not deterministic. Law 32 backstops the handful of laws where "Claude might forget" has real teeth: merging its own PR, writing directly to the default branch, a malformed commit message, a secret slipping into a staged diff.
+
+    **Mechanism.** `.claude/hooks/enforce-laws.py` — a dependency-free Python 3 script — runs as a `PreToolUse` hook matched on `Bash`. It reads the command from the hook's stdin JSON, and for a narrow, explicit set of patterns exits with code `2` and a reason on stderr, which blocks that one tool call outright (Claude sees the reason and must stop, not retry the same call). Everything else passes through untouched.
+
+    **What it blocks:**
+
+    | Check | Law | Trigger |
+    |---|---|---|
+    | `gh pr merge` in any form, or GraphQL `mergePullRequest` | Law 7 | Any form of Claude merging a PR itself — **no exception, unlike `--auto` carve-outs elsewhere; Law 7 stays absolute** |
+    | `git commit` while the current branch is the default branch | Law 5 | Writing directly to the default branch instead of a feature branch |
+    | `git push` while the current branch is the default branch | Law 7 | Pushing directly to the default branch |
+    | `git commit -m "..."` (or a heredoc-quoted message) whose first line doesn't match `type(scope): description` | Law 13 | Non-Conventional-Commits message |
+    | `git commit` when the staged diff matches a private-key block, a credential-shaped assignment, an AWS access key, a known PAT prefix, or a staged non-`.env.example` `.env*` file | Law 14 | A secret about to be committed |
+
+    **Fails open, not closed.** If the hook can't parse its input, can't confidently extract a commit message, or a `git` subprocess errors, it allows the call rather than blocking on an infrastructure fluke. This is a backstop against mechanical slips, not a replacement for the judgment the rest of this document asks for — false blocks on edge cases are worse than an occasional missed catch, because they teach the user to route around the hook entirely.
+
+    **Not a replacement for git-level hooks.** A `commitlint`/`husky` or `detect-secrets` pre-commit hook (if the project has one) catches a *human* committing directly with git. Law 32's hook operates one layer up: it stops Claude's own tool calls before they ever reach git or GitHub, whether or not the project has those hooks installed.
+
+    **Where it lives.** `.claude/hooks/enforce-laws.py` + a `PreToolUse` entry in `.claude/settings.json`, both committed in this repo as the canonical reference implementation. `install.sh` registers the same hook globally in `~/.claude/settings.json` (merging into whatever's already there, never overwriting it), pointing at `~/.design-forge/.claude/hooks/enforce-laws.py` — so the checks run in every repo a session touches, not just this one. Because the registered command points at that fixed path inside the clone, a `dforge-update` pull picks up any change to the script's *logic* automatically; only a change to the registration itself (a new hook entry, a different matcher) needs `install.sh` re-run.
+
+    **Claude's behavior on a block.** Claude does not retry the identical call, does not attempt to route around the hook (e.g. rephrasing the same `git commit` into an equivalent command), and does not use `--no-verify` or any other bypass. It reports the block to the user in plain language and either fixes the underlying issue (reword the commit message, switch off the default branch, strip the secret) or asks how to proceed.
+
+33. **Session resumption via `SESSION_NOTE.md`.** Message quotas and context limits mean a working session often ends before the task does. Without a handoff mechanism, the next session starts cold — the user re-explains goal, progress, and constraints from scratch. When a non-trivial task (Medium/High severity per Law 2, or anything spanning more than one response) is left unfinished at the end of a session, Claude offers to write a short `SESSION_NOTE.md` in the project root: current goal, what's done, what's left, any blocking decision, and the active branch/issue/PR. At the start of a session, if `SESSION_NOTE.md` exists, Claude reads it, summarizes it back in one line, and asks whether to resume or start fresh — then deletes it once the resumed task is complete (per Law 8, this is a file Claude created for this purpose, so removing it when done doesn't need separate approval). This is a lightweight convention, not a mandatory file on every task — Claude doesn't create one for quick, single-response fixes.
+
+34. **UI-PR screenshot evidence.** A green Playwright + axe run (Law 10) proves the page didn't crash and didn't violate WCAG — it says nothing about whether the UI actually looks right. Reviewers currently take that on faith from the code diff alone. Any PR whose diff touches a component file, a styles file, or a layout change embeds at least one screenshot of the changed screen/state in the PR body, captured via `page.screenshot()` in the relevant Playwright spec against the running localhost preview (Law 18). This is a point-in-time capture for reviewer context, not a request to stand up a permanent pixel-diff visual-regression suite — that's a separate, heavier decision the user opts into explicitly. Pure logic, config, docs, or `chore:` PRs are out of scope.
 
 ---
 

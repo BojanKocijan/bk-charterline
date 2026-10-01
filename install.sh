@@ -83,7 +83,52 @@ else
   ok "Created $GLOBAL_MEMORY with Design Forge block"
 fi
 
-# 5. Install dforge-update as a shell function
+# 5. Register the Law 32 guardrail hook globally (~/.claude/settings.json)
+GLOBAL_SETTINGS="${HOME}/.claude/settings.json"
+HOOK_SCRIPT="${LOCAL_DIR}/.claude/hooks/enforce-laws.py"
+HOOK_COMMAND="python3 \"${HOOK_SCRIPT}\""
+
+if command -v python3 >/dev/null 2>&1; then
+  mkdir -p "$(dirname "$GLOBAL_SETTINGS")"
+  [ -f "$GLOBAL_SETTINGS" ] || printf '{}\n' > "$GLOBAL_SETTINGS"
+  if python3 - "$GLOBAL_SETTINGS" "$HOOK_COMMAND" <<'PYEOF'
+import json
+import sys
+
+path, hook_command = sys.argv[1], sys.argv[2]
+
+with open(path) as f:
+    content = f.read().strip()
+settings = json.loads(content) if content else {}
+
+hooks = settings.setdefault("hooks", {})
+pre_tool_use = hooks.setdefault("PreToolUse", [])
+
+already = any(
+    entry.get("matcher") == "Bash"
+    and any(h.get("command") == hook_command for h in entry.get("hooks", []))
+    for entry in pre_tool_use
+)
+if not already:
+    pre_tool_use.append({
+        "matcher": "Bash",
+        "hooks": [{"type": "command", "command": hook_command}],
+    })
+
+with open(path, "w") as f:
+    json.dump(settings, f, indent=2)
+    f.write("\n")
+PYEOF
+  then
+    ok "Registered Law 32 guardrail hook in $GLOBAL_SETTINGS"
+  else
+    warn "Could not update $GLOBAL_SETTINGS automatically — add the PreToolUse hook manually (see .claude/settings.json in $LOCAL_DIR for the entry)."
+  fi
+else
+  warn "python3 not found; skipped global hook registration. Install python3 and re-run, or copy the PreToolUse entry from $LOCAL_DIR/.claude/settings.json into $GLOBAL_SETTINGS yourself."
+fi
+
+# 6. Install dforge-update as a shell function
 SHELL_RC=""
 case "${SHELL:-}" in
   *zsh)  SHELL_RC="$HOME/.zshrc" ;;
@@ -140,17 +185,19 @@ else
   warn "Update manually with: git -C $LOCAL_DIR pull --ff-only"
 fi
 
-# 6. Done
+# 7. Done
 cat <<EOF
 
 ${GREEN}Done.${RESET}
 
-Two things are now wired up:
+Three things are now wired up:
 
   1. Claude global memory  →  $GLOBAL_MEMORY
      (every Claude Code session auto-loads the Design Forge rules)
   2. dforge-update         →  shell function in ${SHELL_RC:-<no rc found>}
      (refreshes the rules clone)
+  3. Law 32 guardrail hook →  $GLOBAL_SETTINGS
+     (mechanically blocks merge/push-to-main/bad-commit-message/secret-commit tool calls)
 
 Verify in Claude Code:
   Rules loaded: DESIGN_FORGE v1.0.0
