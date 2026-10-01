@@ -40,3 +40,8 @@ temp/
 # Personal project registry — keep your own projects/ports private.
 # Ship projects.example.yaml instead; copy it to projects.yaml locally.
 projects.yaml
+
+# Personal cross-project pattern catalogue — keep real project/bug details
+# private. Ship knowledge/PATTERNS.example.md instead; copy it to
+# knowledge/PATTERNS.md locally.
+knowledge/PATTERNS.md
