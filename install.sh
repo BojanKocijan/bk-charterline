@@ -38,6 +38,43 @@ die() { printf "%s✗%s %s\n"             "$RED"    "$RESET" "$1" >&2; exit 1; }
 
 # 1. Sanity checks
 command -v git >/dev/null 2>&1 || die "git is not installed. Install it first: https://git-scm.com/downloads"
+command -v python3 >/dev/null 2>&1 || die "python3 is not installed. Install it first: https://www.python.org/downloads/"
+
+# Replace (or leave untouched) the block between two marker lines in a file.
+# Needed because macOS's awk ("one true awk") can't handle a multi-line
+# string passed via -v — it throws "newline in string" and dies.
+replace_block() {
+  local file="$1" begin="$2" end="$3" block="$4"
+  BLOCK_REPLACE_BEGIN="$begin" BLOCK_REPLACE_END="$end" BLOCK_REPLACE_TEXT="$block" \
+    python3 - "$file" <<'PYEOF'
+import os
+import sys
+
+path = sys.argv[1]
+begin = os.environ["BLOCK_REPLACE_BEGIN"]
+end = os.environ["BLOCK_REPLACE_END"]
+block = os.environ["BLOCK_REPLACE_TEXT"]
+
+with open(path) as f:
+    lines = f.read().splitlines()
+
+out = []
+in_block = False
+for line in lines:
+    if line == begin:
+        in_block = True
+        out.append(block)
+        continue
+    if line == end:
+        in_block = False
+        continue
+    if not in_block:
+        out.append(line)
+
+with open(path, "w") as f:
+    f.write("\n".join(out) + "\n")
+PYEOF
+}
 
 # 2. Clone or pull the rules repo
 if [ -d "$LOCAL_DIR/.git" ]; then
@@ -65,14 +102,7 @@ EOF
 
 if [ -f "$GLOBAL_MEMORY" ]; then
   if grep -q "$MARKER_BEGIN" "$GLOBAL_MEMORY"; then
-    # Replace the existing block using awk (portable; no in-place sed needed)
-    tmp=$(mktemp)
-    awk -v begin="$MARKER_BEGIN" -v end="$MARKER_END" -v block="$BLOCK" '
-      $0==begin { inblock=1; print block; next }
-      $0==end   { inblock=0; next }
-      !inblock  { print }
-    ' "$GLOBAL_MEMORY" > "$tmp"
-    mv "$tmp" "$GLOBAL_MEMORY"
+    replace_block "$GLOBAL_MEMORY" "$MARKER_BEGIN" "$MARKER_END" "$BLOCK"
     ok "Refreshed Design Forge block in $GLOBAL_MEMORY"
   else
     printf "\n%s\n" "$BLOCK" >> "$GLOBAL_MEMORY"
@@ -88,10 +118,9 @@ GLOBAL_SETTINGS="${HOME}/.claude/settings.json"
 HOOK_SCRIPT="${LOCAL_DIR}/.claude/hooks/enforce-laws.py"
 HOOK_COMMAND="python3 \"${HOOK_SCRIPT}\""
 
-if command -v python3 >/dev/null 2>&1; then
-  mkdir -p "$(dirname "$GLOBAL_SETTINGS")"
-  [ -f "$GLOBAL_SETTINGS" ] || printf '{}\n' > "$GLOBAL_SETTINGS"
-  if python3 - "$GLOBAL_SETTINGS" "$HOOK_COMMAND" <<'PYEOF'
+mkdir -p "$(dirname "$GLOBAL_SETTINGS")"
+[ -f "$GLOBAL_SETTINGS" ] || printf '{}\n' > "$GLOBAL_SETTINGS"
+if python3 - "$GLOBAL_SETTINGS" "$HOOK_COMMAND" <<'PYEOF'
 import json
 import sys
 
@@ -119,13 +148,10 @@ with open(path, "w") as f:
     json.dump(settings, f, indent=2)
     f.write("\n")
 PYEOF
-  then
-    ok "Registered Law 32 guardrail hook in $GLOBAL_SETTINGS"
-  else
-    warn "Could not update $GLOBAL_SETTINGS automatically — add the PreToolUse hook manually (see .claude/settings.json in $LOCAL_DIR for the entry)."
-  fi
+then
+  ok "Registered Law 32 guardrail hook in $GLOBAL_SETTINGS"
 else
-  warn "python3 not found; skipped global hook registration. Install python3 and re-run, or copy the PreToolUse entry from $LOCAL_DIR/.claude/settings.json into $GLOBAL_SETTINGS yourself."
+  warn "Could not update $GLOBAL_SETTINGS automatically — add the PreToolUse hook manually (see .claude/settings.json in $LOCAL_DIR for the entry)."
 fi
 
 # 6. Install dforge-update as a shell function
@@ -163,13 +189,7 @@ install_or_update_function() {
   [ -z "$rc" ] && return 0
 
   if [ -f "$rc" ] && grep -q "$FN_MARKER_BEGIN" "$rc"; then
-    tmp=$(mktemp)
-    awk -v begin="$FN_MARKER_BEGIN" -v end="$FN_MARKER_END" -v block="$FN_BLOCK" '
-      $0==begin { inblock=1; print block; next }
-      $0==end   { inblock=0; next }
-      !inblock  { print }
-    ' "$rc" > "$tmp"
-    mv "$tmp" "$rc"
+    replace_block "$rc" "$FN_MARKER_BEGIN" "$FN_MARKER_END" "$FN_BLOCK"
     ok "Refreshed dforge-update function in $rc"
   else
     printf "\n%s\n" "$FN_BLOCK" >> "$rc"
