@@ -2,6 +2,27 @@
 
 ---
 
+## v2.11.0 — October 1, 2026
+
+Ported four generic, stack-agnostic ideas from a comparison against `digital-ai/ux-claude-laws` v0.80.0 (everything tied to their stack — Dot components, Figma Code Connect, Pendo, Agility, MUI X Charts — was left out).
+
+### Law 32 — Hook-enforced guardrails
+- New binding law: a `PreToolUse` hook (`.claude/hooks/enforce-laws.py`) mechanically blocks `gh pr merge` in any form, commit/push while on the default branch, non-Conventional-Commits messages, and secrets in a staged diff
+- No `--auto` exception for merges — Law 7 ("Claude never merges") stays absolute, unlike the source repo's carve-out
+- `.claude/settings.json` ships the reference `PreToolUse` wiring; `install.sh` registers the same hook globally in `~/.claude/settings.json` (merging into existing content, never overwriting), so it runs in every repo a session touches — `dforge-update` alone is enough to pick up script-logic changes, since the registration points at a fixed path in the clone
+- Fails open on parse errors — a backstop against mechanical slips, not a replacement for judgment
+
+### Law 33 — Session resumption via `SESSION_NOTE.md`
+- New binding law: Claude offers a short handoff note (goal, done, left, blocking decision, branch/issue/PR) when a non-trivial task is left unfinished at session end, reads it back at the next session start, and cleans it up once resumed work completes
+
+### Law 34 — UI-PR screenshot evidence
+- New binding law: any PR touching a component, styles, or layout file embeds a Playwright screenshot of the changed screen/state in the PR body — point-in-time reviewer context, not a request for a permanent visual-regression suite
+
+### Law 9 — pull immediately after merge
+- Added an explicit, unprompted `git pull` of the default branch as part of the existing post-merge cleanup duty, so local `main` doesn't go stale between sessions
+
+---
+
 ## v2.10.0 — June 29, 2026
 
 ### Law 31 — Small, atomic PRs

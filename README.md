@@ -1,14 +1,14 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.10.0-blue?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/version-2.11.0-blue?style=flat-square" alt="Version" />
   <img src="https://img.shields.io/github/license/BojanKocijan/design-forge?style=flat-square" alt="License" />
   <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/design-forge/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
-  <img src="https://img.shields.io/badge/laws-31-orange?style=flat-square" alt="31 Laws" />
+  <img src="https://img.shields.io/badge/laws-34-orange?style=flat-square" alt="34 Laws" />
 </p>
 
 # Design Forge
 
-**A governance framework for AI-assisted software engineering — 31 binding laws that make Claude Code work like a disciplined senior product engineer.**
+**A governance framework for AI-assisted software engineering — 34 binding laws that make Claude Code work like a disciplined senior product engineer.**
 
 Design Forge is a set of binding *laws*, reusable *skills*, and shared *knowledge files* that govern every Claude Code session. It controls how Claude scaffolds projects, names branches, opens PRs, writes components, runs UX research, and hands work off to developers. Library-agnostic. Framework-agnostic. No corporate toolchain required.
 
@@ -34,17 +34,18 @@ Design Forge is a set of binding *laws*, reusable *skills*, and shared *knowledg
 
 ## Why Design Forge
 
-Out of the box, an AI coding assistant will happily push to `main`, invent APIs, ship 1000-line PRs, over-engineer, and forget your conventions between sessions. Design Forge fixes that with **31 binding laws** and knowledge files that travel with you to every project.
+Out of the box, an AI coding assistant will happily push to `main`, invent APIs, ship 1000-line PRs, over-engineer, and forget your conventions between sessions. Design Forge fixes that with **34 binding laws** and knowledge files that travel with you to every project.
 
 | Problem | Design Forge solution |
 |---|---|
 | Pushes directly to `main` | Branch + issue before code; PRs only; Claude never merges |
 | Giant, unreviewable PRs | **Law 31** — every PR under 400 lines, one concern per PR, stacked sequences for large features |
 | Over-engineered code | YAGNI enforcement, edge-case analysis upfront, verify-before-claiming |
-| Forgets your conventions | 31 laws + 9 knowledge files loaded every session |
+| Forgets your conventions | 34 laws + 9 knowledge files loaded every session |
 | Inconsistent components | 4-file component folders, no inline styles, TypeScript, accessibility baked in |
 | No audit trail | Pre-execution announcements, Conventional Commits, living `PROJECT_KNOWLEDGE.md` |
 | Stale repos | Auto branch cleanup, orphaned issue detection, README kept current with every PR |
+| "Claude might forget and merge/push to `main` anyway" | **Law 32** — a `PreToolUse` hook mechanically blocks merge/push-to-main/malformed-commit/secret-commit tool calls, not just a reminder |
 
 ---
 
@@ -57,7 +58,7 @@ curl -fsSL https://raw.githubusercontent.com/BojanKocijan/design-forge/main/inst
 Open any Claude Code session. You should see:
 
 ```
-Rules loaded: DESIGN_FORGE v2.10.0
+Rules loaded: DESIGN_FORGE v2.11.0
 Project: <your-repo>
 Persona: Frontend
 GitHub: <your-username>
