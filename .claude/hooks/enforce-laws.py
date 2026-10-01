@@ -170,24 +170,41 @@ def block(reason: str) -> None:
     sys.exit(2)
 
 
+HEREDOC_BODY_RE = re.compile(r"(<<-?\s*['\"]?(\w+)['\"]?\n)(.*?)(\n\2\b)", re.DOTALL)
+
+
+def strip_heredoc_bodies(command: str) -> str:
+    """Heredoc payloads (commit messages, PR/issue bodies) are *data*,
+    not commands — a PR description that mentions `gh pr merge` or
+    `git push` in prose must not trip the checks below just because
+    the text appears in the command string. Blanks out everything
+    between a heredoc's opening and closing delimiter before any
+    dangerous-pattern matching runs; `extract_commit_message` still
+    reads the real (unstripped) command, so actual commit-message
+    content is unaffected.
+    """
+    return HEREDOC_BODY_RE.sub(lambda m: m.group(1) + m.group(4).lstrip("\n"), command)
+
+
 def check_bash(command: str) -> None:
     cmd = command.strip()
+    scan = strip_heredoc_bodies(cmd)
 
     # Law 7 — Claude never merges, under any circumstance.
-    if re.search(r"\bgh\s+pr\s+merge\b", cmd):
+    if re.search(r"\bgh\s+pr\s+merge\b", scan):
         block(
             "Blocked (Law 7): `gh pr merge` is never run by Claude, with or "
             "without flags. Merging the default branch is exclusively the "
             "human's action in the GitHub UI."
         )
-    if "mergePullRequest" in cmd:
+    if "mergePullRequest" in scan:
         block(
             "Blocked (Law 7): GraphQL `mergePullRequest` is a merge — "
             "Claude never merges. Stop and let the human merge in the UI."
         )
 
-    is_commit = bool(re.search(r"\bgit\s+commit\b", cmd))
-    push_matches = list(PUSH_RE.finditer(cmd))
+    is_commit = bool(re.search(r"\bgit\s+commit\b", scan))
+    push_matches = list(PUSH_RE.finditer(scan))
 
     if is_commit or push_matches:
         cwd = resolve_cwd(cmd)
