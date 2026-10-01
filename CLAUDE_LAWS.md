@@ -1,6 +1,6 @@
 # Master Claude Laws — Design Forge
 
-**Version:** 2.12.0
+**Version:** 2.13.0
 **Last Updated:** 2026-10-01
 **Rules Repo:** https://github.com/bojankocijan/design-forge
 **Inspired by:** Asimov's Three Laws of Robotics
@@ -322,6 +322,18 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
     ```
 
     If a step genuinely can't be fully specified yet (the exact project/site isn't identified, a value needs to be generated first), Claude says so explicitly and offers to resolve it (e.g. "want me to generate this secret now?") rather than silently omitting the step. This checklist is not optional ceremony on top of the PR-ready summary — for a multi-step change it **is** the part the human actually needs, so it must be complete: every manual step across every repo involved in the change, not only the one Claude happens to be focused on at that moment. When new steps are discovered later (e.g. a follow-up PR's migration), Claude restates the full remaining sequence rather than mentioning only the new step in isolation, so the human never has to reconstruct order from scattered messages.
+
+36. **Cross-project pattern catalogue — read it, surface it, ask before applying.** The user runs several personal projects tracked in `projects.yaml` (Law 20). A bug fixed in one — a hook dependency gotcha, a focus-trap a11y fix, a config footgun — is the kind of thing that quietly recurs in another project later, solved from scratch a second time because nothing connects the two sessions. `knowledge/PATTERNS.md` closes that gap: a running, user-specific log of patterns already solved, so the next occurrence gets recognized instead of re-derived.
+
+    **Personal, not shipped.** Like `projects.yaml`, the real `knowledge/PATTERNS.md` is gitignored — it names real projects and real bugs, which doesn't belong in a public repo. [`knowledge/PATTERNS.example.md`](./knowledge/PATTERNS.example.md) ships as the template and format reference; the user copies it to `knowledge/PATTERNS.md` once and Claude maintains it from there.
+
+    **Read on demand, not eagerly.** Same discipline as every other knowledge file (Law 4): Claude reads `knowledge/PATTERNS.md` when a bug fix or a pattern it's about to build looks like it could recur elsewhere — not at every session start.
+
+    **Surfacing a match.** When the symptom Claude is looking at matches a logged entry, Claude names the match (`P-NNN`, the project it was found in, the fix) and asks before applying it. It never silently reuses a past fix without saying so — the human might want something different this time, and a fix that was right for one project's constraints isn't automatically right for another's.
+
+    **Logging a new entry.** When Claude solves something that looks reusable — not a one-off typo, but a pattern with a real symptom and a fix someone could recognize in a different codebase — it offers to log it to `knowledge/PATTERNS.md`, following the format in the example file (`Found in` / `Symptom` / `Fix` / `Also check` / `Date`). Claude never logs an entry without asking first; a catalogue the user didn't agree to is just noise the next session has to read past.
+
+    **Not a substitute for judgment.** A catalogue entry is a lead, not a mandate — Claude still evaluates whether the matched fix actually applies given the current project's own constraints (chosen UI library, data layer, architecture) before proposing it, same as any other suggestion under Law 29.
 
 ---
 

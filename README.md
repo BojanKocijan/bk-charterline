@@ -1,14 +1,14 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.11.0-blue?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/version-2.13.0-blue?style=flat-square" alt="Version" />
   <img src="https://img.shields.io/github/license/BojanKocijan/design-forge?style=flat-square" alt="License" />
   <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/design-forge/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
-  <img src="https://img.shields.io/badge/laws-34-orange?style=flat-square" alt="34 Laws" />
+  <img src="https://img.shields.io/badge/laws-36-orange?style=flat-square" alt="36 Laws" />
 </p>
 
 # Design Forge
 
-**A governance framework for AI-assisted software engineering — 34 binding laws that make Claude Code work like a disciplined senior product engineer.**
+**A governance framework for AI-assisted software engineering — 36 binding laws that make Claude Code work like a disciplined senior product engineer.**
 
 Design Forge is a set of binding *laws*, reusable *skills*, and shared *knowledge files* that govern every Claude Code session. It controls how Claude scaffolds projects, names branches, opens PRs, writes components, runs UX research, and hands work off to developers. Library-agnostic. Framework-agnostic. No corporate toolchain required.
 
@@ -34,14 +34,14 @@ Design Forge is a set of binding *laws*, reusable *skills*, and shared *knowledg
 
 ## Why Design Forge
 
-Out of the box, an AI coding assistant will happily push to `main`, invent APIs, ship 1000-line PRs, over-engineer, and forget your conventions between sessions. Design Forge fixes that with **34 binding laws** and knowledge files that travel with you to every project.
+Out of the box, an AI coding assistant will happily push to `main`, invent APIs, ship 1000-line PRs, over-engineer, and forget your conventions between sessions. Design Forge fixes that with **36 binding laws** and knowledge files that travel with you to every project.
 
 | Problem | Design Forge solution |
 |---|---|
 | Pushes directly to `main` | Branch + issue before code; PRs only; Claude never merges |
 | Giant, unreviewable PRs | **Law 31** — every PR under 400 lines, one concern per PR, stacked sequences for large features |
 | Over-engineered code | YAGNI enforcement, edge-case analysis upfront, verify-before-claiming |
-| Forgets your conventions | 34 laws + 9 knowledge files loaded every session |
+| Forgets your conventions | 36 laws + 10 knowledge files loaded every session |
 | Inconsistent components | 4-file component folders, no inline styles, TypeScript, accessibility baked in |
 | No audit trail | Pre-execution announcements, Conventional Commits, living `PROJECT_KNOWLEDGE.md` |
 | Stale repos | Auto branch cleanup, orphaned issue detection, README kept current with every PR |
@@ -58,7 +58,7 @@ curl -fsSL https://raw.githubusercontent.com/BojanKocijan/design-forge/main/inst
 Open any Claude Code session. You should see:
 
 ```
-Rules loaded: DESIGN_FORGE v2.11.0
+Rules loaded: DESIGN_FORGE v2.13.0
 Project: <your-repo>
 Persona: Frontend
 GitHub: <your-username>
@@ -116,14 +116,14 @@ Design Forge has three layers:
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  CLAUDE_LAWS.md — 31 binding rules              │
+│  CLAUDE_LAWS.md — 36 binding rules              │
 │  (loaded every session)                         │
 ├─────────────────────────────────────────────────┤
 │  agents/ — 8 specialized personas               │
 │  Frontend · Backend · Lead · Tester             │
 │  Design · Research · Analyst                    │
 ├─────────────────────────────────────────────────┤
-│  knowledge/ — 9 binding guides                  │
+│  knowledge/ — 10 binding guides                  │
 │  (loaded on demand per task scope)              │
 ├─────────────────────────────────────────────────┤
 │  skills/ — 16 reusable skill definitions        │
@@ -133,7 +133,7 @@ Design Forge has three layers:
 
 ### Laws — [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md)
 
-31 binding rules. Key highlights:
+36 binding rules. Key highlights:
 
 - **Transparency** — pre-execution announcement before any change; Claude waits for explicit approval
 - **Git discipline** — pull default branch, branch + issue before code, PRs only, never push to default branch, never merge
@@ -170,6 +170,7 @@ Seven specialized roles compose into a single pipeline:
 | `SKILLS.md` | Layout, a11y, testing, handoff, git craft |
 | `UX_RESEARCH_GUIDE.md` | Transcript analysis, research decks |
 | `ANALYTICS_GUIDE.md` | Product analytics workflows |
+| `PATTERNS.md` *(personal, gitignored — [example](./knowledge/PATTERNS.example.md))* | Cross-project bug/pattern catalogue |
 
 ---
 
@@ -284,7 +285,7 @@ Claude auto-registers new projects and locks the port in `vite.config.ts` with `
 ```
 design-forge/
 ├── CLAUDE.md                    # Entry point — imports laws, maps knowledge triggers
-├── CLAUDE_LAWS.md               # 31 binding rules (loaded every session)
+├── CLAUDE_LAWS.md               # 36 binding rules (loaded every session)
 ├── AGENTS.md                    # Agent architecture overview
 ├── RELEASES.md                  # Version history
 ├── install.sh                   # One-line installer
@@ -299,7 +300,7 @@ design-forge/
 │   ├── research.md
 │   ├── analyst.md
 │   └── fullstack.md
-├── knowledge/                   # 9 binding guides (loaded on demand)
+├── knowledge/                   # 10 binding guides (loaded on demand)
 │   ├── FRONTEND_GUIDE.md
 │   ├── COMPONENT_PATTERNS.md
 │   ├── PROJECT_SCAFFOLD.md
@@ -308,7 +309,9 @@ design-forge/
 │   ├── FEATURE_WORKFLOW.md
 │   ├── SKILLS.md
 │   ├── UX_RESEARCH_GUIDE.md
-│   └── ANALYTICS_GUIDE.md
+│   ├── ANALYTICS_GUIDE.md
+│   ├── PATTERNS.example.md
+│   └── PATTERNS.md              # gitignored — your copy of the example above
 ├── skills/                      # 16 reusable skill definitions
 ├── docs/                        # Additional documentation
 └── .github/

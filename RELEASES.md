@@ -2,6 +2,15 @@
 
 ---
 
+## v2.13.0 — October 1, 2026
+
+### Law 36 — Cross-project pattern catalogue
+- New binding law: `knowledge/PATTERNS.md` (personal, gitignored like `projects.yaml`) logs bugs/patterns already solved in one project, so the same symptom showing up in another project gets recognized instead of re-solved from scratch
+- Claude surfaces a matching entry and asks before applying it — never silently reuses a past fix; offers to log a new entry when it solves something reusable, never logs one without asking
+- Ships `knowledge/PATTERNS.example.md` as the public template, same convention as `projects.yaml` / `projects.example.yaml`
+
+---
+
 ## v2.12.0 — October 1, 2026
 
 ### Law 35 — Explicit, ordered deploy steps
