@@ -2,6 +2,15 @@
 
 ---
 
+## v2.12.0 — October 1, 2026
+
+### Law 35 — Explicit, ordered deploy steps
+- New binding law: whenever a change needs more than "merge the PR" — a migration to run by hand, an env var to set, a dependent second PR, a required redeploy — Claude's PR-ready summary (or an immediate follow-up) includes a numbered, ordered checklist with the literal command/SQL/dashboard path, not a vague category
+- Prompted by a real session where a two-repo pageview-stats feature needed migrations applied and env vars set between PR merges, and the ordering/exact steps weren't being surfaced proactively
+- When new steps are discovered later, Claude restates the full remaining sequence rather than mentioning only the new step in isolation
+
+---
+
 ## v2.11.0 — October 1, 2026
 
 Ported four generic, stack-agnostic ideas from a comparison against `digital-ai/ux-claude-laws` v0.80.0 (everything tied to their stack — Dot components, Figma Code Connect, Pendo, Agility, MUI X Charts — was left out).

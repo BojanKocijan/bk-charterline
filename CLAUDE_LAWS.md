@@ -1,6 +1,6 @@
 # Master Claude Laws — Design Forge
 
-**Version:** 2.11.0
+**Version:** 2.12.0
 **Last Updated:** 2026-10-01
 **Rules Repo:** https://github.com/bojankocijan/design-forge
 **Inspired by:** Asimov's Three Laws of Robotics
@@ -307,6 +307,21 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
 33. **Session resumption via `SESSION_NOTE.md`.** Message quotas and context limits mean a working session often ends before the task does. Without a handoff mechanism, the next session starts cold — the user re-explains goal, progress, and constraints from scratch. When a non-trivial task (Medium/High severity per Law 2, or anything spanning more than one response) is left unfinished at the end of a session, Claude offers to write a short `SESSION_NOTE.md` in the project root: current goal, what's done, what's left, any blocking decision, and the active branch/issue/PR. At the start of a session, if `SESSION_NOTE.md` exists, Claude reads it, summarizes it back in one line, and asks whether to resume or start fresh — then deletes it once the resumed task is complete (per Law 8, this is a file Claude created for this purpose, so removing it when done doesn't need separate approval). This is a lightweight convention, not a mandatory file on every task — Claude doesn't create one for quick, single-response fixes.
 
 34. **UI-PR screenshot evidence.** A green Playwright + axe run (Law 10) proves the page didn't crash and didn't violate WCAG — it says nothing about whether the UI actually looks right. Reviewers currently take that on faith from the code diff alone. Any PR whose diff touches a component file, a styles file, or a layout change embeds at least one screenshot of the changed screen/state in the PR body, captured via `page.screenshot()` in the relevant Playwright spec against the running localhost preview (Law 18). This is a point-in-time capture for reviewer context, not a request to stand up a permanent pixel-diff visual-regression suite — that's a separate, heavier decision the user opts into explicitly. Pure logic, config, docs, or `chore:` PRs are out of scope.
+
+35. **Explicit, ordered deploy steps whenever a change needs more than "merge the PR."** Law 7 already stops Claude from merging and hands the human a PR-ready summary. That's not enough on its own when the change isn't actually *done* once merged — a database migration to run by hand, an env var to set on a specific service, a second PR that only works after the first is both merged and its migration applied, a redeploy needed to pick up new config. Left implicit, the human is stuck guessing what's left and in what order, and a step skipped or done out of order (e.g. deploying code that depends on a column before the migration adding it has run) breaks production.
+
+    Whenever a change involves **any** step beyond "click merge in the GitHub UI" — a migration, an env var, a dependent second PR, a required redeploy, a manual dashboard toggle — Claude's PR-ready summary (or an immediate follow-up message, if the extra steps only become clear after PRs are already open) includes a **numbered, ordered checklist** naming exactly what to do, in what order, with the literal command/SQL/dashboard path whenever it's knowable — not a vague category ("apply the migration," "set the env vars"). For example:
+
+    ```
+    1. Merge PR #191 (API).
+    2. Run this SQL in the Supabase SQL editor (project: basketball):
+       alter table pageviews add column if not exists visitor_hash text;
+    3. Merge PR #356 (UI) — depends on step 2 being done first.
+    4. Set PAGEVIEW_INGEST_SECRET to the same value on both Netlify sites.
+    5. Redeploy both sites.
+    ```
+
+    If a step genuinely can't be fully specified yet (the exact project/site isn't identified, a value needs to be generated first), Claude says so explicitly and offers to resolve it (e.g. "want me to generate this secret now?") rather than silently omitting the step. This checklist is not optional ceremony on top of the PR-ready summary — for a multi-step change it **is** the part the human actually needs, so it must be complete: every manual step across every repo involved in the change, not only the one Claude happens to be focused on at that moment. When new steps are discovered later (e.g. a follow-up PR's migration), Claude restates the full remaining sequence rather than mentioning only the new step in isolation, so the human never has to reconstruct order from scattered messages.
 
 ---
 

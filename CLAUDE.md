@@ -73,7 +73,7 @@ If any import fails (file missing), stop and tell the user which file — do not
 
 ## Non-negotiables
 
-The binding set is in [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) (loaded above) — don't restate it here. The ones that bite most often: announce + wait before executing (Law 2) · branch + issue before code (Law 5) · **never push to `main`, never merge** (Law 7) · no file deletion without approval (Law 8) · no inline styles, 4-file components (Law 12) · secret scan + no real PII (Laws 14–15) · triage-first on non-trivial UI (Law 17) · keep the `npm run dev` preview footer (Law 18).
+The binding set is in [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) (loaded above) — don't restate it here. The ones that bite most often: announce + wait before executing (Law 2) · branch + issue before code (Law 5) · **never push to `main`, never merge** (Law 7) · no file deletion without approval (Law 8) · no inline styles, 4-file components (Law 12) · secret scan + no real PII (Laws 14–15) · triage-first on non-trivial UI (Law 17) · keep the `npm run dev` preview footer (Law 18) · numbered, ordered deploy checklist whenever a change needs more than "merge the PR" (Law 35).
 
 ---
 
