@@ -74,14 +74,22 @@ This repo uses Conventional Commits. Version bumps in `CLAUDE_LAWS.md` header:
 
 ## Updating `install.sh`
 
-The installer clones the repo to `~/.design-forge` and injects the import into `~/.claude/CLAUDE.md`. If the clone path or markers change, update both `install.sh` and `README.md`.
+The installer does five things:
+
+- clones the repo to `~/.design-forge`
+- injects the import into `~/.claude/CLAUDE.md`
+- registers the Law 32 hook in `~/.claude/settings.json`
+- links `agents/*.md` and `skills/*/` into `~/.claude/agents` and `~/.claude/skills`
+- writes the `dforge-update` function
+
+`dforge-update` runs the installer on every update, so every step must stay safe to re-run. If the clone path or markers change, update both `install.sh` and `README.md`.
 
 ## Running `dforge-update`
 
-End users run this shell function (installed by `install.sh`) to pull the latest rules:
+End users run this shell function (installed by `install.sh`) to pull the latest rules and re-run the installer:
 
 ```bash
 dforge-update
 ```
 
-This pulls `~/.design-forge` and the updated `CLAUDE.md` import is picked up on the next Claude Code session.
+This pulls `~/.design-forge`, then re-runs `install.sh`, so new agents, skills and hook entries get registered. The rules themselves are picked up on the next Claude Code session.

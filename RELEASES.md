@@ -2,6 +2,19 @@
 
 ---
 
+## v2.18.0 — October 2, 2026
+
+### Install registers the agents and skills
+- `install.sh` links each agent into `~/.claude/agents/` and each skill into `~/.claude/skills/`, so Claude Code registers all of them (`claude agents` lists the agents as user agents)
+- Your own agents and skills with the same name are never overwritten. The only links ever removed are the installer's own links whose agent or skill was deleted upstream
+- `dforge-update` now pulls and then re-runs `install.sh`, so new agents, skills and hook entries apply on every update
+- Re-runs never damage your shell config or `~/.claude/CLAUDE.md`: if a Design Forge end marker is missing, the file is left unchanged with a warning
+- The install banner lists all five things it sets up and shows the installed version
+- Plan and approvals: `docs/features/issue-85/`
+- **One-time step:** run `dforge-update && bash ~/.design-forge/install.sh` once, because the old `dforge-update` only pulls. Then open a new terminal and a new Claude Code session so both pick up the new function, agents and skills
+
+---
+
 ## v2.17.1 — October 2, 2026
 
 ### Fix — agents and plugin manifest pass validation
