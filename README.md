@@ -1,14 +1,14 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.16.0-blue?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/version-2.18.0-blue?style=flat-square" alt="Version" />
   <img src="https://img.shields.io/github/license/BojanKocijan/design-forge?style=flat-square" alt="License" />
   <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/design-forge/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
-  <img src="https://img.shields.io/badge/laws-36-orange?style=flat-square" alt="36 Laws" />
+  <img src="https://img.shields.io/badge/laws-37-orange?style=flat-square" alt="37 Laws" />
 </p>
 
 # Design Forge
 
-**A governance framework for AI-assisted software engineering — 36 binding laws that make Claude Code work like a disciplined senior product engineer.**
+**A governance framework for AI-assisted software engineering — 37 binding laws that make Claude Code work like a disciplined senior product engineer.**
 
 Design Forge is a set of binding *laws*, reusable *skills*, and shared *knowledge files* that govern every Claude Code session. It controls how Claude scaffolds projects, names branches, opens PRs, writes components, runs UX research, and hands work off to developers. Library-agnostic. Framework-agnostic. No corporate toolchain required.
 
@@ -34,14 +34,14 @@ Design Forge is a set of binding *laws*, reusable *skills*, and shared *knowledg
 
 ## Why Design Forge
 
-Out of the box, an AI coding assistant will happily push to `main`, invent APIs, ship 1000-line PRs, over-engineer, and forget your conventions between sessions. Design Forge fixes that with **36 binding laws** and knowledge files that travel with you to every project.
+Out of the box, an AI coding assistant will happily push to `main`, invent APIs, ship 1000-line PRs, over-engineer, and forget your conventions between sessions. Design Forge fixes that with **37 binding laws** and knowledge files that travel with you to every project.
 
 | Problem | Design Forge solution |
 |---|---|
 | Pushes directly to `main` | Branch + issue before code; PRs only; Claude never merges |
 | Giant, unreviewable PRs | **Law 31** — every PR under 400 lines, one concern per PR, stacked sequences for large features |
 | Over-engineered code | YAGNI enforcement, edge-case analysis upfront, verify-before-claiming |
-| Forgets your conventions | 36 laws + 10 knowledge files loaded every session |
+| Forgets your conventions | 37 laws + 10 knowledge files that load on demand |
 | Inconsistent components | 4-file component folders, no inline styles, TypeScript, accessibility baked in |
 | No audit trail | Pre-execution announcements, Conventional Commits, living `PROJECT_KNOWLEDGE.md` |
 | Stale repos | Auto branch cleanup, orphaned issue detection, README kept current with every PR |
@@ -120,24 +120,24 @@ Design Forge has three layers:
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  CLAUDE_LAWS.md — 36 binding rules              │
+│  CLAUDE_LAWS.md — 37 binding rules              │
 │  (loaded every session)                         │
 ├─────────────────────────────────────────────────┤
 │  agents/ — 8 specialized personas               │
 │  Frontend · Backend · Lead · Tester             │
-│  Design · Research · Analyst                    │
+│  Fullstack · Design · Research · Analyst        │
 ├─────────────────────────────────────────────────┤
 │  knowledge/ — 10 binding guides                  │
 │  (loaded on demand per task scope)              │
 ├─────────────────────────────────────────────────┤
-│  skills/ — 16 reusable skill definitions        │
+│  skills/ — 17 reusable skill definitions        │
 │  (auto-discovered by Claude Code)               │
 └─────────────────────────────────────────────────┘
 ```
 
 ### Laws — [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md)
 
-36 binding rules. Key highlights:
+37 binding rules. Key highlights:
 
 - **Transparency** — pre-execution announcement before any change; Claude waits for explicit approval
 - **Git discipline** — pull default branch, branch + issue before code, PRs only, never push to default branch, never merge
@@ -145,21 +145,23 @@ Design Forge has three layers:
 - **Code quality** — 4-file component folders, no inline styles, Conventional Commits, secret scanning, PII-free mock data, WCAG 2.2 AA
 - **Engineering rigor** — YAGNI, edge-case thinking, verify-before-claiming, reason-before-executing
 - **Repo hygiene** — immediate branch cleanup, stale branch sweeps, orphaned issue detection, README always current
+- **Human gates** — gate tier from severity, committed `intent.md` → `spec.md` → `plan.md` approvals, risk-scaled review, cap of 3 AI PRs awaiting review (Law 37)
 - **Safety controls** — `arm` / `disarm` toggle; `dry run` mode; three hard-safety rails always survive (never merge, no secrets, no PII)
 
 ### Personas
 
-Seven specialized roles compose into a single pipeline:
+Eight specialized agents compose into a single pipeline. `install.sh` links each one into `~/.claude/agents/`, so `claude agents` lists them.
 
-| Persona | Scope | Trigger |
-|---|---|---|
-| **Frontend** | UI, React, a11y, mocked data | *default* / `frontend mode` |
-| **Backend** | APIs, auth, DB, migrations, observability | `backend mode` |
-| **Lead** | Orchestrates the full team pipeline | `team` / `fullstack mode` |
-| **Tester** | Tests, axe/coverage gate, can block the PR | `tester mode` |
-| **Design** | Figma, design critique, UX writing | *(implied by design tasks)* |
-| **Research** | Transcripts, JTBD, RICE/MoSCoW, deck generation | `research mode` |
-| **Analyst** | Product analytics (Pendo, Amplitude, Mixpanel, ...) | `analyst mode` |
+| Persona | Scope | Trigger | Model |
+|---|---|---|---|
+| **Frontend** | UI, React, a11y, mocked data | *default* / `frontend mode` | Sonnet |
+| **Backend** | APIs, auth, DB, migrations, observability, CI | `backend mode` | Opus |
+| **Lead** | Orchestrates the full team pipeline | `team` / `build feature` / `fullstack mode` | Opus |
+| **Tester** | Tests, axe/coverage gate, can block the PR | `tester mode` | Sonnet |
+| **Fullstack** | Production code; hands big features to the Lead, builds small changes solo | `fullstack mode` | Opus |
+| **Design** | Figma, design critique, UX writing, handoff | *(implied by design tasks)* | Sonnet |
+| **Research** | Transcripts, JTBD, RICE/MoSCoW, deck generation | `research mode` | Sonnet |
+| **Analyst** | Product analytics (Pendo, Amplitude, Mixpanel, ...) | `analyst mode` | Sonnet |
 
 ### Knowledge — [`knowledge/`](./knowledge/)
 
@@ -174,6 +176,7 @@ Seven specialized roles compose into a single pipeline:
 | `SKILLS.md` | Layout, a11y, testing, handoff, git craft |
 | `UX_RESEARCH_GUIDE.md` | Transcript analysis, research decks |
 | `ANALYTICS_GUIDE.md` | Product analytics workflows |
+| `HUMAN_IN_THE_LOOP.md` | Gate tiers, approval artifacts, PR intake, review cap (Law 37) |
 | `PATTERNS.md` *(personal, gitignored — [example](./knowledge/PATTERNS.example.md))* | Cross-project bug/pattern catalogue |
 
 ---
@@ -215,6 +218,10 @@ Seven specialized roles compose into a single pipeline:
 | `update rules` | Pull latest rules and reload |
 | `check rules` | Print loaded version and update status |
 | `stop preview` / `start preview` | Control the background dev server |
+| `approve intent` / `approve spec` / `approve plan` | Record your approval on a Law 37 artifact |
+| `review queue` | Risk-sorted digest of open PRs awaiting your review |
+| `review cap <N>` / `review cap off` | Change the cap on AI PRs awaiting review (default 3) |
+| `skip gates` | Lower the gate tier for this change, with a reason |
 
 ---
 
@@ -289,7 +296,7 @@ Claude auto-registers new projects and locks the port in `vite.config.ts` with `
 ```
 design-forge/
 ├── CLAUDE.md                    # Entry point — imports laws, maps knowledge triggers
-├── CLAUDE_LAWS.md               # 36 binding rules (loaded every session)
+├── CLAUDE_LAWS.md               # 37 binding rules (loaded every session)
 ├── AGENTS.md                    # Agent architecture overview
 ├── RELEASES.md                  # Version history
 ├── install.sh                   # One-line installer
@@ -314,9 +321,10 @@ design-forge/
 │   ├── SKILLS.md
 │   ├── UX_RESEARCH_GUIDE.md
 │   ├── ANALYTICS_GUIDE.md
+│   ├── HUMAN_IN_THE_LOOP.md
 │   ├── PATTERNS.example.md
 │   └── PATTERNS.md              # gitignored — your copy of the example above
-├── skills/                      # 16 reusable skill definitions
+├── skills/                      # 17 reusable skill definitions
 ├── docs/                        # Additional documentation
 └── .github/
     └── workflows/
