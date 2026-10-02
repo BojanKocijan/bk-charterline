@@ -2,7 +2,7 @@
 
 Intent: [#85](https://github.com/BojanKocijan/design-forge/issues/85)
 Design: none (installer behavior, no UI)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-02, chat
 
 ## Behavior
 

@@ -2,7 +2,7 @@
 
 Spec: [spec.md](./spec.md) · Gate tier: Significant · Branch: `feat/install-links-agents-skills` · Issue: #85
 Work pile: delegable (fully specified, limited to the installer, verifiable in a scratch home folder)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-02, chat
 
 ## Files to change
 
