@@ -2,6 +2,14 @@
 
 ---
 
+## v2.14.0 — October 2, 2026
+
+### Law 34 — Changed-pages-only screenshots
+- PR screenshots now cover only screens whose import graph contains a file the PR touched; a touched file that reaches no screen produces no screenshot and no home-screen fallback (PR says `No screens affected`)
+- Speed recipe in `knowledge/SKILLS.md`: minimal standalone Playwright spec, reused dev server, parallel workers, animations disabled, blocked fonts/analytics, no fixed waits, element-level capture, cap of 6 screens
+
+---
+
 ## v2.13.0 — October 1, 2026
 
 ### Law 36 — Cross-project pattern catalogue
