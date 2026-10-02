@@ -2,6 +2,14 @@
 
 ---
 
+## v2.17.1 — October 2, 2026
+
+### Fix — agents and plugin manifest pass validation
+- `agents/backend.md` and `agents/fullstack.md`: the `description` values are now quoted. Before, an unquoted colon inside them broke the YAML frontmatter, and Claude Code loaded both agents without their description
+- `.claude-plugin/plugin.json`: removed the unsupported `displayName` key so `claude plugin validate` passes (Law 27)
+
+---
+
 ## v2.17.0 — October 2, 2026
 
 ### Law 37 — Human gates in the agentic loop
