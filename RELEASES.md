@@ -59,7 +59,7 @@
 
 ## v2.11.0 — October 1, 2026
 
-Ported four generic, stack-agnostic ideas from a comparison against `digital-ai/ux-claude-laws` v0.80.0 (everything tied to their stack — Dot components, Figma Code Connect, Pendo, Agility, MUI X Charts — was left out).
+Four generic, stack-agnostic additions.
 
 ### Law 32 — Hook-enforced guardrails
 - New binding law: a `PreToolUse` hook (`.claude/hooks/enforce-laws.py`) mechanically blocks `gh pr merge` in any form, commit/push while on the default branch, non-Conventional-Commits messages, and secrets in a staged diff
