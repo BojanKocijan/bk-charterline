@@ -3,7 +3,11 @@
 # One-shot setup:
 #   1. Clones the rules repo locally and wires it into Claude's global memory
 #      (~/.claude/CLAUDE.md) so every Claude Code session auto-loads them.
-#   2. Installs `dforge-update` as a shell function that refreshes the clone.
+#   2. Registers the Law 32 guardrail hook in ~/.claude/settings.json.
+#   3. Links the agents and skills into ~/.claude/agents and ~/.claude/skills
+#      so Claude Code registers them.
+#   4. Installs `dforge-update` as a shell function that pulls the clone and
+#      re-runs this installer. Every step is safe to re-run.
 #
 # Run once:
 #   curl -fsSL https://raw.githubusercontent.com/bojankocijan/design-forge/main/install.sh | bash
@@ -154,7 +158,63 @@ else
   warn "Could not update $GLOBAL_SETTINGS automatically — add the PreToolUse hook manually (see .claude/settings.json in $LOCAL_DIR for the entry)."
 fi
 
-# 6. Install dforge-update as a shell function
+# 6. Link agents and skills into ~/.claude so Claude Code registers them.
+#    Only links that point into the clone are ever replaced or removed; the
+#    user's own agents and skills with the same name are left alone.
+AGENTS_DIR="${HOME}/.claude/agents"
+SKILLS_DIR="${HOME}/.claude/skills"
+SKIPPED=""
+
+link_into() {
+  local src="$1" dest="$2"
+  if [ -L "$dest" ]; then
+    case "$(readlink "$dest")" in
+      "$LOCAL_DIR"/*) ln -sfn "$src" "$dest"; return 0 ;;
+    esac
+  fi
+  if [ -e "$dest" ] || [ -L "$dest" ]; then
+    SKIPPED="$SKIPPED $(basename "$dest")"
+    return 1
+  fi
+  ln -s "$src" "$dest"
+}
+
+# Remove links into the clone whose agent or skill was deleted upstream.
+prune_dangling() {
+  local link
+  for link in "$1"/*; do
+    if [ -L "$link" ] && [ ! -e "$link" ]; then
+      case "$(readlink "$link")" in
+        "$LOCAL_DIR"/*) rm "$link" ;;
+      esac
+    fi
+  done
+}
+
+mkdir -p "$AGENTS_DIR" "$SKILLS_DIR"
+prune_dangling "$AGENTS_DIR"
+prune_dangling "$SKILLS_DIR"
+
+AGENT_COUNT=0
+for src in "$LOCAL_DIR"/agents/*.md; do
+  [ -f "$src" ] || continue
+  if link_into "$src" "$AGENTS_DIR/$(basename "$src")"; then
+    AGENT_COUNT=$((AGENT_COUNT + 1))
+  fi
+done
+
+SKILL_COUNT=0
+for src in "$LOCAL_DIR"/skills/*; do
+  [ -f "$src/SKILL.md" ] || continue
+  if link_into "$src" "$SKILLS_DIR/$(basename "$src")"; then
+    SKILL_COUNT=$((SKILL_COUNT + 1))
+  fi
+done
+
+ok "Linked $AGENT_COUNT agents and $SKILL_COUNT skills into ${HOME}/.claude"
+[ -z "$SKIPPED" ] || warn "Skipped, because your own file or link already uses the name:$SKIPPED"
+
+# 7. Install dforge-update as a shell function
 SHELL_RC=""
 case "${SHELL:-}" in
   *zsh)  SHELL_RC="$HOME/.zshrc" ;;
@@ -163,7 +223,7 @@ esac
 
 FN_BLOCK=$(cat <<'EOF'
 # design-forge:fn:begin
-# Design Forge — refresh the Claude rules clone.
+# Design Forge — refresh the Claude rules clone and re-run the installer.
 # Installed by design-forge install.sh.
 dforge-update() {
   local rules_dir="$HOME/.design-forge"
@@ -175,6 +235,9 @@ dforge-update() {
 
   echo "dforge: pulling latest rules from main ..."
   git -C "$rules_dir" pull --ff-only || { echo "dforge: pull failed" >&2; return 1; }
+
+  # Pull first, then run the installer, so the script never changes mid-run.
+  DFORGE_UPDATE=1 bash "$rules_dir/install.sh" || { echo "dforge: install.sh failed" >&2; return 1; }
 
   local version
   version=$(grep -m1 -oE '\*\*Version:\*\* *[0-9]+\.[0-9]+\.[0-9]+' "$rules_dir/CLAUDE_LAWS.md" 2>/dev/null | awk '{print $2}')
@@ -205,26 +268,35 @@ else
   warn "Update manually with: git -C $LOCAL_DIR pull --ff-only"
 fi
 
-# 7. Done
+# 8. Done (dforge-update prints its own one-line summary instead)
+[ -n "${DFORGE_UPDATE:-}" ] && exit 0
+
+INSTALLED_VERSION=$(grep -m1 -oE '\*\*Version:\*\* *[0-9]+\.[0-9]+\.[0-9]+' "$LOCAL_DIR/CLAUDE_LAWS.md" 2>/dev/null | awk '{print $2}' || true)
+
 cat <<EOF
 
 ${GREEN}Done.${RESET}
 
-Three things are now wired up:
+Five things are now wired up:
 
   1. Claude global memory  →  $GLOBAL_MEMORY
      (every Claude Code session auto-loads the Design Forge rules)
   2. dforge-update         →  shell function in ${SHELL_RC:-<no rc found>}
-     (refreshes the rules clone)
+     (pulls the clone, then re-runs this installer)
   3. Law 32 guardrail hook →  $GLOBAL_SETTINGS
      (mechanically blocks merge/push-to-main/bad-commit-message/secret-commit tool calls)
+  4. Agents                →  $AGENTS_DIR ($AGENT_COUNT linked)
+  5. Skills                →  $SKILLS_DIR ($SKILL_COUNT linked)
 
-Verify in Claude Code:
-  Rules loaded: DESIGN_FORGE v1.0.0
+Verify in a new Claude Code session:
+  Rules loaded: DESIGN_FORGE v${INSTALLED_VERSION:-?}
   Project: <repo-name>
   Persona: Frontend
   GitHub: <username>
   Ready.
+
+List the registered agents:
+  claude agents
 
 Keep everything fresh:
   dforge-update

@@ -58,14 +58,14 @@ curl -fsSL https://raw.githubusercontent.com/BojanKocijan/design-forge/main/inst
 Open any Claude Code session. You should see:
 
 ```
-Rules loaded: DESIGN_FORGE v2.16.0
+Rules loaded: DESIGN_FORGE v2.18.0
 Project: <your-repo>
 Persona: Frontend
 GitHub: <your-username>
 Ready.
 ```
 
-That's it. Every session on your machine now follows the laws.
+That's it. Every session on your machine now follows the laws and has the Design Forge agents and skills. Check the agents with `claude agents`.
 
 ---
 
@@ -73,7 +73,7 @@ That's it. Every session on your machine now follows the laws.
 
 ### Path A — Claude Code / CLI (recommended)
 
-The install script clones the repo to `~/.design-forge`, injects the rules into Claude's global memory (`~/.claude/CLAUDE.md`), and installs the `dforge-update` shell function.
+The install script clones the repo to `~/.design-forge`, injects the rules into Claude's global memory (`~/.claude/CLAUDE.md`), registers the Law 32 hook, links the agents and skills into `~/.claude`, and installs the `dforge-update` shell function.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/BojanKocijan/design-forge/main/install.sh | bash
@@ -84,7 +84,11 @@ curl -fsSL https://raw.githubusercontent.com/BojanKocijan/design-forge/main/inst
 
 1. Clones this repo to `~/.design-forge`
 2. Adds `@~/.design-forge/CLAUDE.md` to `~/.claude/CLAUDE.md` (Claude's global memory)
-3. Installs the `dforge-update` shell alias for one-command updates
+3. Registers the Law 32 guardrail hook in `~/.claude/settings.json`
+4. Links each agent into `~/.claude/agents/` and each skill into `~/.claude/skills/`. Your own agents and skills with the same name are never overwritten.
+5. Installs the `dforge-update` shell function, which pulls the clone and re-runs the installer
+
+Re-running the script is safe. Use one install method only: installing the plugin as well would list every agent and skill twice.
 
 </details>
 
@@ -274,7 +278,7 @@ Claude auto-registers new projects and locks the port in `vite.config.ts` with `
 
 | Method | Command |
 |---|---|
-| Shell (Path A) | `dforge-update` |
+| Shell (Path A) | `dforge-update` (pulls, then re-links agents and skills) |
 | Manual (Path B) | `git -C ~/.design-forge pull` |
 | In any session | `update rules` |
 
