@@ -2,6 +2,19 @@
 
 ---
 
+## v2.17.0 — October 2, 2026
+
+### Law 37 — Human gates in the agentic loop
+- Gate tier from the Law 2 severity: Trivial needs nothing extra, Standard needs an approved `plan.md`, Significant needs `intent.md` → `spec.md` → `plan.md`, each approved in order
+- Artifacts are committed in `docs/features/<id>/`; Claude never writes an `Approved-by` line without the owner's explicit approval
+- Every non-chore PR carries an Intake block and a Decision log
+- Review depth follows risk, with an independent fresh-context reviewer subagent for Significant work
+- Cap of 3 AI PRs awaiting review, delegable vs judgment-heavy triage, and a `review queue` digest
+- New on-demand `knowledge/HUMAN_IN_THE_LOOP.md` and `skills/human-in-the-loop`
+- Sources: Anthropic's AI-native SDLC playbook and seven Addy Osmani essays
+
+---
+
 ## v2.16.0 — October 2, 2026
 
 ### Law 32 — Hook enforces the Law 34 screenshot question
