@@ -1,6 +1,6 @@
 # Master Claude Laws — Design Forge
 
-**Version:** 2.15.0
+**Version:** 2.16.0
 **Last Updated:** 2026-10-02
 **Rules Repo:** https://github.com/bojankocijan/design-forge
 **Inspired by:** Asimov's Three Laws of Robotics
@@ -294,7 +294,8 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
     | `git commit` while the current branch is the default branch | Law 5 | Writing directly to the default branch instead of a feature branch |
     | `git push` while the current branch is the default branch | Law 7 | Pushing directly to the default branch |
     | `git commit -m "..."` (or a heredoc-quoted message) whose first line doesn't match `type(scope): description` | Law 13 | Non-Conventional-Commits message |
-    | `git commit` when the staged diff matches a private-key block, a credential-shaped assignment, an AWS access key, a known PAT prefix, or a staged non-`.env.example` `.env*` file | Law 14 | A secret about to be committed |
+    | `gh pr create` whose body (or `--body-file`) has no `Screenshots: yes \| skipped \| not applicable` line | Law 34 | Opening a PR without having asked about screenshot images |
+| `git commit` when the staged diff matches a private-key block, a credential-shaped assignment, an AWS access key, a known PAT prefix, or a staged non-`.env.example` `.env*` file | Law 14 | A secret about to be committed |
 
     **Fails open, not closed.** If the hook can't parse its input, can't confidently extract a commit message, or a `git` subprocess errors, it allows the call rather than blocking on an infrastructure fluke. This is a backstop against mechanical slips, not a replacement for the judgment the rest of this document asks for — false blocks on edge cases are worse than an occasional missed catch, because they teach the user to route around the hook entirely.
 

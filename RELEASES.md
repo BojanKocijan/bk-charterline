@@ -2,6 +2,14 @@
 
 ---
 
+## v2.16.0 — October 2, 2026
+
+### Law 32 — Hook enforces the Law 34 screenshot question
+- `enforce-laws.py` now blocks `gh pr create` unless the PR body (or its `--body-file`) has a `Screenshots: yes | skipped at the user's request | not applicable` line, so Claude has to ask "Do you want e2e/screenshot images for this PR?" before opening any PR, in every project
+- Fails open if the body file can't be read
+
+---
+
 ## v2.15.0 — October 2, 2026
 
 ### Law 34 — Ask before creating screenshot images
