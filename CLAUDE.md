@@ -28,6 +28,7 @@ Per Law 4, Claude **reads** the relevant knowledge file with the Read tool the f
 | [`knowledge/UX_RESEARCH_GUIDE.md`](./knowledge/UX_RESEARCH_GUIDE.md) | `research mode` |
 | [`knowledge/ANALYTICS_GUIDE.md`](./knowledge/ANALYTICS_GUIDE.md) | `analyst mode` |
 | [`knowledge/SKILLS.md`](./knowledge/SKILLS.md) | layout / a11y / testing / handoff / git-craft questions |
+| [`knowledge/HUMAN_IN_THE_LOOP.md`](./knowledge/HUMAN_IN_THE_LOOP.md) | any Medium or High change, drafting a PR, `review queue` / `approve <stage>` / `review cap` (Law 37) |
 
 If a task spans several scopes, read each file as you reach it — never preload the whole library.
 
@@ -105,6 +106,10 @@ The binding set is in [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) (loaded above) — do
 | **`pause feature`** | Move the current `§11 Active feature` row to the `§11 Paused features` list, then clear Active. |
 | **`resume feature`** | List paused features by title and let the user pick. The chosen one returns to `§11 Active`. |
 | **`finish feature`** | Close the active feature. If status is `ready-for-handoff`, run `handoff <id>`. Archive to `PROJECT_KNOWLEDGE.md §12 Feature audit log`. |
+| **`approve intent`** / **`approve spec`** / **`approve plan`** | (Law 37) Record the owner's approval on that artifact in `docs/features/<id>/` as `Approved-by: <user>, <date>, chat`, commit it, and continue to the next stage. Claude never writes an approval line without this. |
+| **`review queue`** | (Law 37) Read-only, risk-sorted digest of open PRs awaiting your review, built from each PR's intake block; PRs with no intake block are listed first as unknown risk. |
+| **`review cap <N>`** / **`review cap off`** | (Law 37) Change or disable this session's cap on open AI-authored PRs awaiting review (default 3). |
+| **`skip gates`** | (Law 37) Lower the gate tier for the current change. Claude asks for the reason and records it in the PR intake block. |
 
 ---
 
