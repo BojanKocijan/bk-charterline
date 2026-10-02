@@ -62,6 +62,11 @@ block = os.environ["BLOCK_REPLACE_TEXT"]
 with open(path) as f:
     lines = f.read().splitlines()
 
+# A begin marker with no end marker after it would drop every line that
+# follows it, so leave the file untouched and let the caller warn.
+if begin in lines and end not in lines[lines.index(begin):]:
+    sys.exit(3)
+
 out = []
 in_block = False
 for line in lines:
@@ -80,8 +85,10 @@ with open(path, "w") as f:
 PYEOF
 }
 
-# 2. Clone or pull the rules repo
-if [ -d "$LOCAL_DIR/.git" ]; then
+# 2. Clone or pull the rules repo (dforge-update has already pulled)
+if [ -n "${DFORGE_UPDATE:-}" ]; then
+  :
+elif [ -d "$LOCAL_DIR/.git" ]; then
   say "Updating existing rules clone at $LOCAL_DIR ..."
   git -C "$LOCAL_DIR" pull --quiet --ff-only || die "git pull failed in $LOCAL_DIR"
   ok "Rules repo updated."
@@ -106,8 +113,11 @@ EOF
 
 if [ -f "$GLOBAL_MEMORY" ]; then
   if grep -q "$MARKER_BEGIN" "$GLOBAL_MEMORY"; then
-    replace_block "$GLOBAL_MEMORY" "$MARKER_BEGIN" "$MARKER_END" "$BLOCK"
-    ok "Refreshed Design Forge block in $GLOBAL_MEMORY"
+    if replace_block "$GLOBAL_MEMORY" "$MARKER_BEGIN" "$MARKER_END" "$BLOCK"; then
+      ok "Refreshed Design Forge block in $GLOBAL_MEMORY"
+    else
+      warn "Left $GLOBAL_MEMORY unchanged: its '$MARKER_END' line is missing. Restore it, then re-run."
+    fi
   else
     printf "\n%s\n" "$BLOCK" >> "$GLOBAL_MEMORY"
     ok "Appended Design Forge block to $GLOBAL_MEMORY"
@@ -252,8 +262,11 @@ install_or_update_function() {
   [ -z "$rc" ] && return 0
 
   if [ -f "$rc" ] && grep -q "$FN_MARKER_BEGIN" "$rc"; then
-    replace_block "$rc" "$FN_MARKER_BEGIN" "$FN_MARKER_END" "$FN_BLOCK"
-    ok "Refreshed dforge-update function in $rc"
+    if replace_block "$rc" "$FN_MARKER_BEGIN" "$FN_MARKER_END" "$FN_BLOCK"; then
+      ok "Refreshed dforge-update function in $rc"
+    else
+      warn "Left $rc unchanged: its '$FN_MARKER_END' line is missing. Restore it, then re-run."
+    fi
   else
     printf "\n%s\n" "$FN_BLOCK" >> "$rc"
     ok "Installed dforge-update function in $rc"
