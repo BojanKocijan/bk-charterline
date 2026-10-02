@@ -4,7 +4,7 @@ Spec: no separate `spec.md`. The intent is [#74](https://github.com/BojanKocijan
 content was supplied as a finished playbook, skill and law text, so the source files are the spec.
 Gate tier: Significant · Branch: `feat/law-37-1-knowledge`, `feat/law-37-2-law` · Issue: #74
 Work pile: delegable (fully specified, docs only, checked by markdownlint)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-02, chat
 
 > **Written after the fact.** The change shipped in v2.17.0 (#75, #77), before Law 37 required this file.
 > At the time, the Law 2 announcement in chat served as the plan and was approved there. This file records
