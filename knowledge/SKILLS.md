@@ -124,6 +124,23 @@ describe('ExampleCard', () => {
 });
 ```
 
+### Changed-pages screenshots (Law 34)
+
+Capture only screens the PR touched, as fast as possible.
+
+1. **Select screens.** `git diff --name-only <default-branch>...HEAD` → reverse-walk the import graph → the set of screen root components that reach a touched file. Docs, config, and logic files that reach no screen select nothing.
+2. **Nothing selected = no run.** Skip Playwright entirely. No fallback or home-screen shot. PR body: `No screens affected` + the touched-file list.
+3. **Cap at 6 screens.** Beyond that, capture the first 6 and say so in the PR body.
+4. **Minimal spec.** A standalone screenshot spec, not the E2E/axe suite: `npx playwright test screenshots.spec.ts --project=chromium`.
+5. **Speed settings:**
+   - Reuse the running dev server (`reuseExistingServer: true`).
+   - `fullyParallel: true`, one screen per worker.
+   - `animations: 'disabled'` on every `page.screenshot()`.
+   - Block fonts and analytics via `page.route`.
+   - No fixed waits: `waitForLoadState('domcontentloaded')` + `expect(locator).toBeVisible()` on the element under change.
+   - Screenshot the changed element or screen region, not `fullPage`.
+6. **Report problems.** A screen that fails to render is an error in the PR body; a new screen without a screenshot key is a warning.
+
 ### PR-screenshot root scoping (Law 34)
 
 When a PR-screenshot tool decides which screens to capture by following the import graph from each screen's root component file (the pattern used by `scripts/relevant-screens.mjs` in sports-training-ui, #286), **one screenshot key must map to one root file that renders exactly one screen.**
