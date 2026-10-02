@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.15.0-blue?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/version-2.16.0-blue?style=flat-square" alt="Version" />
   <img src="https://img.shields.io/github/license/BojanKocijan/design-forge?style=flat-square" alt="License" />
   <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/design-forge/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
@@ -58,7 +58,7 @@ curl -fsSL https://raw.githubusercontent.com/BojanKocijan/design-forge/main/inst
 Open any Claude Code session. You should see:
 
 ```
-Rules loaded: DESIGN_FORGE v2.15.0
+Rules loaded: DESIGN_FORGE v2.16.0
 Project: <your-repo>
 Persona: Frontend
 GitHub: <your-username>

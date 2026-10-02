@@ -4,8 +4,8 @@
 Reads the tool-call JSON Claude Code sends on stdin, inspects Bash
 commands for a narrow set of patterns, and blocks (exit 2 + reason on
 stderr) the ones that would break Law 7 (never merge / never push to
-the default branch), Law 13 (Conventional Commits), or Law 14 (secret
-scan before commit). Everything else passes through untouched.
+the default branch), Law 13 (Conventional Commits), Law 14 (secret
+scan before commit), or Law 34 (ask before PR screenshots). Everything else passes through untouched.
 
 Fails open: if anything here can't be parsed confidently, the call is
 allowed rather than blocked on an infrastructure fluke. This is a
@@ -186,6 +186,29 @@ def strip_heredoc_bodies(command: str) -> str:
     return HEREDOC_BODY_RE.sub(lambda m: m.group(1) + m.group(4).lstrip("\n"), command)
 
 
+SCREENSHOTS_LINE_RE = re.compile(
+    r"screenshots?:?\s+(yes|requested|skipped|not applicable)|no screens affected",
+    re.IGNORECASE,
+)
+BODY_FILE_RE = re.compile(r"(?:--body-file|-F)\s+(\"[^\"]+\"|'[^']+'|\S+)")
+
+
+def pr_body_has_screenshots_line(command: str) -> bool:
+    """True if the `gh pr create` command (or its --body-file) states the
+    screenshot decision. Fails open when the body can't be inspected."""
+    if SCREENSHOTS_LINE_RE.search(command):
+        return True
+    m = BODY_FILE_RE.search(command)
+    if m:
+        path = os.path.expanduser(m.group(1).strip("'\""))
+        try:
+            with open(path) as f:
+                return bool(SCREENSHOTS_LINE_RE.search(f.read()))
+        except Exception:
+            return True  # can't read the file — fail open
+    return False
+
+
 def check_bash(command: str) -> None:
     cmd = command.strip()
     scan = strip_heredoc_bodies(cmd)
@@ -201,6 +224,15 @@ def check_bash(command: str) -> None:
         block(
             "Blocked (Law 7): GraphQL `mergePullRequest` is a merge — "
             "Claude never merges. Stop and let the human merge in the UI."
+        )
+
+    # Law 34 — ask before creating PR screenshots; the body records the answer.
+    if re.search(r"\bgh\s+pr\s+create\b", scan) and not pr_body_has_screenshots_line(cmd):
+        block(
+            "Blocked (Law 34): ask the user \"Do you want e2e/screenshot images "
+            "for this PR?\" first, then add one line to the PR body: "
+            "`Screenshots: yes`, `Screenshots: skipped at the user's request` "
+            "or `Screenshots: not applicable`."
         )
 
     is_commit = bool(re.search(r"\bgit\s+commit\b", scan))
