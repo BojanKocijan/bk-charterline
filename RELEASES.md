@@ -8,6 +8,10 @@
 - PR screenshots now cover only screens whose import graph contains a file the PR touched; a touched file that reaches no screen produces no screenshot and no home-screen fallback (PR says `No screens affected`)
 - Speed recipe in `knowledge/SKILLS.md`: minimal standalone Playwright spec, reused dev server, parallel workers, animations disabled, blocked fonts/analytics, no fixed waits, element-level capture, cap of 6 screens
 
+### Law 10 — Fast E2E
+- E2E runs against the production build via `vite preview`, shards across CI runners, runs only specs affected by the PR diff (full suite on the default branch), Chromium-only on PRs, with cached browsers, `storageState` login, route-level mocks, and cheap trace/video settings
+- `PROJECT_SCAFFOLD.md` CI template split into `ci` + sharded `e2e` jobs sharing one build artifact
+
 ---
 
 ## v2.13.0 — October 1, 2026

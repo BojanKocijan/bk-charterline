@@ -454,10 +454,34 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
       - run: npm run build
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        with: { name: dist, path: dist }
+
+  e2e:
+    needs: ci
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with: { name: dist, path: dist }
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test --project=chromium --shard=${{ matrix.shard }}/4
 ```
+
+Specs affected by the PR's diff run on pull requests; the full suite runs on `main` (see SKILLS.md §3 *Fast E2E*).
 
 #### `.github/dependabot.yml`
 

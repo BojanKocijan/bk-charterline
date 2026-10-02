@@ -141,6 +141,21 @@ Capture only screens the PR touched, as fast as possible.
    - Screenshot the changed element or screen region, not `fullPage`.
 6. **Report problems.** A screen that fails to render is an error in the PR body; a new screen without a screenshot key is a warning.
 
+### Fast E2E (Law 10)
+
+1. **Run only affected specs on PRs.** Reuse the reverse import walk from *Changed-pages screenshots*: run specs whose imported files intersect `git diff --name-only <default-branch>...HEAD`. Run the **full suite** on pushes to the default branch, and whenever `playwright.config.ts`, fixtures, or shared test helpers change.
+2. **Shard in CI.** `--shard=i/n` across a matrix (default 4); `fullyParallel: true`; `workers` = runner CPUs.
+3. **Chromium only on PRs.** Firefox/WebKit run nightly or on the default branch only.
+4. **Cache browsers.** Cache `~/.cache/ms-playwright` keyed on the Playwright version; install with `npx playwright install --with-deps chromium`.
+5. **Serve the build, not the dev server.** `webServer: { command: 'npm run build && npx vite preview --port <port> --strictPort', reuseExistingServer: true }` locally; in CI build once and share the artifact across shards.
+6. **Fast tests:**
+   - Log in once via `storageState` in a setup project, never per test.
+   - Navigate straight to the route under test.
+   - Mock network at the route level for UI specs; keep a small smoke set on the real flow.
+   - No `waitForTimeout`; web-first assertions only.
+   - Run full-page axe only on the changed screens.
+7. **Cheap artifacts.** `trace: 'on-first-retry'`, `video: 'off'`, `retries: 1` on CI. A test that passes only on retry is reported as flaky, not hidden.
+
 ### PR-screenshot root scoping (Law 34)
 
 When a PR-screenshot tool decides which screens to capture by following the import graph from each screen's root component file (the pattern used by `scripts/relevant-screens.mjs` in sports-training-ui, #286), **one screenshot key must map to one root file that renders exactly one screen.**

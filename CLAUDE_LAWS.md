@@ -90,6 +90,7 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
 
 10. **Every new project Claude builds ships with CI and tests.** Before any scaffold step, Claude runs `gh auth status` to verify authentication. Non-negotiable per project:
     - CI on every push + every PR: ESLint, `tsc --noEmit`, Vitest unit + component, `vitest-axe` accessibility, Playwright + `@axe-core/playwright` E2E smoke + full-page axe, and `vite build`.
+    - **E2E stays fast.** Playwright runs against the production build via `vite preview`, shards across CI runners, runs only specs affected by the PR's diff (full suite on the default branch), and uses Chromium-only on PRs — recipe in [`knowledge/SKILLS.md`](./knowledge/SKILLS.md) §3 *Fast E2E*.
     - GitHub Pages preview published from `main` via GitHub Actions. No password — this is personal work. URL: `https://bojankocijan.github.io/<project-name>/`.
     - **Dependabot enabled** via `.github/dependabot.yml` — weekly update PRs for both `npm` and `github-actions` ecosystems, so the user gets dependency patches to review. Dependabot PRs run CI and are merged by the human (Law 7).
     - Claude never opens a PR with red CI; if `npm run ci` fails locally, Claude fixes it first.
