@@ -2,6 +2,14 @@
 
 ---
 
+## v2.15.0 — October 2, 2026
+
+### Law 34 — Ask before creating screenshot images
+- Claude now asks "Do you want e2e/screenshot images for this PR?" and waits for an explicit yes before creating, adding or regenerating any; on no or silence the PR says screenshots were skipped
+- Prompted by screenshot images overloading the GitHub Actions worker in a real project
+
+---
+
 ## v2.14.0 — October 2, 2026
 
 ### Law 34 — Changed-pages-only screenshots

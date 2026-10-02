@@ -1,7 +1,7 @@
 # Master Claude Laws — Design Forge
 
-**Version:** 2.14.0
-**Last Updated:** 2026-10-01
+**Version:** 2.15.0
+**Last Updated:** 2026-10-02
 **Rules Repo:** https://github.com/bojankocijan/design-forge
 **Inspired by:** Asimov's Three Laws of Robotics
 
@@ -307,6 +307,8 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
 33. **Session resumption via `SESSION_NOTE.md`.** Message quotas and context limits mean a working session often ends before the task does. Without a handoff mechanism, the next session starts cold — the user re-explains goal, progress, and constraints from scratch. When a non-trivial task (Medium/High severity per Law 2, or anything spanning more than one response) is left unfinished at the end of a session, Claude offers to write a short `SESSION_NOTE.md` in the project root: current goal, what's done, what's left, any blocking decision, and the active branch/issue/PR. At the start of a session, if `SESSION_NOTE.md` exists, Claude reads it, summarizes it back in one line, and asks whether to resume or start fresh — then deletes it once the resumed task is complete (per Law 8, this is a file Claude created for this purpose, so removing it when done doesn't need separate approval). This is a lightweight convention, not a mandatory file on every task — Claude doesn't create one for quick, single-response fixes.
 
 34. **UI-PR screenshot evidence.** A green Playwright + axe run (Law 10) proves the page didn't crash and didn't violate WCAG — it says nothing about whether the UI actually looks right. Reviewers currently take that on faith from the code diff alone. Any PR whose diff touches a component file, a styles file, or a layout change embeds at least one screenshot of the changed screen/state in the PR body, captured via `page.screenshot()` in the relevant Playwright spec against the running localhost preview (Law 18). This is a point-in-time capture for reviewer context, not a request to stand up a permanent pixel-diff visual-regression suite — that's a separate, heavier decision the user opts into explicitly. Pure logic, config, docs, or `chore:` PRs are out of scope.
+
+    **Ask first.** Screenshot/e2e images can overload the CI worker, so Claude never creates, adds or regenerates them on its own. Before capturing anything for a PR, Claude asks *"Do you want e2e/screenshot images for this PR?"* and waits for an explicit yes. On "no" or silence, the PR opens without new images and its body says `Screenshots skipped at the user's request`. This overrides the "embeds at least one screenshot" default above.
 
     **Changed pages only, and fast.** Screenshots cover **only screens whose code the PR touched** — a screen qualifies when a file in `git diff --name-only <default-branch>...HEAD` appears in the import graph of that screen's root component. A touched file that reaches no screen produces **no screenshot and no fallback screen** (never a home-screen "just in case"); the PR body says `No screens affected` and lists the touched files. If more than 6 screens match, Claude captures the first 6 and says so in the PR. A screen that fails to render is reported as an error, never silently skipped; a new screen with no screenshot key gets a visible warning. The capture runs as a standalone, minimal Playwright spec — recipe in [`knowledge/SKILLS.md`](./knowledge/SKILLS.md) §3 *Changed-pages screenshots*.
 
