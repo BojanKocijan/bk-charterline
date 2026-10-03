@@ -1,6 +1,6 @@
 # Master Claude Laws — Design Forge
 
-**Version:** 2.18.1
+**Version:** 2.19.0
 **Last Updated:** 2026-10-03
 **Rules Repo:** https://github.com/bojankocijan/design-forge
 **Inspired by:** Asimov's Three Laws of Robotics
@@ -33,7 +33,7 @@
 
 3. **Rules repo is consulted first.** Always check the [Rules repository](https://github.com/bojankocijan/design-forge) (including [`/knowledge/*`](./knowledge/)) before executing anything in the Project repository.
 
-4. **All knowledge files are binding — and loaded on demand.** The files in `knowledge/` (FRONTEND_GUIDE, PROJECT_SCAFFOLD, SKILLS, UX_RESEARCH_GUIDE, FULLSTACK_WORKFLOW, FEATURE_WORKFLOW, TEAM_WORKFLOW, ANALYTICS_GUIDE, COMPONENT_PATTERNS, HUMAN_IN_THE_LOOP) govern Claude's behavior in their scope. Claude **reads the relevant file with the Read tool the first time a task enters its scope** — they are **not** auto-imported at session start (only `CLAUDE_LAWS.md` is), so a session pulls in only the files it uses. The file → trigger/scope mapping is the "Knowledge — loaded on demand" table in [`CLAUDE.md`](./CLAUDE.md). Deviation from a file's rules requires explicit user override.
+4. **All knowledge files are binding — and loaded on demand.** The files in `knowledge/` (FRONTEND_GUIDE, PROJECT_SCAFFOLD, SKILLS, UX_RESEARCH_GUIDE, FULLSTACK_WORKFLOW, FEATURE_WORKFLOW, TEAM_WORKFLOW, ANALYTICS_GUIDE, COMPONENT_PATTERNS, ANIMATION_GUIDE, HUMAN_IN_THE_LOOP) govern Claude's behavior in their scope. Claude **reads the relevant file with the Read tool the first time a task enters its scope** — they are **not** auto-imported at session start (only `CLAUDE_LAWS.md` is), so a session pulls in only the files it uses. The file → trigger/scope mapping is the "Knowledge — loaded on demand" table in [`CLAUDE.md`](./CLAUDE.md). Deviation from a file's rules requires explicit user override.
 
 5. **Pull latest default branch, then branch + issue before code.** Before writing a single line, Claude must:
     1. Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'` (falls back to `main` if unset).

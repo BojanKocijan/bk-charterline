@@ -127,7 +127,7 @@ Design Forge has three layers:
 │  Frontend · Backend · Lead · Tester             │
 │  Fullstack · Design · Research · Analyst        │
 ├─────────────────────────────────────────────────┤
-│  knowledge/ — 10 binding guides                  │
+│  knowledge/ — 11 binding guides                  │
 │  (loaded on demand per task scope)              │
 ├─────────────────────────────────────────────────┤
 │  skills/ — 17 reusable skill definitions        │
@@ -169,6 +169,7 @@ Eight specialized agents compose into a single pipeline. `install.sh` links each
 |---|---|
 | `FRONTEND_GUIDE.md` | React, components, styling, TypeScript, a11y |
 | `COMPONENT_PATTERNS.md` | Shared component patterns and refactoring |
+| `ANIMATION_GUIDE.md` | Animation, transitions, morphs, celebrations, reduced motion, measuring and testing motion |
 | `PROJECT_SCAFFOLD.md` | New project scaffolding (Vite + React + TS) |
 | `FULLSTACK_WORKFLOW.md` | Production PR flow (10 phases) |
 | `TEAM_WORKFLOW.md` | Multi-agent team pipeline |
@@ -311,9 +312,10 @@ design-forge/
 │   ├── research.md
 │   ├── analyst.md
 │   └── fullstack.md
-├── knowledge/                   # 10 binding guides (loaded on demand)
+├── knowledge/                   # 11 binding guides (loaded on demand)
 │   ├── FRONTEND_GUIDE.md
 │   ├── COMPONENT_PATTERNS.md
+│   ├── ANIMATION_GUIDE.md
 │   ├── PROJECT_SCAFFOLD.md
 │   ├── FULLSTACK_WORKFLOW.md
 │   ├── TEAM_WORKFLOW.md

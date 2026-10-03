@@ -2,6 +2,15 @@
 
 ---
 
+## v2.19.0 — October 3, 2026
+
+### New knowledge: `ANIMATION_GUIDE.md`
+- A new binding guide, loaded on demand when a task adds or changes an animation, transition, morph, celebration or motion effect. It is listed in Law 4 and in the on-demand table of `CLAUDE.md`, and in the README.
+- Content, from the fluid game-like UI of a real project and generalised: principles (specific effects, content first, never a screen-filling start), one motion library and one token file, what may animate (transform and opacity, with listed exceptions), reduced motion, screen transitions (a relative offset, not a transform, because a transformed ancestor breaks fixed children), the tile morph (one animation per property), entrances and fills, per-step effects, arena-style introductions (compose arrival with scroll on one element so a blend mode survives), celebrations, the faux-bold "doubled number" on iOS, measuring (CPU-throttled long tasks, layout shift, profile, reuse before warm-up) and testing (the happy-dom unhandled-error gotcha that fails a build while every test passes).
+- Law 4 lists the new file; the Laws, `plugin.json` and `marketplace.json` are at 2.19.0.
+
+---
+
 ## v2.18.1 — October 3, 2026
 
 ### License — all rights reserved, contributions welcome
