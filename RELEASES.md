@@ -2,6 +2,18 @@
 
 ---
 
+## v2.19.1 — October 3, 2026
+
+### License — GPL-3.0
+- `LICENSE` is now the GNU General Public License v3.0. Use it for personal or commercial projects; if you modify it and share your version, publish your changes under the same license
+- `CONTRIBUTING.md` rewritten: contributions are licensed under GPL-3.0, and the earlier relicensing clause is gone
+- README license section and badge, and the `license` field in `plugin.json` and `marketplace.json` (`GPL-3.0-only`), updated to match
+- Law 27's directory-submission gate now says "an open source `LICENSE` present (GPL-3.0)" instead of requiring MIT
+- History: v2.18.0 and earlier were MIT, v2.18.1 was all rights reserved. Copies obtained under those keep their terms
+- Donations: `.github/FUNDING.yml` adds a Sponsor button on the repo, and the README has a Support section, both linking to PayPal
+
+---
+
 ## v2.19.0 — October 3, 2026
 
 ### New knowledge: `ANIMATION_GUIDE.md`
