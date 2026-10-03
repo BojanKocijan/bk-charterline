@@ -1,21 +1,50 @@
-MIT License
+Design Forge License
+All Rights Reserved. Contributions Welcome.
 
-Copyright (c) 2026 Bojan Kocijan
+Copyright (c) 2026 Bojan Kocijan. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. What you may do
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+   You may view this repository, and you may run it on your own machine for
+   the sole purpose of evaluating it or preparing a contribution to it.
+   You may submit contributions to the project through pull requests, as
+   described in CONTRIBUTING.md.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+2. What you may not do without written permission
+
+   Without prior written permission from the copyright holder, you may not
+   copy, modify (other than to prepare a contribution), publish, distribute,
+   sublicense, sell, host, or otherwise make available this repository or any
+   part of it. You may not use it, or any part of it, in your own products,
+   services, templates, plugins, or training or fine-tuning data. You may not
+   remove or alter any copyright or license notice.
+
+3. Contributions
+
+   By submitting a contribution, you confirm that you wrote it or have the
+   right to submit it. You keep the copyright in your contribution. You grant
+   Bojan Kocijan a perpetual, worldwide, non-exclusive, royalty-free,
+   irrevocable license to use, reproduce, modify, distribute, sublicense and
+   relicense your contribution as part of this project or any other work,
+   under any license.
+
+4. Earlier versions
+
+   Versions of this project released before v2.18.1 were published under the
+   MIT License. Copies of those versions that you already obtained under the
+   MIT License remain under it. This license applies to v2.18.1 and all later
+   versions.
+
+5. No warranty
+
+   THE SOFTWARE AND DOCUMENTS IN THIS REPOSITORY ARE PROVIDED "AS IS",
+   WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+   LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+   PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE
+   LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THE USE OF
+   THIS REPOSITORY.
+
+6. Asking for permission
+
+   To request permission for anything not allowed above, contact Bojan Kocijan
+   through https://github.com/BojanKocijan.

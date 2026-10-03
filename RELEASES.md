@@ -2,6 +2,17 @@
 
 ---
 
+## v2.18.1 — October 3, 2026
+
+### License — all rights reserved, contributions welcome
+- `LICENSE` replaced: the project is no longer MIT. You may view it, run it locally to evaluate it, and contribute through pull requests. Copying, redistributing or reusing it needs written permission
+- New `CONTRIBUTING.md` with the contribution terms and the pull request steps
+- README license section and badge, and the `license` field in `plugin.json` and `marketplace.json`, updated to match
+- Versions before v2.18.1 stay under MIT for copies already obtained
+- Open: Law 27's directory-submission gate still says "MIT `LICENSE` present"; it needs a decision from the owner
+
+---
+
 ## v2.18.0 — October 2, 2026
 
 ### Install registers the agents and skills
