@@ -20,6 +20,7 @@ Per Law 4, Claude **reads** the relevant knowledge file with the Read tool the f
 |---|---|
 | [`knowledge/FRONTEND_GUIDE.md`](./knowledge/FRONTEND_GUIDE.md) | any React/UI work begins |
 | [`knowledge/COMPONENT_PATTERNS.md`](./knowledge/COMPONENT_PATTERNS.md) | building/refactoring a component or shared pattern |
+| [`knowledge/ANIMATION_GUIDE.md`](./knowledge/ANIMATION_GUIDE.md) | adding or changing any animation, transition, morph, celebration or motion effect, or reduced-motion handling |
 | `knowledge/PATTERNS.md` ([example](./knowledge/PATTERNS.example.md)) | fixing a bug or building a pattern that looks reusable across your other registered projects (Law 36) |
 | [`knowledge/PROJECT_SCAFFOLD.md`](./knowledge/PROJECT_SCAFFOLD.md) | `new project` |
 | [`knowledge/FULLSTACK_WORKFLOW.md`](./knowledge/FULLSTACK_WORKFLOW.md) | `fullstack mode` / `backend mode` / `tester mode`, or any production PR |
