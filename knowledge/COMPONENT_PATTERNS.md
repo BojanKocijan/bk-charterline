@@ -1,7 +1,7 @@
 # Component Patterns — Design Forge
 
-**Version:** 1.5.0
-**Last Updated:** 2026-06-16
+**Version:** 1.6.0
+**Last Updated:** 2026-10-03
 **Binding:** Yes — these patterns represent validated, reusable solutions established across projects. Apply them before building from scratch.
 
 > **Domain-agnostic.** The patterns here are universal. Code examples use a generic CRUD domain (entities like `Customer`, `Order`, `Invoice`, `Task`) **purely as illustration** — substitute your project's own entities. Nothing in this file is tied to a specific project; project-specific component inventories live in that project's `PROJECT_KNOWLEDGE.md §3`, never here.
@@ -208,6 +208,8 @@ For apps used on the go — in the field, on-site, or one-handed on a phone:
 | Avatar (cards) | 48px |
 | Avatar (list rows) | 32-40px |
 | Page padding | px-5 (20px) |
+
+See also §21 for the phone sizes validated since (48 px header controls, 56 px sheet rows) and §20 for menus and dialogs as bottom sheets.
 
 ---
 
@@ -661,7 +663,123 @@ Transitions that are computed (like `overdue`) must never be stored — derive t
 
 ---
 
+## 20. Dialogs and menus become bottom sheets on phones — change the shared wrapper, not the call sites
+
+Thumbs reach the bottom of a phone, not the top. A centred dialog or a dropdown that floats under a header button is the
+wrong shape for one-handed use. Make **every** dialog and menu a bottom sheet below the `sm` breakpoint (640 px) by changing
+the **one shared wrapper** each already goes through, so no screen is edited and none can forget. From `sm` up they are
+unchanged. (Complements §1: §1 chooses Dialog or Sheet per form at the desktop breakpoint; this is the project-wide default.)
+
+### Dialogs
+- The dialog content is **one element whose classes switch at `sm`** (CSS only, no remount), so a rotation never loses form
+  state. Phone: `inset-x-0 bottom-0`, `rounded-t-2xl`, `max-sm:max-h-[90dvh]`, `overflow-y-auto`, slide up/down, bottom
+  padding `max(1rem, env(safe-area-inset-bottom))`. From `sm`: the centred box, with the same zoom animation as before.
+- A **grab handle** (phone only) that drags down to close; only the handle drags, so scrolling content is never taken for
+  a swipe. The swipe presses the real close button, so the normal close path (and any "discard changes?" guard) still runs.
+- The footer (Cancel, Save) is **sticky** to the bottom of the sheet so a long form never hides Save.
+- A `layout="centered"` prop keeps the box on phones for the rare dialog that is not a form to dismiss (a sign-in card).
+- Use `max-sm:` for the phone-only height cap, so a dialog's own `max-h` still rules from `sm` up.
+
+### Menus
+- A Radix dropdown positions itself with **inline styles** and cannot be restyled into a sheet. So the menu wrapper chooses
+  its branch from a context: on a phone `Menu`, `Trigger`, `Content`, `Item`, `RadioGroup`, `RadioItem`, `Label` and
+  `Separator` render the dialog sheet above, with plain buttons for rows; otherwise the Radix dropdown. The menus that use
+  the wrapper are written once and are not edited (except for a `sheetTitle` for screen readers).
+- The branch comes from a `useIsPhone()` hook (`matchMedia('(max-width: 639px)')` through `useSyncExternalStore`). The usual
+  test stub of `matchMedia` never matches, so existing tests keep running the desktop path unchanged.
+- **Keep the roles** (`menuitem`, `menuitemradio`, `aria-checked`) so tests and end-to-end selectors written against the
+  dropdown still work. A row calls `onClick`, then `onSelect` with a cancelable event, and closes unless a handler calls
+  `preventDefault()` — the same contract as Radix.
+- Rows are at least **56 px** tall (§21). Sub-menus, checkbox items and shortcuts need no phone version until something uses
+  them; say so in a comment rather than building them.
+
+**Verify** by measuring in a real browser at 390 px and 1440 px (the sheet's bottom gap is 0 and its rows are 56 px; at
+desktop width it is still the dropdown), then on a real phone — the on-screen keyboard is the risk for any sheet with inputs.
+
+---
+
+## 21. Touch targets and the thumb zone (extends §10)
+
+44 px is the usual minimum and was **not enough** to the people using a phone in the field. Measure real sizes; do not trust
+class names (a flex shrink can undercut a `size-11`).
+
+| Element | Phone size |
+|---|---|
+| Header controls (menu, theme, account buttons) | 48 × 48 px, 22 px icon, at least 8 px apart |
+| Menu and list rows in a sheet | at least 56 px tall, 16 px text, the whole row tappable |
+| Primary actions | 48 px tall |
+
+- Size up with a `max-sm:` class on top of the desktop class, so desktop is untouched.
+- A control floating over imagery (a back or edit button over a hero) is sized by its design; change it only when asked.
+- Check by `getBoundingClientRect()` in a real browser at phone width, for every control in the row, and at 360 px for fit.
+
+---
+
+## 22. One top bar for many screens — props, not forks
+
+When two roles (a trainer and a parent) need the same bar with different labels, icons and actions, build **one** bar with
+optional props, never a copy. The copy drifts; the prop stays in step.
+
+- `onClose` is optional (nothing to go back to), with `closeLabel` and `closeIcon`; `onEdit` with `editLabel` and `editIcon`;
+  each defaults to the original screen's label and icon, so the original screen passes nothing and does not change.
+- `placement`: **fixed** over the content (a screen with no app header), or **sticky** as a **zero-height strip** (the bar
+  absolutely positioned inside it) for a screen that sits under an app header. A row in the page flow pushes the picture down
+  and is not the same look; a fixed bar covers the header's menus. The zero-height sticky strip floats over the content like
+  the fixed one, starts below the header, and sticks to the top when the page scrolls.
+- The compact identity (small face and name) fades in on scroll in both.
+
+---
+
+## 23. One editor for several roles — a `restrictTo` prop
+
+A role that may change only some fields (a parent, who may recolour but not rename) uses the **same editor** as the full
+role, restricted by a prop. The restriction is a UI convenience; **the server is the authority** and re-checks every write.
+
+- `restrictTo="parent"` limits the categories shown, makes the name read-only, and hides everything else; a short line
+  names what to ask the trainer for.
+- Save sends **only the fields that differ** from the original (a diff), in one request; **nothing changed means close without
+  a request**. A field cleared to empty is a change (`null`), not "leave it".
+- Map the server's refusals to typed errors the screen understands: too many requests (429) keeps the editor open with a
+  plain message; not allowed or no longer editable (403, 409) closes it, hides the entry button and says so.
+- Apply the server's **answer** at once (a local override over the loaded record), without waiting for a reload; then the
+  saved moment; then any warning the server returned ("another player has this number").
+- The same endpoint serves the undo for the owner: send the previous values in one request, as that role.
+
+---
+
+## 24. Every request has a time limit
+
+A lost or very late reply must never leave a dialog on "Saving…" for ever: the work may already be done and the user cannot
+tell, cannot close it and cannot retry.
+
+- The one request helper aborts after a fixed time (20 s, a little under the hosting function's own limit) with an
+  `AbortController` whose timer covers reading the body and is always cleared. The error carries `timedOut: true` and a plain
+  message; an ordinary failure does not.
+- A caller that **changed** something treats a timeout as "unknown": reload what it shows, say "it may have saved", and leave
+  the form open and closable. A caller that only read shows the message with a retry.
+- Test it with fake timers and a fetch that only ends when aborted; check a normal failure is not reported as a timeout and
+  the timer is cleared.
+
+---
+
+## 25. Cache derived render work that two screens share
+
+When a list tile and its detail screen draw the **same derived result** from the same inputs (a recoloured image in the same
+colours, a computed layout), the detail screen repeating the work is the cost. Find it with a CPU profile before guessing
+(the animation guide, §10): in the project it was one per-pixel function, not the animation, and "warming" on tap would not
+have helped because the earlier screen had already done the analysis.
+
+- Memoize the **derived output** in a small **LRU** keyed by every input (the source, the layout boxes and each colour), most
+  recently used last; cap it by memory (entries of about 2 MB: 16 entries).
+- Reuse the **same buffer** wherever it is only read, and draw it with the cheap call; never mutate a cached result.
+- Test: the same inputs return the same object; each different input is a different entry; the least recently used is dropped
+  first; the result equals the uncached computation.
+
+---
+
 ## Changelog
+
+- **1.6.0 (2026-10-03)** — Added Patterns 20–25, validated in a real mobile-first project: dialogs and menus as bottom sheets on phones by changing the shared wrapper (§20), touch targets and the thumb zone (48 px header controls, 56 px rows; §21), one top bar for many screens with a fixed or zero-height sticky placement (§22), one editor for several roles through a `restrictTo` prop (§23), a time limit on every request (§24) and caching derived render work two screens share (§25).
 
 - **1.5.0 (2026-06-16)** — Universalized the file: examples reframed as a generic CRUD domain (illustrative, domain-agnostic), removed the project-specific component inventories (they belong in each project's `PROJECT_KNOWLEDGE.md §3`), and genericized provenance. No pattern changed.
 

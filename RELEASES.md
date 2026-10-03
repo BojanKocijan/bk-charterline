@@ -2,6 +2,15 @@
 
 ---
 
+## v2.20.0 — October 3, 2026
+
+### New patterns in `COMPONENT_PATTERNS.md` (v1.6.0) and a rule in `ANIMATION_GUIDE.md` (v1.1.0)
+- **§20** dialogs and menus become bottom sheets on phones by changing the shared wrapper (a dialog switches by CSS at 640 px with no remount; a menu picks a dialog-based sheet from a context and keeps its roles); **§21** touch targets and the thumb zone (48 px header controls, 56 px sheet rows, measured, not assumed); **§22** one top bar for many screens through props, with a fixed or zero-height sticky placement; **§23** one editor for several roles through a `restrictTo` prop (send only changed fields, typed errors, the server is the authority); **§24** a time limit on every request; **§25** cache derived render work that two screens share (a small LRU, after profiling).
+- **Animation guide §2.1, switchable by design:** one preference module (`motion` and `haptics`, each system, on or off), a `data-motion="off"` root attribute, a `no-motion:` variant and one haptics helper, so animations and haptics can be made user-toggleable later without touching components.
+- The Laws, `plugin.json` and `marketplace.json` are at 2.20.0.
+
+---
+
 ## v2.19.1 — October 3, 2026
 
 ### License — GPL-3.0

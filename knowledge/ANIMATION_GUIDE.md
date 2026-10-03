@@ -1,6 +1,6 @@
 # Animation Guide — Design Forge
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Last Updated:** 2026-10-03
 **Binding:** Yes — apply these rules to every animation, transition, celebration and motion effect. They were validated in a real project (a mobile-first React app given a fluid, game-like look), by measuring in a real browser and on a phone, not by taste alone.
 
@@ -24,6 +24,23 @@
 - **One token file** holds every duration, spring, distance and stagger (`SPRING_SOFT`, `SPRING_SNAPPY`, a slide distance, a stagger, a maximum number of staggered items). Nothing invents its own value; a new value goes into the file first.
 - **A single root** (`MotionRoot`) sets the library's reduced-motion handling to follow the user's setting for every component beneath it.
 - Past about **8 children nothing extra animates**, so a big list never plays a long cascade.
+
+### 2.1 Switchable by design
+
+Animations and haptics **must be switchable by the user later** (a setting), even if the setting screen is not built yet.
+Route both through **one switch point** from the first line, so adding the toggle never means editing components:
+
+- One preference module with `motion` and `haptics`, each `system` (follow the phone, the default), `on` or `off`, saved on the
+  device. It is the **only** place that reads the phone's reduced-motion media query. A device comfort setting holds no
+  personal data, so it survives sign-out.
+- When motion is off (the preference says off, or it says system and the phone asks for reduced motion) it sets a
+  `data-motion="off"` attribute on the root element. The motion library's root reads it and switches to "always reduce".
+- All CSS animations use **one custom variant** (for example `no-motion:`) that matches the reduced-motion media query **or**
+  that attribute, so each animation class has a `no-motion:` pair and a switch from inside the app disables it exactly like
+  the phone setting.
+- Haptics go through one helper that asks the same module (`navigator.vibrate` where it exists; iPhone has none) and never
+  throws.
+- Never read the reduced-motion media query in a component.
 
 ## 3. What may animate
 
@@ -126,6 +143,7 @@ Do this before claiming a screen is smooth, and again after any change to its la
 
 - [ ] Only `transform` and `opacity` (plus the listed exceptions); values come from the token file.
 - [ ] Reduced motion: final state, no sequence, content in the accessibility tree.
+- [ ] Routed through the one switch point (§2.1): a `no-motion:` pair on every CSS animation, haptics through the helper.
 - [ ] No wrapper around an element that uses a blend mode; no start state that fills the screen.
 - [ ] An old and a new element never overlap; entrances play once, on a user-initiated entry only.
 - [ ] Measured: no task over 50 ms, layout shift 0, API instant and delayed.
@@ -135,5 +153,7 @@ Do this before claiming a screen is smooth, and again after any change to its la
 ---
 
 ## Changelog
+
+- **1.1.0 (2026-10-03)** — Added §2.1 Switchable by design: one preference module, a root attribute, a custom `no-motion:` variant and one haptics helper, so animations and haptics can be made user-toggleable later without touching components.
 
 - **1.0.0 (2026-10-03)** — Initial version, from the fluid, game-like UI work of a real project: principles, one library and token file, what may animate, reduced motion, screen transitions, tile morph, entrances and fills, per-step effects, introductions, celebrations, faux-bold typography, measuring, testing (including the unhandled-error gotcha that fails a build) and a PR checklist.
