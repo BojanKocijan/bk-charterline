@@ -1,6 +1,6 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.18.0-blue?style=flat-square" alt="Version" />
-  <img src="https://img.shields.io/github/license/BojanKocijan/design-forge?style=flat-square" alt="License" />
+  <img src="https://img.shields.io/badge/version-2.18.1-blue?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/license-all_rights_reserved-lightgrey?style=flat-square" alt="License: all rights reserved" />
   <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/design-forge/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
   <img src="https://img.shields.io/badge/laws-37-orange?style=flat-square" alt="37 Laws" />
@@ -58,7 +58,7 @@ curl -fsSL https://raw.githubusercontent.com/BojanKocijan/design-forge/main/inst
 Open any Claude Code session. You should see:
 
 ```
-Rules loaded: DESIGN_FORGE v2.18.0
+Rules loaded: DESIGN_FORGE v2.18.1
 Project: <your-repo>
 Persona: Frontend
 GitHub: <your-username>
@@ -335,7 +335,7 @@ design-forge/
 
 ## Contributing
 
-Issues and PRs are welcome. All contributions follow the project's own laws:
+Issues and PRs are welcome. Read [`CONTRIBUTING.md`](./CONTRIBUTING.md) first. All contributions follow the project's own laws:
 
 1. Branch + issue before code (Law 5)
 2. Conventional Commits (Law 13)
@@ -349,4 +349,6 @@ See [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) for the full governance framework.
 
 ## License
 
-[MIT](./LICENSE) &copy; Bojan Kocijan
+All rights reserved. &copy; Bojan Kocijan. You may view the project and contribute through pull requests, but you may not copy or reuse it without written permission. See [LICENSE](./LICENSE) and [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+Versions before v2.18.1 were published under the MIT License; copies already obtained under MIT stay under MIT.
