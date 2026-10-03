@@ -1,6 +1,6 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.18.1-blue?style=flat-square" alt="Version" />
-  <img src="https://img.shields.io/badge/license-all_rights_reserved-lightgrey?style=flat-square" alt="License: all rights reserved" />
+  <img src="https://img.shields.io/badge/version-2.19.1-blue?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License: GPL-3.0" />
   <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/design-forge/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
   <img src="https://img.shields.io/badge/laws-37-orange?style=flat-square" alt="37 Laws" />
@@ -58,7 +58,7 @@ curl -fsSL https://raw.githubusercontent.com/BojanKocijan/design-forge/main/inst
 Open any Claude Code session. You should see:
 
 ```
-Rules loaded: DESIGN_FORGE v2.18.1
+Rules loaded: DESIGN_FORGE v2.19.1
 Project: <your-repo>
 Persona: Frontend
 GitHub: <your-username>
@@ -351,6 +351,6 @@ See [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) for the full governance framework.
 
 ## License
 
-All rights reserved. &copy; Bojan Kocijan. You may view the project and contribute through pull requests, but you may not copy or reuse it without written permission. See [LICENSE](./LICENSE) and [CONTRIBUTING.md](./CONTRIBUTING.md).
+[GPL-3.0](./LICENSE) &copy; Bojan Kocijan. Free to use for personal and commercial projects. If you modify it and share your version, you must publish your changes under the same license. See [CONTRIBUTING.md](./CONTRIBUTING.md) to send your improvements back.
 
-Versions before v2.18.1 were published under the MIT License; copies already obtained under MIT stay under MIT.
+Version 2.18.0 and earlier were published under the MIT License, and version 2.18.1 under an all-rights-reserved license. Copies obtained under those licenses keep their terms.

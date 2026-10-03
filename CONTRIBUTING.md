@@ -1,16 +1,20 @@
 # Contributing to Design Forge
 
-Contributions are welcome. This repository is not open source. Read the [LICENSE](./LICENSE) first: you may contribute, but you may not copy or reuse the project without written permission.
+Contributions are welcome. Design Forge is free software under the [GNU General Public License v3.0](./LICENSE).
 
 ## Contribution terms
 
 By opening a pull request you agree that:
 
 - You wrote the contribution or have the right to submit it.
-- You keep the copyright in it.
-- You grant Bojan Kocijan the license described in section 3 of the [LICENSE](./LICENSE), so the contribution can be used in this project and elsewhere.
+- Your contribution is licensed under the same GPL-3.0 license as the rest of the project.
+- You keep the copyright in your contribution.
 
 If you do not agree, please do not submit a contribution.
+
+## Using Design Forge in your own work
+
+You may use it for personal and commercial projects. If you modify it and share your version, you must publish your changes under GPL-3.0 as well and keep the copyright notices. Sending your improvements back as a pull request is the easiest way to do that, and very welcome.
 
 ## How to contribute
 

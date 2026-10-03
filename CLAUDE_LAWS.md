@@ -1,6 +1,6 @@
 # Master Claude Laws — Design Forge
 
-**Version:** 2.19.0
+**Version:** 2.19.1
 **Last Updated:** 2026-10-03
 **Rules Repo:** https://github.com/bojankocijan/design-forge
 **Inspired by:** Asimov's Three Laws of Robotics
@@ -213,7 +213,7 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
     - **Marketplace:** `.claude-plugin/marketplace.json` lists this plugin with `source: "./"` so the repo is installable via `/plugin marketplace add <owner>/<repo>`.
     - **Component layout:** skills live in `skills/<name>/SKILL.md`; agents in `agents/`; (commands/, hooks/ if added) — all at the **plugin root**, never inside `.claude-plugin/`. Every `SKILL.md` has `name` + `description` frontmatter.
     - **Version sync on every release:** when bumping the version, update **all four** in the same PR — `plugin.json`, `marketplace.json`, the `CLAUDE_LAWS.md` header, and `RELEASES.md` — and tag the git release to match.
-    - **Quality + security gate (for official directory submission):** MIT `LICENSE` present, professional `README.md`, no secrets in the repo or history (Law 14), no personal data shipped (`projects.yaml` gitignored), CI green. Submit to `anthropics/claude-plugins-official` only when these hold.
+    - **Quality + security gate (for official directory submission):** an open source `LICENSE` present (GPL-3.0), professional `README.md`, no secrets in the repo or history (Law 14), no personal data shipped (`projects.yaml` gitignored), CI green. Submit to `anthropics/claude-plugins-official` only when these hold.
 
 28. **Notify consuming sessions when a new rules version ships.** Design Forge loads globally — every project shares one `~/.design-forge` clone — so a single update reaches all consuming projects at once. At session start (Law 25 / the `CLAUDE.md` rules-update check), Claude compares the loaded version against the remote and, if a newer version exists, surfaces **one line** before proceeding:
 
