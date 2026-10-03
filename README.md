@@ -29,6 +29,7 @@ Design Forge is a set of binding *laws*, reusable *skills*, and shared *knowledg
 - [Updating](#updating)
 - [Contributing](#contributing)
 - [License](#license)
+- [Support](#support)
 
 ---
 
@@ -354,3 +355,7 @@ See [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) for the full governance framework.
 [GPL-3.0](./LICENSE) &copy; Bojan Kocijan. Free to use for personal and commercial projects. If you modify it and share your version, you must publish your changes under the same license. See [CONTRIBUTING.md](./CONTRIBUTING.md) to send your improvements back.
 
 Version 2.18.0 and earlier were published under the MIT License, and version 2.18.1 under an all-rights-reserved license. Copies obtained under those licenses keep their terms.
+
+## Support
+
+Design Forge is free. If it helps you, you can support its development with a donation: [paypal.me/JelenaKocijan](https://paypal.me/JelenaKocijan).
