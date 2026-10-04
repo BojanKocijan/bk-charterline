@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -73,6 +74,7 @@ class WorkingDirectoryTests(unittest.TestCase):
         return subprocess.run(
             [sys.executable, HOOK], input=json.dumps(payload),
             capture_output=True, text=True, cwd=process_cwd,
+            env=env_with_home(self.tmp.name),
         )
 
     def assertAllowed(self, result: subprocess.CompletedProcess) -> None:
@@ -132,6 +134,7 @@ class CommitMessageTests(unittest.TestCase):
         return subprocess.run(
             [sys.executable, HOOK], input=json.dumps(payload),
             capture_output=True, text=True, cwd=self.tmp.name,
+            env=env_with_home(self.tmp.name),
         )
 
     def assertAllowed(self, command: str) -> None:
@@ -300,6 +303,72 @@ class HookLogTests(unittest.TestCase):
         self.assertNotIn("merge", out)
         self.assertIn("Total: 3 blocks, 1 marked false positive.", out)
         self.assertIn("heredoc", out)
+
+
+class BlockLogWiringTests(unittest.TestCase):
+    """The hook writes a block-log line, and logging never changes the
+    decision (#113)."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.home = os.path.join(self.tmp.name, "home")
+        os.makedirs(self.home)
+        self.main_repo = os.path.join(self.tmp.name, "main-repo")
+        self.feat_repo = os.path.join(self.tmp.name, "feat-repo")
+        make_repo(self.main_repo, "main")
+        make_repo(self.feat_repo, "feat/x")
+        self.log = os.path.join(self.home, ".design-forge", "hook-log.jsonl")
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def run_hook(self, command: str, cwd: str, hook: str = HOOK) -> subprocess.CompletedProcess:
+        payload = {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": cwd}
+        return subprocess.run(
+            [sys.executable, hook], input=json.dumps(payload),
+            capture_output=True, text=True, cwd=cwd, env=env_with_home(self.home),
+        )
+
+    def test_block_writes_one_line(self) -> None:
+        result = self.run_hook('git commit -m "fix: x"', self.main_repo)
+        self.assertEqual(result.returncode, 2, result.stderr)
+        with open(self.log) as f:
+            [record] = [json.loads(line) for line in f]
+        self.assertEqual((record["law"], record["check"], record["branch"]),
+                         (5, "commit-on-default", "main"))
+        self.assertEqual(os.path.realpath(record["cwd"]), os.path.realpath(self.main_repo))
+
+    def test_allowed_call_writes_nothing(self) -> None:
+        self.assertEqual(self.run_hook('git commit -m "fix: x"', self.feat_repo).returncode, 0)
+        self.assertFalse(os.path.exists(self.log))
+
+    def test_commit_message_is_not_logged(self) -> None:
+        result = self.run_hook('git commit -m "secret-marker-xyz"', self.feat_repo)
+        self.assertEqual(result.returncode, 2, result.stderr)
+        with open(self.log) as f:
+            log = f.read()
+        self.assertIn('"check": "commit-message"', log)
+        self.assertNotIn("secret-marker-xyz", log)
+
+    def test_unwritable_log_still_blocks(self) -> None:
+        with open(os.path.join(self.home, ".design-forge"), "w") as f:
+            f.write("not a folder")
+        result = self.run_hook('git commit -m "fix: x"', self.main_repo)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("Blocked (Law 5)", result.stderr)
+
+    def test_missing_module_still_blocks(self) -> None:
+        lone = os.path.join(self.tmp.name, "lone")
+        os.makedirs(lone)
+        shutil.copy(HOOK, lone)
+        result = self.run_hook('git commit -m "fix: x"', self.main_repo,
+                               os.path.join(lone, "enforce-laws.py"))
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("Blocked (Law 5)", result.stderr)
+
+    def test_hook_leaves_no_bytecode_next_to_it(self) -> None:
+        self.run_hook('git commit -m "fix: x"', self.main_repo)
+        self.assertFalse(os.path.exists(os.path.join(HOOKS_DIR, "__pycache__")))
 
 
 if __name__ == "__main__":

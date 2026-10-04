@@ -2,6 +2,17 @@
 
 ---
 
+## v2.22.0 — October 5, 2026
+
+### Law 32 hook keeps a block log ([#113](https://github.com/BojanKocijan/design-forge/issues/113))
+- **New:** every block appends one line to `~/.design-forge/hook-log.jsonl`: law, check id, repo, branch and a hash of the command. It never stores the command, the commit message or the reason.
+- **`hook log`** trigger: blocks per law and check for the last 30 days, plus false positives. When you say a block was wrong, Claude marks it with `hook_log.py --false-positive` and offers a bug issue.
+- The log rotates at 1 MB to `hook-log.1.jsonl` and uses a lock file with a 200 ms limit, so concurrent sessions never interleave lines. The code lives in the new `.claude/hooks/hook_log.py`; if that file is missing or the log can't be written, the hook still blocks as before.
+- Tests in `tests/test_enforce_laws.py` now run with a temporary `HOME`, so they never write to your real log.
+- The Laws, `plugin.json` and `marketplace.json` are at 2.22.0.
+
+---
+
 ## v2.21.4 — October 5, 2026
 
 ### Context-menu card pattern works by keyboard ([#124](https://github.com/BojanKocijan/design-forge/issues/124))
