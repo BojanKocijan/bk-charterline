@@ -282,7 +282,18 @@ Design Forge assigns each project a **locked localhost port** so running multipl
 cp projects.example.yaml projects.yaml
 ```
 
-Claude auto-registers new projects and locks the port in `vite.config.ts` with `strictPort: true`.
+Claude auto-registers new projects by adding an entry to this local file (no PR), and locks the port in `vite.config.ts` with `strictPort: true`.
+
+### Reply language
+
+On your first session, Claude asks once whether English should be the only language you communicate in, and saves the answer in the same file:
+
+```yaml
+settings:
+  language: english-only   # or: any
+```
+
+For professional work we recommend one language, so code, commits, PRs and docs stay consistent. Edit the value any time to change it.
 
 ---
 

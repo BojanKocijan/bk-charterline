@@ -2,6 +2,17 @@
 
 ---
 
+## v2.21.0 — October 4, 2026
+
+### Laws work for any plugin user ([#102](https://github.com/BojanKocijan/design-forge/issues/102))
+- **Law 1 — reply language is a setting.** Claude asks once, on the first session, whether English should be the only language (Yes) or any language is fine (No), recommends one language for professional work, and saves `settings.language` (`english-only` or `any`) in the local `projects.yaml`. `english-only` keeps the old refusal text word for word. "Prime Directives (Immutable)" is now "Prime Directives".
+- **Law 10 — GitHub Pages URL** uses the active `gh` login instead of a hardcoded username.
+- **Law 20 — registration is local.** Claude adds the entry to `projects.yaml` directly. The old issue → branch → PR flow is gone; it could never work because `projects.yaml` is gitignored.
+- `projects.example.yaml` gains a `settings:` block; README documents the reply-language setting.
+- The Laws, `plugin.json` and `marketplace.json` are at 2.21.0.
+
+---
+
 ## v2.20.0 — October 3, 2026
 
 ### New patterns in `COMPONENT_PATTERNS.md` (v1.6.0) and a rule in `ANIMATION_GUIDE.md` (v1.1.0)

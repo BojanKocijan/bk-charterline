@@ -1,17 +1,27 @@
 # Master Claude Laws — Design Forge
 
-**Version:** 2.20.0
-**Last Updated:** 2026-10-03
+**Version:** 2.21.0
+**Last Updated:** 2026-10-04
 **Rules Repo:** https://github.com/bojankocijan/design-forge
 **Inspired by:** Asimov's Three Laws of Robotics
 
 ---
 
-## Prime Directives (Immutable)
+## Prime Directives
 
-1. **English only.** Claude replies only in English. Claude does not translate. If the user writes in any other language, Claude responds:
-   > *"Please provide instructions in English only."*
-   and does nothing else until the user complies.
+1. **Reply language — one global setting.** At session start, Claude reads `settings.language` from `~/.design-forge/projects.yaml` (the same file Law 18 reads for the port).
+   - **`english-only`** — Claude replies only in English and does not translate. If the user writes in any other language, Claude responds:
+     > *"Please provide instructions in English only."*
+     and does nothing else until the user complies.
+   - **`any`** — Claude replies in the language the user writes in.
+   - **Not set** — Claude asks once, in English, before anything else:
+     > **Do you want English to be the only language we communicate in?**
+     > - **Yes** — English only
+     > - **No** — any language
+     >
+     > *For professional work we recommend one language, so code, commits, PRs and docs stay consistent.*
+
+     "Yes" saves `language: english-only`, "No" saves `language: any`, under `settings:` in `~/.design-forge/projects.yaml`. The answer applies to every project; Claude never asks again. If `projects.yaml` is missing, Claude copies `projects.example.yaml` to it first. If the file can't be parsed, Claude applies the answer for this session only, does not write the file, and tells the user why.
 
 2. **No code executes without disclosure.** Before running a single line, Claude must output the pre-execution announcement in this exact format:
 
@@ -91,7 +101,7 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
 
 10. **Every new project Claude builds ships with CI and tests.** Before any scaffold step, Claude runs `gh auth status` to verify authentication. Non-negotiable per project:
     - CI on every push + every PR: ESLint, `tsc --noEmit`, Vitest unit + component, `vitest-axe` accessibility, Playwright + `@axe-core/playwright` E2E smoke + full-page axe, and `vite build`.
-    - GitHub Pages preview published from `main` via GitHub Actions. No password — this is personal work. URL: `https://bojankocijan.github.io/<project-name>/`.
+    - GitHub Pages preview published from `main` via GitHub Actions. No password — this is personal work. URL: `https://<github-username>.github.io/<project-name>/`, where `<github-username>` is the active `gh` login (`gh api user -q .login`). If `gh` is not logged in, Claude asks the user to run `gh auth login --web` first and never guesses a username.
     - **Dependabot enabled** via `.github/dependabot.yml` — weekly update PRs for both `npm` and `github-actions` ecosystems, so the user gets dependency patches to review. Dependabot PRs run CI and are merged by the human (Law 7).
     - Claude never opens a PR with red CI; if `npm run ci` fails locally, Claude fixes it first.
 
@@ -153,12 +163,12 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
 
 19. **Design fidelity — only add elements explicitly present in the design.** When implementing from a Figma link or any design, never invent icons, color accents, borders, or other visual elements not present in the design. Source `iconId` from Figma before writing any icon reference. When in doubt, implement less.
 
-20. **Every project must be registered in `~/.design-forge/projects.yaml` (auto-registration).** At session start, Claude checks if the current project is in `projects.yaml`. If not, Claude **automatically**:
-    1. Opens an issue in `BojanKocijan/design-forge` titled `chore: register <project-name>` with a description including the project repo URL and a note that this is auto-registration.
-    2. Creates a branch `chore/register-<project-name>`, adds the project entry to `projects.yaml` with the next available port (increment from the highest port already in the file).
-    3. Commits with `chore: register <project-name> in projects.yaml` and pushes.
-    4. Opens a PR with a clear description, waits for user to merge.
-    5. After merge, runs `dforge-update` to pull the updated registry.
+20. **Every project must be registered in `~/.design-forge/projects.yaml` (auto-registration).** `projects.yaml` is local and gitignored, so registration is a local file edit — no issue, branch, commit, or PR. At session start, Claude checks if the current project is in `projects.yaml`. If not, Claude **automatically**:
+    1. If `projects.yaml` is missing, copies `projects.example.yaml` to `projects.yaml`.
+    2. Adds the project entry under `projects:` with the next available port (increment from the highest port already in the file; start at 5173 if there are none).
+    3. Reports it in one line, e.g. `Registered <project-name> on port 5174.`
+
+    If `projects.yaml` can't be parsed, Claude stops, tells the user, and does not overwrite the file.
 
     **`projects.yaml` entry format:**
     ```yaml

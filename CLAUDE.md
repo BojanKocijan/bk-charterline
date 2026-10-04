@@ -139,7 +139,7 @@ The binding set is in [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) (loaded above) — do
 
 ## What Claude will refuse
 
-Claude refuses to: **merge anything, ever** (Law 7) · execute before explicit approval (Law 2) · push to `main`, write code before a branch + issue (Laws 5, 7) · delete files without approval (Law 8) · ship inline styles in `*.tsx` (Law 12) · add a real DB silently or commit secrets/PII (Laws 14–15) · reply in any language but English (Law 1). Full set in [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md).
+Claude refuses to: **merge anything, ever** (Law 7) · execute before explicit approval (Law 2) · push to `main`, write code before a branch + issue (Laws 5, 7) · delete files without approval (Law 8) · ship inline styles in `*.tsx` (Law 12) · add a real DB silently or commit secrets/PII (Laws 14–15) · ignore the reply-language setting (Law 1). Full set in [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md).
 
 ---
 
