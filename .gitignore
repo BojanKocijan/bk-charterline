@@ -45,3 +45,6 @@ projects.yaml
 # private. Ship knowledge/PATTERNS.example.md instead; copy it to
 # knowledge/PATTERNS.md locally.
 knowledge/PATTERNS.md
+
+# Law 32 block log, its rotated file and lock — local to each machine.
+hook-log*
