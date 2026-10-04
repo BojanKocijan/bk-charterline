@@ -23,30 +23,30 @@ import subprocess
 import sys
 
 
-CD_RE = re.compile(r"(?:^|&&|;|\n)\s*cd\s+(\"[^\"]+\"|'[^']+'|\S+)")
+CD_RE = re.compile(r"(?:^|&&|\|\||;|\n)\s*cd\s+(\"[^\"]+\"|'[^']+'|[^\s;&|]+)")
 
 
-def resolve_cwd(command: str) -> str:
-    """Best-effort: the hook is invoked with whatever cwd the harness
-    reports *before* the proposed command runs, which may not match a
-    `cd` the command itself does first (e.g. `cd ~/foo && git push ...`
-    or `cd ~/foo` on its own line). Without this, every check below
-    would silently evaluate the wrong repo's branch — a correctness
-    bug, not just an edge case, since multi-line `cd`-then-`git`
-    scripts are the norm for this hook's own laws (branch + pull,
-    cleanup, etc). Falls back to the hook's actual cwd if no `cd` is
-    found or it can't be resolved.
+def resolve_cwd(command: str, base: str) -> str:
+    """Best-effort: `base` is the shell's cwd *before* the proposed
+    command runs, which may not match a `cd` the command itself does
+    first (e.g. `cd ~/foo && git push ...` or `cd ~/foo` on its own
+    line). Without this, every check below would silently evaluate the
+    wrong repo's branch — a correctness bug, not just an edge case,
+    since multi-line `cd`-then-`git` scripts are the norm for this
+    hook's own laws (branch + pull, cleanup, etc).
+
+    Walks every `cd` in order, each relative to the one before, and
+    skips any target that isn't a directory (`cd -`, a `cd` quoted in
+    a commit message). Pass heredoc-stripped text, so a `cd` inside a
+    message or PR body is never followed.
     """
-    here = os.getcwd()
-    matches = CD_RE.findall(command)
-    if not matches:
-        return here
-    target = matches[-1].strip("'\"")
-    target = os.path.expanduser(os.path.expandvars(target))
-    if not os.path.isabs(target):
-        target = os.path.join(here, target)
-    target = os.path.normpath(target)
-    return target if os.path.isdir(target) else here
+    cwd = base
+    for raw in CD_RE.findall(command):
+        target = os.path.expanduser(os.path.expandvars(raw.strip("'\"")))
+        target = os.path.normpath(os.path.join(cwd, target))
+        if os.path.isdir(target):
+            cwd = target
+    return cwd
 
 
 def default_branch(cwd: str) -> str:
@@ -209,7 +209,7 @@ def pr_body_has_screenshots_line(command: str) -> bool:
     return False
 
 
-def check_bash(command: str) -> None:
+def check_bash(command: str, base: str) -> None:
     cmd = command.strip()
     scan = strip_heredoc_bodies(cmd)
 
@@ -239,7 +239,7 @@ def check_bash(command: str) -> None:
     push_matches = list(PUSH_RE.finditer(scan))
 
     if is_commit or push_matches:
-        cwd = resolve_cwd(cmd)
+        cwd = resolve_cwd(scan, base)
         branch = current_branch(cwd)
         default = default_branch(cwd)
 
@@ -258,7 +258,7 @@ def check_bash(command: str) -> None:
                 )
 
     if is_commit:
-        cwd = resolve_cwd(cmd)
+        cwd = resolve_cwd(scan, base)
         msg = extract_commit_message(cmd)
         if msg is not None:
             first_line = msg.strip().splitlines()[0] if msg.strip() else ""
@@ -310,8 +310,15 @@ def main() -> None:
     if not isinstance(command, str) or not command.strip():
         return
 
+    # The Bash tool's cwd. The hook process itself may sit in another
+    # checkout (e.g. the main repo while the session runs in a worktree),
+    # and Claude Code drops a leading `cd <cwd> &&` before calling hooks.
+    base = payload.get("cwd")
+    if not isinstance(base, str) or not os.path.isdir(base):
+        base = os.getcwd()
+
     try:
-        check_bash(command)
+        check_bash(command, base)
     except SystemExit:
         raise
     except Exception:
