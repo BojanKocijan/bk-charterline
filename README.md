@@ -372,6 +372,8 @@ Version 2.18.0 and earlier were published under the MIT License, and version 2.1
 
 ## Support
 
-Design Forge is free and always will be. But here's the honest truth: my wife loves coffee. A lot. So much that I build side projects just to keep her cup full. ☕
+Design Forge is free. My wife's coffee is not. ☕
 
-If Design Forge saves you time, [buy her a coffee on Ko-fi](https://ko-fi.com/bojaforjelena). She'll appreciate it, and I'll get to keep building.
+If you're married, you already know how this works: a happy wife means a happy life, and in my house a happy wife means a full cup of coffee. We've been happily married for years, mostly thanks to a reliable coffee supply.
+
+If Design Forge saves you time, [buy her a coffee on Ko-fi](https://ko-fi.com/bojaforjelena) and help a fellow husband keep the peace.
