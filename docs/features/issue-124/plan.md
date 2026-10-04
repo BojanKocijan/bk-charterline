@@ -2,7 +2,7 @@
 
 Spec: [#124](https://github.com/BojanKocijan/design-forge/issues/124) (the issue is the spec) · Gate tier: Standard (changes a knowledge file) · Branch: `fix/card-pattern-keyboard` · Issue: #124
 Work pile: delegable (a reviewed text change, no code)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-05, chat
 
 ## Files to change
 
