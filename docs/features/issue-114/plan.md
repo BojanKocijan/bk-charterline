@@ -2,7 +2,16 @@
 
 Spec: [#114](https://github.com/BojanKocijan/design-forge/issues/114) (the issue is the spec) · Gate tier: Standard · Branch: `feat/ai-inventory` · Issue: #114 · Roadmap: #123
 Work pile: delegable (one stdlib script plus docs, verifiable with fixture tests)
-Approved-by: BojanKocijan, 2026-10-05, chat
+Approved-by: <pending> (revision 2; revision 1 approved by BojanKocijan, 2026-10-05, chat)
+
+## Revision 2 — why
+
+Built and measured: the script is 302 lines and its tests 173, so the script and tests alone are 475 lines. Revision 1's fallback split (script and tests first, then docs) would still go over the 400-line ceiling. The work is split by source instead, into two PRs that each ship something whole. Both target `main` and are stacked by commits.
+
+1. **PR A — core and MCP servers** (about 360 lines): the collector framework, Markdown output, first-seen state, **new** and **removed** marking, secret handling, and the MCP sources (user, local, project, desktop, extensions, `--session`). Tests: MCP and extension listing, no secrets in the output, empty home, broken file, idempotency, `--session` carry-over. No trigger yet.
+2. **PR B — remaining sources, trigger and release** (about 170 lines): plugins, skills, agents, hooks and permission rules, plus their tests; the `ai inventory` trigger rows, `.gitignore`, `RELEASES.md` and the version bump to v2.23.0.
+
+Nothing else in the plan changes.
 
 ## What was found on this machine
 
