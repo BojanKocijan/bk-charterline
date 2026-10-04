@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/design-forge/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
   <img src="https://img.shields.io/badge/laws-37-orange?style=flat-square" alt="37 Laws" />
-  <a href="https://paypal.me/JelenaKocijan"><img src="https://img.shields.io/badge/buy_her_a_coffee-PayPal-6f4e37?style=flat-square&logo=paypal" alt="Buy her a coffee via PayPal" /></a>
+  <a href="https://ko-fi.com/bojaforjelena"><img src="https://img.shields.io/badge/buy_her_a_coffee-Ko--fi-6f4e37?style=flat-square&logo=kofi" alt="Buy her a coffee on Ko-fi" /></a>
 </p>
 
 # Design Forge
@@ -363,4 +363,4 @@ Version 2.18.0 and earlier were published under the MIT License, and version 2.1
 
 Design Forge is free and always will be. But here's the honest truth: my wife loves coffee. A lot. So much that I build side projects just to keep her cup full. ☕
 
-If Design Forge saves you time, [buy her a coffee via PayPal](https://paypal.me/JelenaKocijan). She'll appreciate it, and I'll get to keep building.
+If Design Forge saves you time, [buy her a coffee on Ko-fi](https://ko-fi.com/bojaforjelena). She'll appreciate it, and I'll get to keep building.
