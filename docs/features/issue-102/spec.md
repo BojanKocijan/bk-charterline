@@ -2,7 +2,8 @@
 
 Intent: [#102](https://github.com/BojanKocijan/design-forge/issues/102)
 Design: none — no UI; this changes rules text, plugin packaging, and CI
-Approved-by: BojanKocijan, 2026-10-04, chat
+Approved-by: <pending>
+Revision 2026-10-04: Law 1 asks once when no language setting exists, instead of silently defaulting (owner request in chat). Previous approval: BojanKocijan, 2026-10-04, chat.
 
 ## Behavior
 
@@ -13,13 +14,21 @@ Approved-by: BojanKocijan, 2026-10-04, chat
 - `settings.language: english-only` → today's behavior, unchanged: Claude
   replies only in English and answers any other language with
   *"Please provide instructions in English only."*
-- Setting absent, `projects.yaml` missing, or the file can't be parsed →
-  Claude replies in the language the user writes in. This is the public
-  default.
+- `settings.language: any` → Claude replies in the language the user
+  writes in.
+- Setting absent → at session start Claude asks once, in English:
+  *"Do you want English to be the only language we communicate in?"*
+  "Yes" saves `language: english-only`, "no" saves `language: any`, in the
+  global `settings:` block of `~/.design-forge/projects.yaml`. The answer
+  applies to every project and Claude never asks again.
+- `projects.yaml` missing → Claude copies `projects.example.yaml` first, then
+  saves the answer (same as Law 20).
+- `projects.yaml` can't be parsed → Claude asks, applies the answer for this
+  session only, doesn't write the file, and tells the user why.
 - The "Prime Directives (Immutable)" heading is renamed so it no longer
   claims Law 1 cannot change. The other directives keep their wording.
 - `projects.example.yaml` documents the `settings:` block with
-  `language` commented out.
+  `language` commented out and both values explained.
 
 ### 2. GitHub Pages URL (Law 10)
 
@@ -61,9 +70,12 @@ Approved-by: BojanKocijan, 2026-10-04, chat
 
 ## Acceptance criteria
 
-- [ ] With `settings.language: english-only` in `projects.yaml`, a non-English
-      prompt gets the English-only refusal; without the setting, Claude
-      replies in the prompt's language.
+- [ ] With `settings.language: english-only`, a non-English prompt gets the
+      English-only refusal; with `language: any`, Claude replies in the
+      prompt's language.
+- [ ] With no `language` setting, the first session asks the English-only
+      question once, saves the answer to the global `settings:` block, and
+      later sessions don't ask again.
 - [ ] Every remaining `bojankocijan` hit in tracked files is a link to the
       Design Forge repo itself, author metadata in the plugin manifests, or
       history (`RELEASES.md`, `docs/features/`). None tells Claude to act on

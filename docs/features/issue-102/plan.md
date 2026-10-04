@@ -2,7 +2,8 @@
 
 Spec: [spec.md](./spec.md)   ·   Gate tier: Significant   ·   Branch: one per PR (below)   ·   Issue: #102
 Work pile: judgment-heavy for PR 1 (rewording binding laws); delegable for PRs 2–4 (specified, machine-verifiable)
-Approved-by: BojanKocijan, 2026-10-04, chat
+Approved-by: <pending>
+Revision 2026-10-04: Law 1 asks once when no language setting exists, instead of silently defaulting (owner request in chat). Previous approval: BojanKocijan, 2026-10-04, chat.
 
 The work ships as **4 stacked PRs**, opened one at a time. Each PR branches
 from an up-to-date `main` after the previous one merges. The spec planned 3;
@@ -15,10 +16,10 @@ It lands after PR 3 because its test needs PR 3's test setup.
 
 | File | Change |
 |---|---|
-| `CLAUDE_LAWS.md` | Heading "Prime Directives (Immutable)" → "Prime Directives". Law 1 → "Reply language": reads `settings.language` from `~/.design-forge/projects.yaml`; `english-only` keeps today's refusal text word for word; absent, missing or invalid file → reply in the user's language. Law 10 URL → `https://<github-username>.github.io/<project-name>/` with the username from `gh api user -q .login`; not logged in → ask for `gh auth login --web`, never guess. Law 20 → write the entry to the local `projects.yaml` (copy the example first if the file is missing; stop without writing if it can't be parsed), report the assigned port in one line; delete the issue/branch/commit/PR steps and step 5. Header version 2.21.0, date 2026-10-04. |
+| `CLAUDE_LAWS.md` | Heading "Prime Directives (Immutable)" → "Prime Directives". Law 1 → "Reply language": reads `settings.language` from `~/.design-forge/projects.yaml`; `english-only` keeps today's refusal text word for word; `any` → reply in the user's language; absent → ask once at session start (*"Do you want English to be the only language we communicate in?"*) and save `english-only` or `any` to the global `settings:` block (copy the example first if the file is missing; if it can't be parsed, apply for this session only and say so). Law 10 URL → `https://<github-username>.github.io/<project-name>/` with the username from `gh api user -q .login`; not logged in → ask for `gh auth login --web`, never guess. Law 20 → write the entry to the local `projects.yaml` (copy the example first if the file is missing; stop without writing if it can't be parsed), report the assigned port in one line; delete the issue/branch/commit/PR steps and step 5. Header version 2.21.0, date 2026-10-04. |
 | `CLAUDE.md` | "What Claude will refuse": `reply in any language but English (Law 1)` → `ignore the reply-language setting (Law 1)`. |
-| `projects.example.yaml` | Add a `settings:` block with `# language: english-only` and a one-line explanation. Header comment: replace the "issue → branch → … → PR" description with "Claude adds the entry locally". |
-| `README.md` | "Project registry": registration is local, with no PR. New short "Reply language" note under it showing the `settings.language` line. |
+| `projects.example.yaml` | Add a `settings:` block with `# language: english-only   # or: any` and a one-line note that Claude asks and fills this in. Header comment: replace the "issue → branch → … → PR" description with "Claude adds the entry locally". |
+| `README.md` | "Project registry": registration is local, with no PR. New short "Reply language" note under it: Claude asks once, and how to change the answer later. |
 | `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | Version 2.21.0. |
 | `RELEASES.md` | v2.21.0 entry. |
 
@@ -70,7 +71,7 @@ It lands after PR 3 because its test needs PR 3's test setup.
 
 ## Risks
 
-- Your setup loses English-only after PR 1 merges and you run `update rules` → the PR 1 summary includes a deploy step: add `settings:\n  language: english-only` to `~/.design-forge/projects.yaml` (Law 35).
+- After PR 1 merges and you run `update rules`, your `projects.yaml` has no `language` setting yet → your first session asks the English-only question; answer "yes". The PR 1 deploy checklist names this step (Law 35).
 - This repo's own `.claude/settings.json` also registers the hook, and the dedupe only reads `~/.claude/settings.json` → a contributor who has the plugin but no install.sh, working inside this repo, gets two runs. It's harmless (same blocks) and limited to contributors, so it's accepted and noted in the README's Contributing section.
 - A plugin user who has neither install.sh nor `~/.claude/settings.json` → no global entry, so the plugin copy runs the checks. That's the intended behaviour.
 - Claude can't reliably "read" `settings.language` before every reply, because it's an instruction, not code → Law 1 says to read it at session start alongside `projects.yaml` (Law 18 already reads that file then), and the confirmation block gains no new line.
@@ -79,6 +80,8 @@ It lands after PR 3 because its test needs PR 3's test setup.
 ## Ruled out
 
 - **A separate `~/.design-forge/config.yaml` for settings.** It adds a second personal file. `projects.yaml` is already local, ignored by git, and read at session start.
+- **Silently replying in the user's language when no setting exists** (the first approved version of this plan). The owner preferred an explicit question, so nobody has to know the setting exists.
+- **Asking per project.** The owner chose one global answer for all projects.
 - **Detecting the user's language and staying English-only by default.** Public users would get a refusal on their first non-English message, which is a bad first impression for a directory listing.
 - **Keeping Law 20's PR flow but pointing it at the user's fork.** It still can't work, because `projects.yaml` is ignored by git, and it adds a GitHub step for a local file.
 - **Deduping with a lock file or environment variable shared between the two hook processes.** It needs cross-process timing. Checking for the global entry is stateless and easy to test.
