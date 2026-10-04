@@ -227,6 +227,7 @@ Eight specialized agents compose into a single pipeline. `install.sh` links each
 | `review queue` | Risk-sorted digest of open PRs awaiting your review |
 | `review cap <N>` / `review cap off` | Change the cap on AI PRs awaiting review (default 3) |
 | `skip gates` | Lower the gate tier for this change, with a reason |
+| `hook log` | Law 32 blocks per law for the last 30 days, including false positives |
 
 ---
 

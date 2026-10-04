@@ -253,9 +253,19 @@ def push_targets_default(push_args: str, current: str | None, default: str) -> b
     return current is not None and current == default
 
 
-def block(reason: str) -> None:
-    print(reason, file=sys.stderr)
-    sys.exit(2)
+class Blocked(Exception):
+    """Raised by a check to block the tool call. `check` is a fixed id
+    for the block log, so the log never has to store the reason text
+    (the Law 13 reason quotes the commit message)."""
+
+    def __init__(self, reason: str, check: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
+        self.check = check
+
+
+def block(reason: str, check: str) -> None:
+    raise Blocked(reason, check)
 
 
 HEREDOC_BODY_RE = re.compile(r"(<<-?\s*['\"]?(\w+)['\"]?\n)(.*?)(\n\2\b)", re.DOTALL)
@@ -306,12 +316,14 @@ def check_bash(command: str, base: str) -> None:
         block(
             "Blocked (Law 7): `gh pr merge` is never run by Claude, with or "
             "without flags. Merging the default branch is exclusively the "
-            "human's action in the GitHub UI."
+            "human's action in the GitHub UI.",
+            "merge",
         )
     if "mergePullRequest" in scan:
         block(
             "Blocked (Law 7): GraphQL `mergePullRequest` is a merge — "
-            "Claude never merges. Stop and let the human merge in the UI."
+            "Claude never merges. Stop and let the human merge in the UI.",
+            "graphql-merge",
         )
 
     # Law 34 — ask before creating PR screenshots; the body records the answer.
@@ -320,7 +332,8 @@ def check_bash(command: str, base: str) -> None:
             "Blocked (Law 34): ask the user \"Do you want e2e/screenshot images "
             "for this PR?\" first, then add one line to the PR body: "
             "`Screenshots: yes`, `Screenshots: skipped at the user's request` "
-            "or `Screenshots: not applicable`."
+            "or `Screenshots: not applicable`.",
+            "screenshots",
         )
 
     is_commit = bool(re.search(r"\bgit\s+commit\b", scan))
@@ -334,7 +347,8 @@ def check_bash(command: str, base: str) -> None:
         if is_commit and branch is not None and branch == default:
             block(
                 f"Blocked (Law 5): refusing to commit directly on "
-                f"`{default}`. Create a feature branch first."
+                f"`{default}`. Create a feature branch first.",
+                "commit-on-default",
             )
 
         for match in push_matches:
@@ -342,7 +356,8 @@ def check_bash(command: str, base: str) -> None:
                 block(
                     f"Blocked (Law 7): refusing to push to `{default}`. "
                     "Only a feature branch + PR gets pushed; the human "
-                    "merges in the GitHub UI."
+                    "merges in the GitHub UI.",
+                    "push-default",
                 )
 
     if is_commit:
@@ -353,7 +368,8 @@ def check_bash(command: str, base: str) -> None:
                 block(
                     "Blocked (Law 13): commit message doesn't follow "
                     "Conventional Commits (`type(scope): description`). "
-                    f"Got: {first_line!r}"
+                    f"Got: {first_line!r}",
+                    "commit-message",
                 )
 
         diff = staged_diff(cwd)
@@ -362,7 +378,8 @@ def check_bash(command: str, base: str) -> None:
                 if pattern.search(diff):
                     block(
                         "Blocked (Law 14): staged diff matches a credential "
-                        "pattern. Remove the secret before committing."
+                        "pattern. Remove the secret before committing.",
+                        "secret",
                     )
         if re.search(r"(^|\s)\.env(\.\w+)?(\s|$)", cmd) and ".env.example" not in cmd:
             # Best-effort: also check what's actually staged, not just the
@@ -380,8 +397,28 @@ def check_bash(command: str, base: str) -> None:
                     block(
                         f"Blocked (Law 14): `{name}` is staged for commit. "
                         "Env files other than `.env.example` must never be "
-                        "committed."
+                        "committed.",
+                        "env-file",
                     )
+
+
+def log_block(blocked: Blocked, command: str, base: str) -> None:
+    """Record the block in the local block log (`hook_log.py`, #113).
+    Never raises: a missing module, an unwritable log or a held lock
+    must not change the decision."""
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        sys.dont_write_bytecode = True  # keep the ~/.design-forge clone clean
+        import hook_log
+
+        m = re.match(r"Blocked \(Law (\d+)\)", blocked.reason)
+        cwd = resolve_cwd(strip_heredoc_bodies(command.strip()), base)
+        hook_log.append_block(
+            int(m.group(1)) if m else None, blocked.check, cwd,
+            current_branch(cwd), command,
+        )
+    except Exception:
+        pass
 
 
 def main() -> None:
@@ -406,8 +443,10 @@ def main() -> None:
 
     try:
         check_bash(command, base)
-    except SystemExit:
-        raise
+    except Blocked as blocked:
+        log_block(blocked, command, base)
+        print(blocked.reason, file=sys.stderr)
+        sys.exit(2)
     except Exception:
         return  # fail open — don't block on a bug in this script
 

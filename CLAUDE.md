@@ -111,6 +111,7 @@ The binding set is in [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) (loaded above) — do
 | **`approve intent`** / **`approve spec`** / **`approve plan`** | (Law 37) Record the owner's approval on that artifact in `docs/features/<id>/` as `Approved-by: <user>, <date>, chat`, commit it, and continue to the next stage. Claude never writes an approval line without this. |
 | **`review queue`** | (Law 37) Read-only, risk-sorted digest of open PRs awaiting your review, built from each PR's intake block; PRs with no intake block are listed first as unknown risk. |
 | **`review cap <N>`** / **`review cap off`** | (Law 37) Change or disable this session's cap on open AI-authored PRs awaiting review (default 3). |
+| **`hook log`** | (Law 32) Run `python3 ~/.design-forge/.claude/hooks/hook_log.py --summary` and report blocks per law and check for the last 30 days, plus false positives and their notes. Read-only. |
 | **`skip gates`** | (Law 37) Lower the gate tier for the current change. Claude asks for the reason and records it in the PR intake block. |
 
 ---
