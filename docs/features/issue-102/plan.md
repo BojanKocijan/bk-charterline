@@ -2,7 +2,7 @@
 
 Spec: [spec.md](./spec.md)   ·   Gate tier: Significant   ·   Branch: one per PR (below)   ·   Issue: #102
 Work pile: judgment-heavy for PR 1 (rewording binding laws); delegable for PRs 2–4 (specified, machine-verifiable)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-04, chat
 Revision 2026-10-04: Law 1 asks once when no language setting exists, instead of silently defaulting (owner request in chat). Previous approval: BojanKocijan, 2026-10-04, chat.
 
 The work ships as **4 stacked PRs**, opened one at a time. Each PR branches

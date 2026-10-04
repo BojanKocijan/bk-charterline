@@ -2,7 +2,7 @@
 
 Intent: [#102](https://github.com/BojanKocijan/design-forge/issues/102)
 Design: none — no UI; this changes rules text, plugin packaging, and CI
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-04, chat
 Revision 2026-10-04: Law 1 asks once when no language setting exists, instead of silently defaulting (owner request in chat). Previous approval: BojanKocijan, 2026-10-04, chat.
 
 ## Behavior
