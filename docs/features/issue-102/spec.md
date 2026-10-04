@@ -2,7 +2,8 @@
 
 Intent: [#102](https://github.com/BojanKocijan/design-forge/issues/102)
 Design: none — no UI; this changes rules text, plugin packaging, and CI
-Approved-by: BojanKocijan, 2026-10-04, chat
+Approved-by: <pending>
+Revision 2026-10-04 (2): the language question gets explicit Yes/No answers and a recommendation to use one language for professional work (owner request in chat).
 Revision 2026-10-04: Law 1 asks once when no language setting exists, instead of silently defaulting (owner request in chat). Previous approval: BojanKocijan, 2026-10-04, chat.
 
 ## Behavior
@@ -16,9 +17,15 @@ Revision 2026-10-04: Law 1 asks once when no language setting exists, instead of
   *"Please provide instructions in English only."*
 - `settings.language: any` → Claude replies in the language the user
   writes in.
-- Setting absent → at session start Claude asks once, in English:
-  *"Do you want English to be the only language we communicate in?"*
-  "Yes" saves `language: english-only`, "no" saves `language: any`, in the
+- Setting absent → at session start Claude asks once, in English, with two
+  answers and a recommendation:
+  - Question: *"Do you want English to be the only language we communicate in?"*
+  - **Yes**: English only.
+  - **No**: any language.
+  - Note shown with the question: *"For professional work we recommend one
+    language, so code, commits, PRs and docs stay consistent."*
+
+  "Yes" saves `language: english-only`, "No" saves `language: any`, in the
   global `settings:` block of `~/.design-forge/projects.yaml`. The answer
   applies to every project and Claude never asks again.
 - `projects.yaml` missing → Claude copies `projects.example.yaml` first, then
@@ -74,7 +81,8 @@ Revision 2026-10-04: Law 1 asks once when no language setting exists, instead of
       English-only refusal; with `language: any`, Claude replies in the
       prompt's language.
 - [ ] With no `language` setting, the first session asks the English-only
-      question once, saves the answer to the global `settings:` block, and
+      question once, with the Yes/No answers and the one-language
+      recommendation, saves the answer to the global `settings:` block, and
       later sessions don't ask again.
 - [ ] Every remaining `bojankocijan` hit in tracked files is a link to the
       Design Forge repo itself, author metadata in the plugin manifests, or
@@ -98,7 +106,8 @@ Revision 2026-10-04: Law 1 asks once when no language setting exists, instead of
 
 - Component library: n/a, no UI.
 - Accessibility: n/a, no UI.
-- Copy: the English-only refusal text stays word for word.
+- Copy: the English-only refusal text stays word for word. The language
+  question, its Yes/No answers and the recommendation are fixed in §1.
 - Conflicts flagged for the owner:
   - Law 1 is listed under "Immutable". Making it a setting means
     deliberately editing a directive marked immutable.

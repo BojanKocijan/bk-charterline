@@ -2,7 +2,8 @@
 
 Spec: [spec.md](./spec.md)   ·   Gate tier: Significant   ·   Branch: one per PR (below)   ·   Issue: #102
 Work pile: judgment-heavy for PR 1 (rewording binding laws); delegable for PRs 2–4 (specified, machine-verifiable)
-Approved-by: BojanKocijan, 2026-10-04, chat
+Approved-by: <pending>
+Revision 2026-10-04 (2): the language question gets explicit Yes/No answers and a recommendation to use one language for professional work (owner request in chat).
 Revision 2026-10-04: Law 1 asks once when no language setting exists, instead of silently defaulting (owner request in chat). Previous approval: BojanKocijan, 2026-10-04, chat.
 
 The work ships as **4 stacked PRs**, opened one at a time. Each PR branches
@@ -16,7 +17,7 @@ It lands after PR 3 because its test needs PR 3's test setup.
 
 | File | Change |
 |---|---|
-| `CLAUDE_LAWS.md` | Heading "Prime Directives (Immutable)" → "Prime Directives". Law 1 → "Reply language": reads `settings.language` from `~/.design-forge/projects.yaml`; `english-only` keeps today's refusal text word for word; `any` → reply in the user's language; absent → ask once at session start (*"Do you want English to be the only language we communicate in?"*) and save `english-only` or `any` to the global `settings:` block (copy the example first if the file is missing; if it can't be parsed, apply for this session only and say so). Law 10 URL → `https://<github-username>.github.io/<project-name>/` with the username from `gh api user -q .login`; not logged in → ask for `gh auth login --web`, never guess. Law 20 → write the entry to the local `projects.yaml` (copy the example first if the file is missing; stop without writing if it can't be parsed), report the assigned port in one line; delete the issue/branch/commit/PR steps and step 5. Header version 2.21.0, date 2026-10-04. |
+| `CLAUDE_LAWS.md` | Heading "Prime Directives (Immutable)" → "Prime Directives". Law 1 → "Reply language": reads `settings.language` from `~/.design-forge/projects.yaml`; `english-only` keeps today's refusal text word for word; `any` → reply in the user's language; absent → ask once at session start with the exact question, Yes/No answers and one-language recommendation from spec §1, and save `english-only` or `any` to the global `settings:` block (copy the example first if the file is missing; if it can't be parsed, apply for this session only and say so). Law 10 URL → `https://<github-username>.github.io/<project-name>/` with the username from `gh api user -q .login`; not logged in → ask for `gh auth login --web`, never guess. Law 20 → write the entry to the local `projects.yaml` (copy the example first if the file is missing; stop without writing if it can't be parsed), report the assigned port in one line; delete the issue/branch/commit/PR steps and step 5. Header version 2.21.0, date 2026-10-04. |
 | `CLAUDE.md` | "What Claude will refuse": `reply in any language but English (Law 1)` → `ignore the reply-language setting (Law 1)`. |
 | `projects.example.yaml` | Add a `settings:` block with `# language: english-only   # or: any` and a one-line note that Claude asks and fills this in. Header comment: replace the "issue → branch → … → PR" description with "Claude adds the entry locally". |
 | `README.md` | "Project registry": registration is local, with no PR. New short "Reply language" note under it: Claude asks once, and how to change the answer later. |
