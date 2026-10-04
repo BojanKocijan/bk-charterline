@@ -2,6 +2,17 @@
 
 ---
 
+## v2.21.3 — October 5, 2026
+
+### Law 32 hook checks only the commit's own message ([#107](https://github.com/BojanKocijan/design-forge/issues/107))
+- **Fix:** the Law 13 check no longer reads a heredoc from another command as the commit message. Chaining `git commit -m "docs(readme): …"` with `gh pr create --body "$(cat <<'EOF' …)"` was blocked with `Got: '## Summary'`.
+- The hook splits the command into segments on `&&`, `||`, `;`, `|`, `&` and newlines, respecting quotes, `$(...)`, backticks and heredocs. It checks the heredoc, `-m`/`--message` or `-F <file>` message of every `git commit` segment. Combined flags such as `-am` are now checked too.
+- Still fails open: unbalanced quoting or an unreadable `-F` file skips the Law 13 check.
+- New regression tests in `tests/test_enforce_laws.py`, next to the #110 tests. CI now runs them all through `.github/workflows/hook-tests.yml`.
+- The Laws, `plugin.json` and `marketplace.json` are at 2.21.3.
+
+---
+
 ## v2.21.2 — October 5, 2026
 
 ### Law 32 hook checks the repo the command runs in ([#110](https://github.com/BojanKocijan/design-forge/issues/110))
