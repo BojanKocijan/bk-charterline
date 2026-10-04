@@ -5,7 +5,7 @@
 # never clash when you run `npm run dev` in parallel.
 #
 # Claude auto-registers a new project on first session detection (Law 20):
-#   issue → branch → add entry with the next free port → PR.
+#   it adds the entry here with the next free port. No PR — this file is local.
 #
 # Format:
 #   - name: project-name
@@ -14,6 +14,10 @@
 #     description: one-line description
 #     deployment: netlify | github-pages | none
 #     status: active | paused | archived
+
+# Global settings. Claude asks on first session and fills this in (Law 1).
+settings:
+  # language: english-only   # or: any — reply in whatever language you write in
 
 # Next available port: 5173
 

@@ -2,7 +2,7 @@
 
 Spec: [spec.md](./spec.md)   ·   Gate tier: Significant   ·   Branch: one per PR (below)   ·   Issue: #102
 Work pile: judgment-heavy for PR 1 (rewording binding laws); delegable for PRs 2–4 (specified, machine-verifiable)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-04, PR #103
 Revision 2026-10-04 (2): the language question gets explicit Yes/No answers and a recommendation to use one language for professional work (owner request in chat).
 Revision 2026-10-04: Law 1 asks once when no language setting exists, instead of silently defaulting (owner request in chat). Previous approval: BojanKocijan, 2026-10-04, chat.
 

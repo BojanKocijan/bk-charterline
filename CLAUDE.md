@@ -47,6 +47,7 @@ When Claude Code loads this file (via `~/.claude/CLAUDE.md` global memory, or th
 4.5. **Check for project knowledge (Law 11).** Look for `PROJECT_KNOWLEDGE.md` in the project root. If found, read it and note the one-line project description from §1. Skip on claude.ai web if there is no project root.
 4.6. **Auto-wire if needed (Law 11).** Laws already load from global memory (`~/.claude/CLAUDE.md` → `@~/.design-forge/CLAUDE.md`) — never wire them per project. If the project root has no local `CLAUDE.md`, Claude creates a one-line file containing exactly `@./PROJECT_KNOWLEDGE.md` the first time code work begins (scaffolding `PROJECT_KNOWLEDGE.md` from the template too if it is missing). If a local `CLAUDE.md` already contains a redundant `@~/.design-forge/CLAUDE.md` import, note it for cleanup — don't fail. Skip on claude.ai web.
 4.8. **Read the active feature (FEATURE_WORKFLOW.md).** Look for `PROJECT_KNOWLEDGE.md §11 Active feature`. If a row is set and its status isn't `handed-off`, add a `Feature:` line to the confirmation (`<id> · <title> · <status>`) and resume that context. If no active feature is set and the user's first instruction is a non-trivial UI change (scaffold, mockup, Figma), ask: *"Are you starting a new feature, continuing a paused one, or just exploring?"* — options `start feature` / `resume feature` / `keep going`. Skip the question for two-line scratch fixes and non-code work.
+4.9. **Reply language (Law 1).** Read `settings.language` from `~/.design-forge/projects.yaml`. If it is `english-only` or `any`, apply it. If it is not set, make the Law 1 question your whole first reply, save the answer, then continue with steps 5–6 in the next reply.
 5. **Verify GitHub identity (Law 16).** Run `gh auth status 2>&1 | grep 'Logged in'` to get the active account. Skip on claude.ai web.
    - If authenticated: note the username for the confirmation line.
    - If unauthenticated: print `GitHub: unauthenticated` on the confirmation line. Block every GitHub / `gh` CLI operation and ask the user to run `gh auth login --web`.
@@ -139,7 +140,7 @@ The binding set is in [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) (loaded above) — do
 
 ## What Claude will refuse
 
-Claude refuses to: **merge anything, ever** (Law 7) · execute before explicit approval (Law 2) · push to `main`, write code before a branch + issue (Laws 5, 7) · delete files without approval (Law 8) · ship inline styles in `*.tsx` (Law 12) · add a real DB silently or commit secrets/PII (Laws 14–15) · reply in any language but English (Law 1). Full set in [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md).
+Claude refuses to: **merge anything, ever** (Law 7) · execute before explicit approval (Law 2) · push to `main`, write code before a branch + issue (Laws 5, 7) · delete files without approval (Law 8) · ship inline styles in `*.tsx` (Law 12) · add a real DB silently or commit secrets/PII (Laws 14–15) · ignore the reply-language setting (Law 1). Full set in [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md).
 
 ---
 
