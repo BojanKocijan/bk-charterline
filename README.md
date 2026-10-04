@@ -358,7 +358,7 @@ Issues and PRs are welcome. Read [`CONTRIBUTING.md`](./CONTRIBUTING.md) first. A
 2. Conventional Commits (Law 13)
 3. PRs only — no direct pushes to `main` (Law 7)
 4. Small, atomic PRs under 400 lines (Law 31)
-5. CI (markdownlint) must pass
+5. CI (markdownlint and the hook tests) must pass. Run the hook tests locally with `python3 -m unittest discover -s tests -v`
 
 See [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) for the full governance framework.
 

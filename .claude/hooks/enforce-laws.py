@@ -100,19 +100,107 @@ SECRET_PATTERNS = [
 ]
 
 
-def extract_commit_message(command: str) -> str | None:
-    # Heredoc first: `git commit -m "$(cat <<'EOF' ... EOF)"` is this
-    # project's own mandated commit-message idiom (see CLAUDE.md), and
-    # it must be checked before the plain -m "..." pattern below —
-    # otherwise the naive quote-matcher grabs the raw `$(cat <<'EOF'`
-    # / `EOF\n)` shell syntax as if it were the message itself.
-    m = re.search(r"<<-?\s*['\"]?(\w+)['\"]?\n(.*?)\n\1\b", command, re.DOTALL)
-    if m:
-        return m.group(2)
-    m = re.search(r"-m\s+(['\"])(.*?)\1", command, re.DOTALL)
-    if m:
-        return m.group(2)
-    return None
+HEREDOC_PLACEHOLDER_RE = re.compile(r"\x00HEREDOC(\d+)\x00")
+
+
+def split_segments(command: str) -> list[str] | None:
+    """Split a shell command into its top-level simple commands on
+    `&&`, `||`, `;`, `|`, `&` and newlines, ignoring separators inside
+    quotes, `$(...)`, `(...)` and backticks. Returns None when quoting
+    doesn't balance, so callers can fail open.
+    """
+    segments: list[str] = []
+    stack: list[str] = []
+    start = i = 0
+    n = len(command)
+    while i < n:
+        c = command[i]
+        top = stack[-1] if stack else ""
+        if top == "'":
+            if c == "'":
+                stack.pop()
+        elif c == "\\":
+            i += 1  # skip the escaped character
+        elif top == '"':
+            if c == '"':
+                stack.pop()
+            elif command.startswith("$(", i):
+                stack.append("(")
+                i += 1
+            elif c == "`":
+                stack.append("`")
+        elif top == "`" and c == "`":
+            stack.pop()
+        elif c in "'\"":
+            stack.append(c)
+        elif command.startswith("$(", i):
+            stack.append("(")
+            i += 1
+        elif c == "(":
+            stack.append("(")
+        elif c == ")" and top == "(":
+            stack.pop()
+        elif c == "`":
+            stack.append("`")
+        elif not stack and c in "&|;\n":
+            segments.append(command[start:i])
+            if command.startswith(("&&", "||"), i):
+                i += 1
+            start = i + 1
+        i += 1
+    if stack:
+        return None
+    segments.append(command[start:])
+    return [s.strip() for s in segments if s.strip()]
+
+
+def extract_commit_messages(command: str, cwd: str) -> list[str]:
+    """The messages of every `git commit` in the command, and only
+    those: a heredoc, `-m`/`--message`, or `-F <file>` must sit in the
+    commit's own segment. A heredoc attached to another command (e.g. a
+    `gh pr create --body "$(cat <<'EOF' ...)"` chained after the commit)
+    is that command's data, not the commit message.
+    """
+    # Each heredoc (opener line break, body, closing delimiter) collapses
+    # to a placeholder on the opener's line, so quotes or `&&` inside a
+    # commit message or PR body can't confuse the segment splitter, and a
+    # top-level `git commit -F - <<EOF` keeps its body in its own segment.
+    bodies: list[str] = []
+
+    def stash(m: re.Match) -> str:
+        bodies.append(m.group(3))
+        return f"{m.group(1).rstrip()} \x00HEREDOC{len(bodies) - 1}\x00"
+
+    segments = split_segments(HEREDOC_BODY_RE.sub(stash, command))
+    if segments is None:
+        return []  # fail open — can't tell which message is the commit's
+
+    messages = []
+    for seg in segments:
+        if not re.search(r"\bgit\s+commit\b", seg):
+            continue
+        # Heredoc first: `git commit -m "$(cat <<'EOF' ... EOF)"` is this
+        # project's own mandated commit-message idiom (see CLAUDE.md), and
+        # it must be checked before the plain -m "..." pattern below —
+        # otherwise the naive quote-matcher grabs the raw `$(cat <<'EOF'`
+        # / `EOF\n)` shell syntax as if it were the message itself.
+        m = HEREDOC_PLACEHOLDER_RE.search(seg)
+        if m:
+            messages.append(bodies[int(m.group(1))])
+            continue
+        m = re.search(r"(?:\s-[A-Za-z]*m|--message)(?:\s+|=)(['\"])(.*?)\1", seg, re.DOTALL)
+        if m:
+            messages.append(m.group(2))
+            continue
+        m = re.search(r"(?:-F|--file)(?:\s+|=)(\"[^\"]+\"|'[^']+'|\S+)", seg)
+        if m:
+            path = os.path.expanduser(m.group(1).strip("'\""))
+            try:
+                with open(os.path.join(cwd, path)) as f:
+                    messages.append(f.read())
+            except Exception:
+                pass  # can't read the file — fail open
+    return messages
 
 
 PUSH_RE = re.compile(r"\bgit\s+push\b([^\n;&|]*)")
@@ -179,7 +267,7 @@ def strip_heredoc_bodies(command: str) -> str:
     `git push` in prose must not trip the checks below just because
     the text appears in the command string. Blanks out everything
     between a heredoc's opening and closing delimiter before any
-    dangerous-pattern matching runs; `extract_commit_message` still
+    dangerous-pattern matching runs; `extract_commit_messages` still
     reads the real (unstripped) command, so actual commit-message
     content is unaffected.
     """
@@ -259,8 +347,7 @@ def check_bash(command: str, base: str) -> None:
 
     if is_commit:
         cwd = resolve_cwd(scan, base)
-        msg = extract_commit_message(cmd)
-        if msg is not None:
+        for msg in extract_commit_messages(cmd, cwd):
             first_line = msg.strip().splitlines()[0] if msg.strip() else ""
             if first_line and not CONVENTIONAL_COMMIT_RE.match(first_line):
                 block(
