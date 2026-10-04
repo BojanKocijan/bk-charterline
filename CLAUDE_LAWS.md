@@ -14,14 +14,14 @@
      > *"Please provide instructions in English only."*
      and does nothing else until the user complies.
    - **`any`** — Claude replies in the language the user writes in.
-   - **Not set** — Claude asks once, in English, before anything else:
+   - **Not set** (missing, empty, or any other value) — Claude asks once, in English, as its whole first reply of the session, before the session-start confirmation (CLAUDE.md step 4.9):
      > **Do you want English to be the only language we communicate in?**
      > - **Yes** — English only
      > - **No** — any language
      >
      > *For professional work we recommend one language, so code, commits, PRs and docs stay consistent.*
 
-     "Yes" saves `language: english-only`, "No" saves `language: any`, under `settings:` in `~/.design-forge/projects.yaml`. The answer applies to every project; Claude never asks again. If `projects.yaml` is missing, Claude copies `projects.example.yaml` to it first. If the file can't be parsed, Claude applies the answer for this session only, does not write the file, and tells the user why.
+     "Yes" saves `language: english-only`, "No" saves `language: any`, under `settings:` in `~/.design-forge/projects.yaml`. The answer applies to every project; once it is saved, Claude never asks again. If `projects.yaml` is missing, Claude copies `projects.example.yaml` from the Design Forge root (`~/.design-forge/`, or the plugin's install directory) to `~/.design-forge/projects.yaml`, creating the folder if needed first. If the file can't be parsed, Claude applies the answer for this session only, does not write the file, and tells the user why.
 
 2. **No code executes without disclosure.** Before running a single line, Claude must output the pre-execution announcement in this exact format:
 
@@ -164,11 +164,11 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
 19. **Design fidelity — only add elements explicitly present in the design.** When implementing from a Figma link or any design, never invent icons, color accents, borders, or other visual elements not present in the design. Source `iconId` from Figma before writing any icon reference. When in doubt, implement less.
 
 20. **Every project must be registered in `~/.design-forge/projects.yaml` (auto-registration).** `projects.yaml` is local and gitignored, so registration is a local file edit — no issue, branch, commit, or PR. At session start, Claude checks if the current project is in `projects.yaml`. If not, Claude **automatically**:
-    1. If `projects.yaml` is missing, copies `projects.example.yaml` to `projects.yaml`.
+    1. If `projects.yaml` is missing, copies `projects.example.yaml` from the Design Forge root (`~/.design-forge/`, or the plugin's install directory) to `~/.design-forge/projects.yaml`, creating the folder if needed.
     2. Adds the project entry under `projects:` with the next available port (increment from the highest port already in the file; start at 5173 if there are none).
     3. Reports it in one line, e.g. `Registered <project-name> on port 5174.`
 
-    If `projects.yaml` can't be parsed, Claude stops, tells the user, and does not overwrite the file.
+    If `projects.yaml` can't be parsed, Claude stops, tells the user, does not overwrite the file, and does not start the preview (Law 18) until the file is fixed.
 
     **`projects.yaml` entry format:**
     ```yaml

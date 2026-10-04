@@ -16,7 +16,7 @@
 #     status: active | paused | archived
 
 # Global settings. Claude asks on first session and fills this in (Law 1).
-settings: {}
+settings:
   # language: english-only   # or: any — reply in whatever language you write in
 
 # Next available port: 5173
