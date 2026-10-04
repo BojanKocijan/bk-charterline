@@ -8,9 +8,11 @@
 
 # Design Forge
 
-**A governance framework for AI-assisted software engineering — 37 binding laws that make Claude Code work like a disciplined senior product engineer.**
+**The working knowledge of a UX manager, a full-stack designer and a senior developer, packaged as binding rules, skills and agents for Claude Code.**
 
 Design Forge is a set of binding *laws*, reusable *skills*, and shared *knowledge files* that govern every Claude Code session. It controls how Claude scaffolds projects, names branches, opens PRs, writes components, runs UX research, and hands work off to developers. Library-agnostic. Framework-agnostic. No corporate toolchain required.
+
+It's not only for developers. Design Forge carries the full product craft, from UX research, design critique, UX writing and Figma handoff to frontend, backend, testing and shipping, so Claude works like a senior teammate across the whole team, not just the codebase.
 
 > Think of it as a constitution for your AI pair-programmer: announce before acting, branch + issue before code, never push to `main`, never merge for you, small atomic PRs, no inline styles, WCAG 2.2 AA, no bloated code, no hallucination.
 
