@@ -372,8 +372,8 @@ Version 2.18.0 and earlier were published under the MIT License, and version 2.1
 
 ## Support
 
-Design Forge is free. My wife's coffee is not. ☕
+### If you like Design Forge, help a fellow husband and buy my wife a coffee
 
-If you're married, you already know how this works: a happy wife means a happy life, and in my house a happy wife means a full cup of coffee. We've been happily married for years, mostly thanks to a reliable coffee supply.
+Design Forge is free and always will be. If you're married, you already know how this works: a happy wife means a happy life, and in my house a happy wife means a full cup of coffee. We've been happily married for years, mostly thanks to a reliable coffee supply.
 
-If Design Forge saves you time, [buy her a coffee on Ko-fi](https://ko-fi.com/bojaforjelena) and help a fellow husband keep the peace.
+<a href="https://ko-fi.com/bojaforjelena"><img src="https://img.shields.io/badge/%E2%98%95_Buy_her_a_coffee-Ko--fi-6f4e37?style=for-the-badge&logo=kofi&logoColor=white" alt="Buy her a coffee on Ko-fi" /></a>
