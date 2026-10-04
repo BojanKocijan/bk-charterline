@@ -1,7 +1,7 @@
 # Component Patterns — Design Forge
 
-**Version:** 1.6.0
-**Last Updated:** 2026-10-03
+**Version:** 1.6.1
+**Last Updated:** 2026-10-05
 **Binding:** Yes — these patterns represent validated, reusable solutions established across projects. Apply them before building from scratch.
 
 > **Domain-agnostic.** The patterns here are universal. Code examples use a generic CRUD domain (entities like `Customer`, `Order`, `Invoice`, `Task`) **purely as illustration** — substitute your project's own entities. Nothing in this file is tied to a specific project; project-specific component inventories live in that project's `PROJECT_KNOWLEDGE.md §3`, never here.
@@ -217,24 +217,47 @@ See also §21 for the phone sizes validated since (48 px header controls, 56 px 
 
 Entity cards (clients, projects) should have a context menu accessible via a 3-dot button (MoreHorizontal icon).
 
-### Device-aware visibility
+### Device-aware visibility — hover AND keyboard
 ```tsx
-// Always visible on touch, hover-reveal on mouse — CSS only, no JS
+// Always visible on touch; hover-reveal on mouse; also reveal when card has keyboard focus
 '[@media(hover:none)]:opacity-100',
 '[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100',
+'group-focus-within:opacity-100',  // ← required — keyboard users see the trigger as they Tab into the card
+```
+
+**Known miss (found 2026-06-14):** The original pattern omitted `group-focus-within:opacity-100`. On desktop (hover:hover), the trigger stayed `opacity-0` even when focused via Tab — keyboard users could Tab to it but never see it. Always include all three classes.
+
+### Card body must be a `<button>`, not a `<div>`
+**Critical — WCAG 2.1.1:** The clickable area of a card must be a `<button type="button">` (or `<a>` for navigation), never a bare `<div onClick>`. Tab skips non-interactive elements entirely.
+
+```tsx
+// ✅ Correct — keyboard reachable, Enter/Space activates
+<button
+  type="button"
+  onClick={onDetails}
+  aria-label={`View details for ${client.name}`}
+  className="flex items-center gap-3 flex-1 min-w-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 rounded-lg"
+>
+  <Avatar /> <Name />
+</button>
+
+// ❌ Wrong — Tab skips it, Enter does nothing
+<div onClick={onDetails} className="cursor-pointer flex-1">
+  <Avatar /> <Name />
+</div>
 ```
 
 ### No event conflict rule
-**Critical:** The 3-dot trigger must be a SIBLING to the clickable area, NOT a child of it. If the whole card is clickable, the trigger must sit outside that clickable div.
+**Critical:** The 3-dot trigger must be a SIBLING to the clickable area, NOT a child of it. If the whole card is clickable, the trigger must sit outside that clickable button.
 
 ```tsx
-// ✅ Correct — 3-dot is sibling, no conflict
+// ✅ Correct — button body + sibling 3-dot, no conflict
 <div className="flex items-start gap-2">
-  <div onClick={onDetails} className="flex-1">  ← clickable area
+  <button type="button" onClick={onDetails} className="flex-1 text-left ...">
     <Avatar /> <Name />
-  </div>
+  </button>
   <DropdownMenu>                                 ← sibling, no conflict
-    <DropdownMenuTrigger className="... [@media(hover:none)]:opacity-100 ...">
+    <DropdownMenuTrigger className="... [@media(hover:none)]:opacity-100 ... group-focus-within:opacity-100">
       <MoreHorizontal />
     </DropdownMenuTrigger>
   </DropdownMenu>
@@ -778,6 +801,8 @@ have helped because the earlier screen had already done the analysis.
 ---
 
 ## Changelog
+
+- **1.6.1 (2026-10-05)** — §20 context-menu cards work by keyboard: the 3-dot trigger also reveals on `group-focus-within`, the card body must be a `<button>` (or `<a>`), never `<div onClick>` (WCAG 2.1.1), and the no-event-conflict example uses the button body.
 
 - **1.6.0 (2026-10-03)** — Added Patterns 20–25, validated in a real mobile-first project: dialogs and menus as bottom sheets on phones by changing the shared wrapper (§20), touch targets and the thumb zone (48 px header controls, 56 px rows; §21), one top bar for many screens with a fixed or zero-height sticky placement (§22), one editor for several roles through a `restrictTo` prop (§23), a time limit on every request (§24) and caching derived render work two screens share (§25).
 

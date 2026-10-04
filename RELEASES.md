@@ -2,6 +2,15 @@
 
 ---
 
+## v2.21.4 — October 5, 2026
+
+### Context-menu card pattern works by keyboard ([#124](https://github.com/BojanKocijan/design-forge/issues/124))
+- **Fix:** `COMPONENT_PATTERNS.md` §20 (v1.6.1). The 3-dot trigger stayed invisible to keyboard users on desktop, and the example's `<div onClick>` card body was skipped by Tab.
+- The trigger also reveals on `group-focus-within:opacity-100`; a new rule makes the card body a `<button type="button">` (or `<a>`) with a visible focus ring (WCAG 2.1.1); the no-event-conflict example uses the button body.
+- The Laws, `plugin.json` and `marketplace.json` are at 2.21.4.
+
+---
+
 ## v2.21.3 — October 5, 2026
 
 ### Law 32 hook checks only the commit's own message ([#107](https://github.com/BojanKocijan/design-forge/issues/107))
