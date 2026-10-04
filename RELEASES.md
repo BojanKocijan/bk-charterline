@@ -2,6 +2,18 @@
 
 ---
 
+## v2.21.2 — October 5, 2026
+
+### Law 32 hook checks the repo the command runs in ([#110](https://github.com/BojanKocijan/design-forge/issues/110))
+- **Fix:** no more false Law 5 blocks ("refusing to commit directly on `main`") when Claude runs in a git worktree on a feature branch while the main checkout is on `main`.
+- The hook uses the `cwd` field of the PreToolUse input instead of its own process cwd, falling back to the process cwd when the field is missing. In a worktree session the hook process runs in the main checkout, and Claude Code drops a leading `cd <cwd> &&` before calling hooks, so the hook used to read the main checkout's branch.
+- `cd path; git commit …` now resolves to `path` (the trailing `;` was read as part of the path). Every `cd` is followed in order, a target that isn't a directory (`cd -`) is skipped, and a `cd` inside a heredoc body is ignored.
+- Still fails open.
+- New regression tests in `tests/test_enforce_laws.py` (`python3 -m unittest discover -s tests -v`).
+- The Laws, `plugin.json` and `marketplace.json` are at 2.21.2 (2.21.1 is reserved for #107).
+
+---
+
 ## v2.21.0 — October 4, 2026
 
 ### Laws work for any plugin user ([#102](https://github.com/BojanKocijan/design-forge/issues/102))
