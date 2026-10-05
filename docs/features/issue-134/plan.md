@@ -2,7 +2,7 @@
 
 Spec: [#134](https://github.com/BojanKocijan/design-forge/issues/134) (the issue is the spec, decisions included) · Gate tier: Standard (changes skills and the project's license terms) · Branch: `docs/commercial-license` · Issue: #134
 Work pile: judgment-heavy for the wording (licensing), mechanical for the skill frontmatter
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-05, chat
 
 ## Behavior
 
