@@ -1,0 +1,59 @@
+name: Company inquiry
+description: Ask about team setup, a workshop, or a commercial license
+title: "company inquiry: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your interest. [FOR_COMPANIES.md](https://github.com/BojanKocijan/design-forge/blob/main/FOR_COMPANIES.md) explains the options; many companies don't need a commercial license at all.
+
+        **This issue is public. Don't include confidential details.** Once I reply, we can continue privately.
+
+  - type: dropdown
+    id: need
+    attributes:
+      label: What do you need?
+      options:
+        - "Setup (from €1,500)"
+        - "Setup + workshop (from €2,500)"
+        - "Commercial license"
+        - "Something else"
+    validations:
+      required: true
+
+  - type: input
+    id: company
+    attributes:
+      label: Company
+      placeholder: e.g., Acme Corp
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Tell me about your team and what you want to achieve
+      description: Your stack, how many repositories, and, for a commercial license, what you want to do with Design Forge and why GPL-3.0 doesn't fit.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: team-size
+    attributes:
+      label: Team size
+      options:
+        - "1–10"
+        - "11–50"
+        - "51–250"
+        - "More than 250"
+    validations:
+      required: true
+
+  - type: input
+    id: timeline
+    attributes:
+      label: Timeline
+      placeholder: e.g., this quarter
+    validations:
+      required: false

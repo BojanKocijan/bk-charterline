@@ -18,7 +18,7 @@
 ## v2.23.1 — October 5, 2026
 
 ### Commercial license alongside GPL-3.0 ([#134](https://github.com/BojanKocijan/design-forge/issues/134))
-- Design Forge stays GPL-3.0. Companies that want to ship a changed version without publishing the changes, or can't use GPL, can ask for a commercial license: [COMMERCIAL.md](./COMMERCIAL.md) and a "Commercial license inquiry" issue form.
+- Design Forge stays GPL-3.0. Companies that want to ship a changed version without publishing the changes, or can't use GPL, can ask for a commercial license: [FOR_COMPANIES.md](./FOR_COMPANIES.md) (originally `COMMERCIAL.md`) and the company inquiry form.
 - `CONTRIBUTING.md`: contributions stay GPL-3.0 for everyone, and contributors also grant a non-exclusive right to include them in a commercial license. They keep their copyright.
 - Every skill gets a `license: GPL-3.0-only` line, so a skill copied on its own keeps its license (two follow-up PRs).
 - `plugin.json` and `marketplace.json` keep `GPL-3.0-only`; they and the Laws are at 2.23.1.
