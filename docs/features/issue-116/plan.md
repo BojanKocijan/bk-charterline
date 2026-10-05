@@ -108,7 +108,7 @@ Expected sizes: PR 1 ~10 lines, PR 2 ~150, PR 3 ~350. All under Law 31's 400-lin
 - **Moving a clone that's on `main` onto a tag looks like a downgrade** when `main` is ahead of the last tag → step 5 never downgrades; the auto-tag after PR 3 makes the newest tag equal to `main` at that moment.
 - **`less` hiding the prompt** → it's only used with a terminal, with `-F` (quit if one screen) and `-X` (keep the output on screen).
 - **zsh vs bash differences** → tests run both when zsh is present. CI runs bash only, which is noted in the PR, and the zsh run is local proof.
-- **The workflow token can't push a tag** (the repo's Actions permissions are read-only) → the workflow fails loudly. The deploy step checks the setting: Settings → Actions → General → Workflow permissions.
+- **The workflow token can't push a tag.** The repo's default token permission is `read` (checked 2026-10-05). The job's own `permissions: contents: write` overrides that default, so no setting change is needed. If an org or repo policy blocks it later, the workflow fails loudly and no tag is made.
 - **A user editing the clone by hand** → step 2 refuses with the file names instead of losing the edits.
 
 ## Ruled out
