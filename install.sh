@@ -147,16 +147,19 @@ settings = json.loads(content) if content else {}
 hooks = settings.setdefault("hooks", {})
 pre_tool_use = hooks.setdefault("PreToolUse", [])
 
-already = any(
-    entry.get("matcher") == "Bash"
-    and any(h.get("command") == hook_command for h in entry.get("hooks", []))
-    for entry in pre_tool_use
-)
-if not already:
-    pre_tool_use.append({
-        "matcher": "Bash",
-        "hooks": [{"type": "command", "command": hook_command}],
-    })
+# Bash commands, plus the file-editing tools so the hook can guard the
+# guardrail files themselves (#117). Each entry is added once.
+for matcher in ("Bash", "Edit|Write|MultiEdit|NotebookEdit"):
+    already = any(
+        entry.get("matcher") == matcher
+        and any(h.get("command") == hook_command for h in entry.get("hooks", []))
+        for entry in pre_tool_use
+    )
+    if not already:
+        pre_tool_use.append({
+            "matcher": matcher,
+            "hooks": [{"type": "command", "command": hook_command}],
+        })
 
 with open(path, "w") as f:
     json.dump(settings, f, indent=2)

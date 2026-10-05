@@ -287,6 +287,95 @@ def block(reason: str, check: str) -> None:
     raise Blocked(reason, check)
 
 
+class Asked(Blocked):
+    """Raised to hand the call to the user: Claude Code shows its own
+    permission prompt with the reason (#117). Only the user's click in
+    the app approves it; nothing Claude or a tool output says can."""
+
+
+def ask(reason: str, check: str) -> None:
+    raise Asked(reason, check)
+
+
+# Permission modes in which an "ask" would let the call through without
+# a prompt; there the hook denies instead (filled from the live probe).
+ASK_DENIED_MODES: set[str] = set()
+
+FILE_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit")
+
+# Files under the installed clone that its own tools write (relative paths
+# or name prefixes); everything else in ~/.design-forge is protected.
+DF_DATA_PREFIXES = ("hook-log", "ai-inventory")
+DF_DATA_FILES = ("ai-tools.json", "projects.yaml", os.path.join("knowledge", "PATTERNS.md"))
+
+
+def protected_target(path: str, cwd: str) -> str | None:
+    """What a path protects, or None. Compared after resolving symlinks,
+    so ~/.claude/skills/x (a link into ~/.design-forge) counts. Fails open
+    (None) if the path can't be resolved."""
+    try:
+        real = os.path.realpath(os.path.join(cwd, os.path.expanduser(path)))
+        home = os.path.realpath(os.path.expanduser("~"))
+    except Exception:
+        return None
+    claude = os.path.join(home, ".claude")
+    if real in (os.path.join(claude, "settings.json"), os.path.join(claude, "settings.local.json")):
+        return "your Claude Code settings"
+    if real == os.path.join(claude, "CLAUDE.md"):
+        return "your global CLAUDE.md"
+    if os.path.basename(real) in ("settings.json", "settings.local.json") \
+            and os.path.basename(os.path.dirname(real)) == ".claude":
+        return "a project's Claude Code settings"
+    forge = os.path.realpath(os.path.join(home, ".design-forge"))
+    if real == forge or real.startswith(forge + os.sep):
+        rel = os.path.relpath(real, forge)
+        if rel.startswith(DF_DATA_PREFIXES) or rel in DF_DATA_FILES:
+            return None
+        return "the installed Design Forge"
+    return None
+
+
+def check_file_edit(tool: str, tool_input: dict, base: str) -> None:
+    path = tool_input.get("notebook_path" if tool == "NotebookEdit" else "file_path")
+    if not isinstance(path, str) or not path:
+        return
+    what = protected_target(path, base)
+    if what:
+        ask(
+            f"Law 32 (guardrail): {tool} would change {what} ({path}). "
+            "Approve only if you asked for this change.",
+            "guardrail-edit",
+        )
+
+
+WRITE_VERBS = {"tee", "cp", "mv", "ln", "install", "rm", "unlink", "truncate", "chmod", "chown"}
+DEST_ONLY_VERBS = {"cp", "ln", "install"}  # reading the source is fine
+REDIRECT_RE = re.compile(r"(?:^|[^<>&\d])\d?(?:>>?|&>)\s*(\"[^\"]+\"|'[^']+'|[^\s;&|<>]+)")
+
+
+def bash_write_targets(segment: str) -> list[str]:
+    """Paths one command segment writes to: redirection targets, plus the
+    arguments of a write verb (only the destination for cp/ln/install).
+    Best-effort; an untokenisable segment yields nothing (fail open)."""
+    targets = [m.group(1).strip("'\"") for m in REDIRECT_RE.finditer(segment)]
+    try:
+        tokens = shlex.split(segment)
+    except ValueError:
+        return targets
+    while tokens and tokens[0] in ("sudo", "command", "exec"):
+        tokens = tokens[1:]
+    if not tokens:
+        return targets
+    verb = os.path.basename(tokens[0])
+    args = [t for t in tokens[1:] if not t.startswith("-") and not t.startswith(">")]
+    in_place = any(t == "-i" or t.startswith("-i") for t in tokens[1:])
+    if verb in DEST_ONLY_VERBS and args:
+        targets.append(args[-1])
+    elif verb in WRITE_VERBS or (verb in ("sed", "perl") and in_place):
+        targets += args
+    return targets
+
+
 FORCE_FLAGS = ("--force", "-f", "--force-with-lease", "--force-if-includes")
 
 
@@ -464,6 +553,21 @@ def check_bash(command: str, base: str) -> None:
                 "no-verify",
             )
 
+    # Law 32 — writing to a guardrail file asks the user in the app (#117).
+    # Held until the end: every block check below must still run, so an
+    # approved prompt can never let a blocked command through.
+    pending_ask = None
+    write_cwd = resolve_cwd(scan, base)
+    for segment in split_segments(scan) or []:
+        for target in bash_write_targets(segment):
+            what = protected_target(target, write_cwd)
+            if what and pending_ask is None:
+                pending_ask = (
+                    f"Law 32 (guardrail): this command writes to {what} ({target}). "
+                    "Approve only if you asked for this change.",
+                    "guardrail-write",
+                )
+
     is_commit = bool(re.search(r"\bgit\s+commit\b", scan))
     push_matches = list(PUSH_RE.finditer(scan))
 
@@ -536,8 +640,11 @@ def check_bash(command: str, base: str) -> None:
                         "env-file",
                     )
 
+    if pending_ask:
+        ask(*pending_ask)
 
-def log_block(blocked: Blocked, command: str, base: str) -> None:
+
+def log_block(blocked: Blocked, command: str, base: str, record_type: str = "block") -> None:
     """Record the block in the local block log (`hook_log.py`, #113).
     Never raises: a missing module, an unwritable log or a held lock
     must not change the decision."""
@@ -546,11 +653,11 @@ def log_block(blocked: Blocked, command: str, base: str) -> None:
         sys.dont_write_bytecode = True  # keep the ~/.design-forge clone clean
         import hook_log
 
-        m = re.match(r"Blocked \(Law (\d+)\)", blocked.reason)
+        m = re.search(r"Law (\d+)", blocked.reason)
         cwd = resolve_cwd(strip_heredoc_bodies(command.strip()), base)
         hook_log.append_block(
             int(m.group(1)) if m else None, blocked.check, cwd,
-            current_branch(cwd), command,
+            current_branch(cwd), command, record_type,
         )
     except Exception:
         pass
@@ -562,11 +669,16 @@ def main() -> None:
     except Exception:
         return  # fail open — can't parse input
 
-    if payload.get("tool_name") != "Bash":
-        return
-
-    command = payload.get("tool_input", {}).get("command")
-    if not isinstance(command, str) or not command.strip():
+    tool = payload.get("tool_name")
+    tool_input = payload.get("tool_input") if isinstance(payload.get("tool_input"), dict) else {}
+    if tool == "Bash":
+        command = tool_input.get("command")
+        if not isinstance(command, str) or not command.strip():
+            return
+    elif tool in FILE_TOOLS:
+        # What the log hashes for a file edit: the tool and its target.
+        command = f"{tool} {tool_input.get('file_path') or tool_input.get('notebook_path') or ''}"
+    else:
         return
 
     # The Bash tool's cwd. The hook process itself may sit in another
@@ -577,7 +689,24 @@ def main() -> None:
         base = os.getcwd()
 
     try:
-        check_bash(command, base)
+        if tool == "Bash":
+            check_bash(command, base)
+        else:
+            check_file_edit(tool, tool_input, base)
+    except Asked as asked:
+        mode = payload.get("permission_mode")
+        decision = "deny" if mode in ASK_DENIED_MODES else "ask"
+        log_block(asked, command, base, "ask" if decision == "ask" else "block")
+        reason = asked.reason if decision == "ask" else (
+            asked.reason + f" In `{mode}` mode this can't be confirmed in a prompt, so it's "
+            "blocked: make the change yourself or switch permission mode."
+        )
+        print(json.dumps({"hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": decision,
+            "permissionDecisionReason": reason,
+        }}))
+        sys.exit(0)
     except Blocked as blocked:
         log_block(blocked, command, base)
         print(blocked.reason, file=sys.stderr)

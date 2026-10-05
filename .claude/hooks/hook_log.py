@@ -90,10 +90,12 @@ def append_record(record: dict) -> bool:
     return True
 
 
-def append_block(law: int | None, check: str, cwd: str, branch: str | None, command: str) -> bool:
+def append_block(law: int | None, check: str, cwd: str, branch: str | None, command: str,
+                 record_type: str = "block") -> bool:
+    """record_type is "block", or "ask" when the user got a permission prompt (#117)."""
     return append_record({
         "ts": utc_now(),
-        "type": "block",
+        "type": record_type if record_type in ("block", "ask") else "block",
         "law": law,
         "check": check,
         "cwd": cwd,
@@ -150,6 +152,7 @@ def summary() -> int:
     cutoff = (datetime.now(timezone.utc) - timedelta(days=SUMMARY_DAYS)).strftime(TS_FORMAT)
     recent = [r for r in records if str(r.get("ts", "")) >= cutoff]
     blocks = [r for r in recent if r.get("type") == "block"]
+    asks = [r for r in recent if r.get("type") == "ask"]
     false_positives = [r for r in recent if r.get("type") == "false_positive"]
     counts: dict[tuple, int] = {}
     for r in blocks:
@@ -159,6 +162,12 @@ def summary() -> int:
     for (law, check), n in sorted(counts.items(), key=lambda kv: -kv[1]):
         print(f"  Law {law} · {check}: {n}")
     print(f"Total: {len(blocks)} blocks, {len(false_positives)} marked false positive.")
+    if asks:
+        ask_counts: dict = {}
+        for r in asks:
+            ask_counts[r.get("check")] = ask_counts.get(r.get("check"), 0) + 1
+        print(f"Permission prompts (asks): {len(asks)} — "
+              + ", ".join(f"{c}: {n}" for c, n in sorted(ask_counts.items(), key=lambda kv: -kv[1])))
     for r in false_positives:
         print(f"  - {r.get('ref_ts')} {r.get('check')}: {r.get('note')}")
     return 0
