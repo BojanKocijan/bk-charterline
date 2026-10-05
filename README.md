@@ -1,12 +1,10 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.19.1-blue?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/version-2.24.0-blue?style=flat-square" alt="Version" />
   <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License: GPL-3.0" />
   <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/design-forge/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
-  <img src="https://img.shields.io/badge/laws-37-orange?style=flat-square" alt="37 Laws" />
+  <img src="https://img.shields.io/badge/laws-38-orange?style=flat-square" alt="38 Laws" />
   <a href="https://ko-fi.com/bojaforjelena"><img src="https://img.shields.io/badge/buy_her_a_coffee-Ko--fi-6f4e37?style=flat-square&logo=kofi" alt="Buy her a coffee on Ko-fi" /></a>
-
-Using Design Forge at a company that can't use GPL? See the [commercial license](./COMMERCIAL.md).
 </p>
 
 # Design Forge
@@ -374,7 +372,7 @@ See [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) for the full governance framework.
 
 [GPL-3.0](./LICENSE) &copy; Bojan Kocijan. Free to use for personal and commercial projects. If you modify it and share your version, you must publish your changes under the same license. See [CONTRIBUTING.md](./CONTRIBUTING.md) to send your improvements back.
 
-**Commercial license.** If your company wants to ship a changed version without publishing the changes, or can't use GPL software, a commercial license is available. See [COMMERCIAL.md](./COMMERCIAL.md).
+**Commercial license.** If your company wants to ship a changed version without publishing the changes, or can't use GPL software, a commercial license is available. See [Design Forge for companies](./FOR_COMPANIES.md), which also covers paid team setup.
 
 Version 2.18.0 and earlier were published under the MIT License, and version 2.18.1 under an all-rights-reserved license. Copies obtained under those licenses keep their terms.
 
@@ -385,3 +383,5 @@ Version 2.18.0 and earlier were published under the MIT License, and version 2.1
 Design Forge is free and always will be. If you're married, you already know how this works: a happy wife means a happy life, and in my house a happy wife means a full cup of coffee. We've been happily married for years, mostly thanks to a reliable coffee supply.
 
 <a href="https://ko-fi.com/bojaforjelena"><img src="https://img.shields.io/badge/%E2%98%95_Buy_her_a_coffee-Ko--fi-6f4e37?style=for-the-badge&logo=kofi&logoColor=white" alt="Buy her a coffee on Ko-fi" /></a>
+
+Using Design Forge at a company? See [Design Forge for companies](./FOR_COMPANIES.md): team setup and workshops, or a commercial license if GPL doesn't fit.
