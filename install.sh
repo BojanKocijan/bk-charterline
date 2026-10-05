@@ -145,18 +145,26 @@ with open(path) as f:
 settings = json.loads(content) if content else {}
 
 hooks = settings.setdefault("hooks", {})
-pre_tool_use = hooks.setdefault("PreToolUse", [])
 
-# Bash commands, plus the file-editing tools so the hook can guard the
-# guardrail files themselves (#117). Each entry is added once.
-for matcher in ("Bash", "Edit|Write|MultiEdit|NotebookEdit"):
+# Bash commands, the file-editing tools so the hook can guard the
+# guardrail files themselves (#117), and MCP tools for Law 38's tier 3
+# and 4 asks (#138). PostToolUse on MCP tools records tier 3 approvals.
+# Each entry is added once.
+wanted = [
+    ("PreToolUse", "Bash"),
+    ("PreToolUse", "Edit|Write|MultiEdit|NotebookEdit"),
+    ("PreToolUse", "mcp__.*"),
+    ("PostToolUse", "mcp__.*"),
+]
+for event, matcher in wanted:
+    entries = hooks.setdefault(event, [])
     already = any(
         entry.get("matcher") == matcher
         and any(h.get("command") == hook_command for h in entry.get("hooks", []))
-        for entry in pre_tool_use
+        for entry in entries
     )
     if not already:
-        pre_tool_use.append({
+        entries.append({
             "matcher": matcher,
             "hooks": [{"type": "command", "command": hook_command}],
         })
@@ -168,7 +176,7 @@ PYEOF
 then
   ok "Registered Law 32 guardrail hook in $GLOBAL_SETTINGS"
 else
-  warn "Could not update $GLOBAL_SETTINGS automatically — add the PreToolUse hook manually (see .claude/settings.json in $LOCAL_DIR for the entry)."
+  warn "Could not update $GLOBAL_SETTINGS automatically — add the hook entries manually (see .claude/settings.json in $LOCAL_DIR)."
 fi
 
 # 6. Link agents and skills into ~/.claude so Claude Code registers them.

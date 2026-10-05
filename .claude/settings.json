@@ -18,6 +18,26 @@
             "command": "python3 \"$HOME/.design-forge/.claude/hooks/enforce-laws.py\""
           }
         ]
+      },
+      {
+        "matcher": "mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$HOME/.design-forge/.claude/hooks/enforce-laws.py\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$HOME/.design-forge/.claude/hooks/enforce-laws.py\""
+          }
+        ]
       }
     ]
   }
