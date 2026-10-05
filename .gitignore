@@ -48,3 +48,6 @@ knowledge/PATTERNS.md
 
 # Law 32 block log, its rotated file and lock — local to each machine.
 hook-log*
+
+# AI inventory output and its first-seen state — local to each machine.
+ai-inventory*

@@ -2,6 +2,17 @@
 
 ---
 
+## v2.23.0 — October 5, 2026
+
+### `ai inventory` ([#114](https://github.com/BojanKocijan/design-forge/issues/114))
+- **New:** `scripts/ai_inventory.py` and the `ai inventory` trigger list every MCP server (user, local, project, desktop, and the claude.ai connectors the session passes with `--session`), desktop extension, plugin, skill, agent, hook and permission rule. The result goes to a local `~/.design-forge/ai-inventory.md`.
+- First-seen dates are kept in `ai-inventory.json`, so each run marks what is **new** or **removed** since the last one.
+- **Only names, never secrets:** MCP `args`, `env`, `headers` and URL paths are never read, the desktop `config.json` (OAuth token caches) is never opened, and permission rules that match the Law 14 patterns show as `[masked]`.
+- First step of the AI-governance roadmap (#123); risk tiers and owners come next (#115).
+- The Laws, `plugin.json` and `marketplace.json` are at 2.23.0.
+
+---
+
 ## v2.22.0 — October 5, 2026
 
 ### Law 32 hook keeps a block log ([#113](https://github.com/BojanKocijan/design-forge/issues/113))
