@@ -2,6 +2,19 @@
 
 ---
 
+## v2.24.0 — October 5, 2026
+
+### Law 38 — every AI tool has a risk tier and an owner ([#115](https://github.com/BojanKocijan/design-forge/issues/115))
+- **New law:** MCP servers (including claude.ai connectors), desktop extensions and plugins get a tier: 1 local, 2 reads data, 3 writes or sends, 4 production or irreversible. Claude asks once per session before a tier 3 tool and before **every** tier 4 call. Unclassified tools count as tier 3.
+- Per-tool overrides (for example mail at tier 2 with `send_message` at 3), and an owner for accountability.
+- **Registry:** personal `~/.design-forge/ai-tools.json` plus an optional committed `.claude/ai-tools.json` per project (project wins), written by the new `scripts/ai_tools.py`. It validates, writes atomically and never overwrites a broken file.
+- **`ai inventory`** shows tiers and owners and counts unclassified tools; the new **`ai classify`** trigger proposes classifications for you to approve.
+- A tier only adds friction; existing safety rules still apply. Mechanical enforcement follows in #138.
+- Hardened after an independent review: an invalid or duplicated project entry stays unclassified instead of falling through to a lower personal one, and the registry refuses values that look like secrets, the `[masked]` name and a `--project` folder that doesn't exist.
+- The Laws, `plugin.json` and `marketplace.json` are at 2.24.0.
+
+---
+
 ## v2.23.1 — October 5, 2026
 
 ### Commercial license alongside GPL-3.0 ([#134](https://github.com/BojanKocijan/design-forge/issues/134))

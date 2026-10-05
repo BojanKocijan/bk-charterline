@@ -40,14 +40,14 @@ It's not only for developers. Design Forge carries the full product craft, from 
 
 ## Why Design Forge
 
-Out of the box, an AI coding assistant will happily push to `main`, invent APIs, ship 1000-line PRs, over-engineer, and forget your conventions between sessions. Design Forge fixes that with **37 binding laws** and knowledge files that travel with you to every project.
+Out of the box, an AI coding assistant will happily push to `main`, invent APIs, ship 1000-line PRs, over-engineer, and forget your conventions between sessions. Design Forge fixes that with **38 binding laws** and knowledge files that travel with you to every project.
 
 | Problem | Design Forge solution |
 |---|---|
 | Pushes directly to `main` | Branch + issue before code; PRs only; Claude never merges |
 | Giant, unreviewable PRs | **Law 31** — every PR under 400 lines, one concern per PR, stacked sequences for large features |
 | Over-engineered code | YAGNI enforcement, edge-case analysis upfront, verify-before-claiming |
-| Forgets your conventions | 37 laws + 10 knowledge files that load on demand |
+| Forgets your conventions | 38 laws + 10 knowledge files that load on demand |
 | Inconsistent components | 4-file component folders, no inline styles, TypeScript, accessibility baked in |
 | No audit trail | Pre-execution announcements, Conventional Commits, living `PROJECT_KNOWLEDGE.md` |
 | Stale repos | Auto branch cleanup, orphaned issue detection, README kept current with every PR |
@@ -126,7 +126,7 @@ Design Forge has three layers:
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  CLAUDE_LAWS.md — 37 binding rules              │
+│  CLAUDE_LAWS.md — 38 binding rules              │
 │  (loaded every session)                         │
 ├─────────────────────────────────────────────────┤
 │  agents/ — 8 specialized personas               │
@@ -143,7 +143,7 @@ Design Forge has three layers:
 
 ### Laws — [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md)
 
-37 binding rules. Key highlights:
+38 binding rules. Key highlights:
 
 - **Transparency** — pre-execution announcement before any change; Claude waits for explicit approval
 - **Git discipline** — pull default branch, branch + issue before code, PRs only, never push to default branch, never merge
@@ -152,6 +152,7 @@ Design Forge has three layers:
 - **Engineering rigor** — YAGNI, edge-case thinking, verify-before-claiming, reason-before-executing
 - **Repo hygiene** — immediate branch cleanup, stale branch sweeps, orphaned issue detection, README always current
 - **Human gates** — gate tier from severity, committed `intent.md` → `spec.md` → `plan.md` approvals, risk-scaled review, cap of 3 AI PRs awaiting review (Law 37)
+- **AI tool risk tiers** — every MCP server, extension and plugin has a tier (1–4) and an owner; Claude asks before tier 3 tools and before every tier 4 call (Law 38)
 - **Safety controls** — `arm` / `disarm` toggle; `dry run` mode; three hard-safety rails always survive (never merge, no secrets, no PII)
 
 ### Personas
@@ -230,7 +231,8 @@ Eight specialized agents compose into a single pipeline. `install.sh` links each
 | `review cap <N>` / `review cap off` | Change the cap on AI PRs awaiting review (default 3) |
 | `skip gates` | Lower the gate tier for this change, with a reason |
 | `hook log` | Law 32 blocks per law for the last 30 days, including false positives |
-| `ai inventory` | Every MCP server, extension, plugin, skill, agent, hook and permission rule your sessions can use, with what's new since last time |
+| `ai inventory` | Every MCP server, extension, plugin, skill, agent, hook and permission rule your sessions can use, with tiers, owners and what's new since last time |
+| `ai classify` | Give each unclassified tool a Law 38 risk tier and owner; Claude proposes, you approve |
 
 ---
 
@@ -316,7 +318,7 @@ For professional work we recommend one language, so code, commits, PRs and docs 
 ```
 design-forge/
 ├── CLAUDE.md                    # Entry point — imports laws, maps knowledge triggers
-├── CLAUDE_LAWS.md               # 37 binding rules (loaded every session)
+├── CLAUDE_LAWS.md               # 38 binding rules (loaded every session)
 ├── AGENTS.md                    # Agent architecture overview
 ├── RELEASES.md                  # Version history
 ├── install.sh                   # One-line installer
