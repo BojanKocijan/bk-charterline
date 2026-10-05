@@ -465,5 +465,127 @@ class SkipAndForceTests(unittest.TestCase):
         self.assertAllowed("git push origin +feat/x")
 
 
+class GuardrailAskTests(unittest.TestCase):
+    """Changing a guardrail file hands the call to the user (#117)."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.home = os.path.realpath(os.path.join(self.tmp.name, "home"))
+        self.forge = os.path.join(self.home, ".design-forge")
+        os.makedirs(os.path.join(self.forge, "skills", "ux-writing"))
+        os.makedirs(os.path.join(self.forge, "knowledge"))
+        os.makedirs(os.path.join(self.home, ".claude", "skills"))
+        os.symlink(os.path.join(self.forge, "skills", "ux-writing"),
+                   os.path.join(self.home, ".claude", "skills", "ux-writing"))
+        self.project = os.path.realpath(os.path.join(self.tmp.name, "project"))
+        make_repo(self.project, "feat/x")
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def run_payload(self, payload: dict, cwd: str | None = None) -> subprocess.CompletedProcess:
+        payload.setdefault("cwd", cwd or self.project)
+        return subprocess.run(
+            [sys.executable, HOOK], input=json.dumps(payload), capture_output=True,
+            text=True, cwd=cwd or self.project, env=env_with_home(self.home),
+        )
+
+    def decision(self, result: subprocess.CompletedProcess) -> str:
+        if result.returncode == 2:
+            return "block"
+        self.assertEqual(result.returncode, 0, result.stderr)
+        if not result.stdout.strip():
+            return "allow"
+        return json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"]
+
+    def edit(self, path: str, tool: str = "Edit") -> str:
+        key = "notebook_path" if tool == "NotebookEdit" else "file_path"
+        return self.decision(self.run_payload({"tool_name": tool, "tool_input": {key: path}}))
+
+    def bash(self, command: str, cwd: str | None = None) -> str:
+        return self.decision(self.run_payload({"tool_name": "Bash", "tool_input": {"command": command}}, cwd))
+
+    def test_editing_a_guardrail_file_asks(self) -> None:
+        h = self.home
+        for path in (
+            f"{h}/.claude/settings.json",
+            f"{h}/.claude/settings.local.json",
+            f"{h}/.claude/CLAUDE.md",
+            f"{self.project}/.claude/settings.local.json",
+            f"{self.forge}/CLAUDE_LAWS.md",
+            f"{self.forge}/.claude/hooks/enforce-laws.py",
+            f"{h}/.claude/skills/ux-writing/SKILL.md",  # symlink into the installed clone
+        ):
+            for tool in ("Edit", "Write", "MultiEdit"):
+                self.assertEqual(self.edit(path, tool), "ask", f"{tool} {path}")
+        self.assertEqual(self.edit(f"{self.forge}/x.ipynb", "NotebookEdit"), "ask")
+
+    def test_ask_carries_a_reason_for_the_prompt(self) -> None:
+        result = self.run_payload({"tool_name": "Write", "tool_input": {"file_path": f"{self.home}/.claude/settings.json"}})
+        reason = json.loads(result.stdout)["hookSpecificOutput"]["permissionDecisionReason"]
+        self.assertIn("Law 32", reason)
+        self.assertIn("your Claude Code settings", reason)
+
+    def test_data_files_dev_checkouts_and_normal_files_are_free(self) -> None:
+        dev = os.path.join(self.tmp.name, "design-forge-dev", ".claude", "hooks", "enforce-laws.py")
+        for path in (
+            f"{self.forge}/hook-log.jsonl",
+            f"{self.forge}/hook-log.1.jsonl",
+            f"{self.forge}/ai-inventory.md",
+            f"{self.forge}/ai-tools.json",
+            f"{self.forge}/projects.yaml",
+            f"{self.forge}/knowledge/PATTERNS.md",
+            dev,
+            f"{self.project}/src/app.ts",
+            f"{self.project}/.claude/agents/helper.md",
+        ):
+            self.assertEqual(self.edit(path, "Write"), "allow", path)
+        self.assertEqual(self.edit(f"{self.project}/notebook.ipynb", "NotebookEdit"), "allow")
+
+    def test_bash_writes_to_guardrail_files_ask(self) -> None:
+        for command in (
+            "echo '{}' > ~/.claude/settings.json",
+            "echo x >> ~/.claude/CLAUDE.md",
+            "echo x | tee ~/.claude/settings.local.json",
+            "sed -i '' 's/a/b/' ~/.design-forge/CLAUDE_LAWS.md",
+            "cp /tmp/evil.json ~/.claude/settings.json",
+            "mv ~/.design-forge/CLAUDE_LAWS.md /tmp/x",
+            "rm ~/.design-forge/.claude/hooks/enforce-laws.py",
+            "chmod 777 .claude/settings.local.json",
+        ):
+            self.assertEqual(self.bash(command), "ask", command)
+
+    def test_bash_reads_and_updates_are_free(self) -> None:
+        for command in (
+            "cat ~/.claude/settings.json",
+            "grep -n hooks ~/.claude/settings.json",
+            "cp ~/.claude/settings.json /tmp/settings-backup.json",
+            "git -C ~/.design-forge pull --ff-only",
+            "python3 ~/.design-forge/scripts/ai_tools.py show mcp:db",
+            "echo hi > notes.txt",
+        ):
+            self.assertEqual(self.bash(command), "allow", command)
+
+    def test_a_block_always_wins_over_an_ask(self) -> None:
+        main_repo = os.path.join(self.tmp.name, "main-repo")
+        make_repo(main_repo, "main")
+        self.assertEqual(
+            self.bash('echo x > ~/.claude/settings.json && git commit -m "fix: x"', main_repo), "block"
+        )
+
+    def test_asks_are_logged_as_asks(self) -> None:
+        self.edit(f"{self.home}/.claude/settings.json", "Write")
+        with open(os.path.join(self.forge, "hook-log.jsonl")) as f:
+            [record] = [json.loads(line) for line in f]
+        self.assertEqual((record["type"], record["law"], record["check"]), ("ask", 32, "guardrail-edit"))
+        summary = subprocess.run([sys.executable, "-B", HOOK_LOG, "--summary"], capture_output=True,
+                                 text=True, env=env_with_home(self.home)).stdout
+        self.assertIn("Permission prompts (asks): 1 — guardrail-edit: 1", summary)
+
+    def test_unparsable_input_fails_open(self) -> None:
+        self.assertEqual(self.bash("echo 'unbalanced > ~/.claude/settings.json"), "allow")
+        self.assertEqual(self.decision(self.run_payload({"tool_name": "Write", "tool_input": {}})), "allow")
+
+
 if __name__ == "__main__":
     unittest.main()
