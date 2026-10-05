@@ -1,0 +1,46 @@
+name: Release Tag
+
+# Tags main as vX.Y.Z when a merge changes the version (Law 27, #116).
+# dforge-update installs the newest tag, so only a version whose four
+# files agree is tagged, and an existing tag is never moved.
+
+on:
+  push:
+    branches: [main]
+    paths: [CLAUDE_LAWS.md]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-tag
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Check the version agrees in all four files
+        id: version
+        run: |
+          version=$(python3 scripts/release_version.py check)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Tag the release unless the tag exists
+        env:
+          TAG: v${{ steps.version.outputs.version }}
+        run: |
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "$TAG already exists; leaving it unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Design Forge $TAG" "$GITHUB_SHA"
+          git push origin "$TAG"
+          echo "Tagged $TAG on $GITHUB_SHA."
