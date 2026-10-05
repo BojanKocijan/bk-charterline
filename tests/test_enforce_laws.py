@@ -610,6 +610,9 @@ class GuardrailAskTests(unittest.TestCase):
             "echo '{}' > ~/.design-forge/ai-tools.json",
             "echo x >> ~/.design-forge/ai-approvals.jsonl",
             "cp /tmp/x.json .claude/ai-tools.json",
+            "mv stage .claude",
+            "ln -s stage .claude",
+            "mv /tmp/stage ~/.claude",
         ):
             self.assertEqual(self.bash(command), "ask", command)
 

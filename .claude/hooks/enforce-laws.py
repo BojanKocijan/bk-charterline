@@ -358,6 +358,10 @@ def protected_target(path: str, cwd: str) -> str | None:
         return "a project's Claude Code settings"
     if os.path.basename(real) == _fold("ai-tools.json") and os.path.basename(os.path.dirname(real)) == ".claude":
         return "a project's Law 38 tool registry"
+    if os.path.basename(real) == ".claude":
+        # Moving or linking a folder onto .claude swaps its settings and
+        # registry in one step, past the per-file checks above.
+        return "a .claude folder"
     forge = _fold(os.path.realpath(os.path.join(os.path.expanduser("~"), ".design-forge")))
     if real == forge or real.startswith(forge + os.sep):
         rel = os.path.relpath(real, forge)
