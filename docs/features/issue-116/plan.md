@@ -3,7 +3,7 @@
 Spec: [spec.md](./spec.md) (approved) · Gate tier: Significant · Issue: #116 · Roadmap: #123
 Branches: `chore/pin-actions-to-shas`, `feat/tagged-updates-1-release-tag`, `feat/tagged-updates-2-dforge-update`, each targeting `main`, merged in that order
 Work pile: judgment-heavy for the update function and its gate; delegable for the SHA pins and the tests
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-05, PR #159
 
 ## Design
 
