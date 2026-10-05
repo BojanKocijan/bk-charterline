@@ -2,7 +2,7 @@
 
 Spec: [spec.md](./spec.md) (approved) · Gate tier: Significant · Branch: `feat/guardrail-tamper` · Issue: #117 · Roadmap: #123
 Work pile: judgment-heavy for the guard boundaries; delegable for the checks and tests
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-05, chat
 
 ## Design
 
