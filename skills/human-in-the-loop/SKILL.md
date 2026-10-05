@@ -1,6 +1,7 @@
 ---
 name: human-in-the-loop
 description: Load the Law 37 human-gates playbook — gate tiers from the Law 2 severity (Trivial / Standard / Significant), the committed intent.md → spec.md → plan.md artifact chain in docs/features/<id>/ with owner approval rules, the PR Intake block and Decision log, risk-tiered review with an independent fresh-context reviewer subagent for high-risk work, the review cap on AI-authored PRs awaiting review, the review queue digest, and the delegable vs judgment-heavy triage. Auto-load before any Medium-or-High change, before drafting any non-chore PR, and when the user says "review queue", "approve intent", "approve spec", "approve plan", "review cap", or "skip gates".
+license: GPL-3.0-only
 ---
 
 # Human in the loop — Law 37
