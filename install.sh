@@ -6,8 +6,8 @@
 #   2. Registers the Law 32 guardrail hook in ~/.claude/settings.json.
 #   3. Links the agents and skills into ~/.claude/agents and ~/.claude/skills
 #      so Claude Code registers them.
-#   4. Installs `dforge-update` as a shell function that pulls the clone and
-#      re-runs this installer. Every step is safe to re-run.
+#   4. Installs `dforge-update` as a shell function that moves the clone to the
+#      newest release tag and re-runs this installer. Every step is safe to re-run.
 #
 # Run once:
 #   curl -fsSL https://raw.githubusercontent.com/bojankocijan/design-forge/main/install.sh | bash
@@ -247,25 +247,139 @@ esac
 
 FN_BLOCK=$(cat <<'EOF'
 # design-forge:fn:begin
-# Design Forge — refresh the Claude rules clone and re-run the installer.
-# Installed by design-forge install.sh.
+# Design Forge — move the Claude rules clone to the newest release and
+# re-run the installer. Installed by design-forge install.sh (#116).
+# A shell function, not a script in the clone, so `git checkout` never
+# rewrites the code that's running. Runs in zsh and bash.
 dforge-update() {
-  local rules_dir="$HOME/.design-forge"
+  local rules_dir="$HOME/.design-forge" mode=release
+  local usage="usage: dforge-update [--main]
+  (no flag)  install the newest release tag (vX.Y.Z)
+  --main     follow the main branch instead
+  A change to the hook asks first, in your own terminal."
+  # if, not case: bash 3.2 misreads a case pattern's ")" inside this heredoc.
+  if [ "${1:-}" = --main ]; then
+    mode=main
+  elif [ "${1:-}" = -h ] || [ "${1:-}" = --help ]; then
+    printf '%s\n' "$usage"
+    return 0
+  elif [ -n "${1:-}" ]; then
+    printf '%s\n' "$usage" >&2
+    return 2
+  fi
+  if [ "$#" -gt 1 ]; then
+    printf '%s\n' "$usage" >&2
+    return 2
+  fi
 
   if [ ! -d "$rules_dir/.git" ]; then
     echo "dforge: $rules_dir is not a git clone. Re-run install.sh first." >&2
     return 1
   fi
 
-  echo "dforge: pulling latest rules from main ..."
-  git -C "$rules_dir" pull --ff-only || { echo "dforge: pull failed" >&2; return 1; }
+  # Never overwrite edits to tracked files; gitignored data files don't count.
+  local changed
+  changed=$(command git -C "$rules_dir" status --porcelain --untracked-files=no) || return 1
+  if [ -n "$changed" ]; then
+    echo "dforge: $rules_dir has local changes. Nothing changed. Commit, stash or undo them first:" >&2
+    printf '%s\n' "$changed" >&2
+    return 1
+  fi
 
-  # Pull first, then run the installer, so the script never changes mid-run.
-  DFORGE_UPDATE=1 bash "$rules_dir/install.sh" || { echo "dforge: install.sh failed" >&2; return 1; }
+  echo "dforge: checking for updates ..."
+  if ! command git -C "$rules_dir" fetch --quiet --prune --prune-tags --force --tags origin; then
+    echo "dforge: fetch failed. Nothing changed." >&2
+    return 1
+  fi
+
+  local target label
+  if [ "$mode" = release ]; then
+    label=$(command git -C "$rules_dir" tag --list 'v*' --sort=-v:refname | command grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)
+    if [ -z "$label" ]; then
+      echo "dforge: no release tags yet; following main." >&2
+      mode=main
+    fi
+  fi
+  if [ "$mode" = main ]; then
+    target=origin/main
+    label=main
+  else
+    target="$label"
+  fi
+
+  local head new on_main=no
+  head=$(command git -C "$rules_dir" rev-parse HEAD) || return 1
+  new=$(command git -C "$rules_dir" rev-parse "$target^{commit}") || return 1
+  [ "$(command git -C "$rules_dir" symbolic-ref -q --short HEAD)" = main ] && on_main=yes
 
   local version
-  version=$(grep -m1 -oE '\*\*Version:\*\* *[0-9]+\.[0-9]+\.[0-9]+' "$rules_dir/CLAUDE_LAWS.md" 2>/dev/null | awk '{print $2}')
-  echo "dforge: ready (DESIGN_FORGE v${version:-?})."
+  version=$(command grep -m1 -oE '\*\*Version:\*\* *[0-9]+\.[0-9]+\.[0-9]+' "$rules_dir/CLAUDE_LAWS.md" 2>/dev/null | awk '{print $2}')
+
+  if [ "$head" = "$new" ] && { [ "$mode" = release ] || [ "$on_main" = yes ]; }; then
+    if [ "$mode" = release ] && [ -n "$(command git -C "$rules_dir" symbolic-ref -q HEAD)" ]; then
+      command git -C "$rules_dir" checkout --quiet --detach "$new" || return 1
+    fi
+    DFORGE_UPDATE=1 bash "$rules_dir/install.sh" || { echo "dforge: install.sh failed" >&2; return 1; }
+    echo "dforge: already on $label (DESIGN_FORGE v${version:-?})."
+    return 0
+  fi
+
+  # Never downgrade: a clone that followed main past the last release stays put.
+  if [ "$mode" = release ] && command git -C "$rules_dir" merge-base --is-ancestor "$new" "$head"; then
+    echo "dforge: you're ahead of the latest release, $label (on v${version:-?}). Nothing changed."
+    echo "dforge: the next release tag moves you onto it; dforge-update --main follows main."
+    return 0
+  fi
+
+  # --main moves the local main branch; it may only move forward to the
+  # reviewed commit, never bring in commits of its own.
+  # (No line continuations in this function: bash 3.2 drops them in the heredoc.)
+  if [ "$mode" = main ] && command git -C "$rules_dir" rev-parse -q --verify refs/heads/main >/dev/null && ! command git -C "$rules_dir" merge-base --is-ancestor refs/heads/main "$new"; then
+    echo "dforge: your local main has commits that aren't on origin/main. Nothing changed." >&2
+    return 1
+  fi
+
+  # A change to anything the hook runs needs a yes in a real terminal.
+  if [ -n "$(command git -C "$rules_dir" diff --stat "$head" "$new" -- .claude/hooks scripts/ai_tools.py install.sh .claude/settings.json)" ]; then
+    echo "dforge: this update changes the Law 32 hook:"
+    command git -C "$rules_dir" --no-pager diff --stat "$head" "$new" -- .claude/hooks scripts/ai_tools.py install.sh .claude/settings.json
+    if [ -t 0 ] && [ -t 1 ]; then
+      command git -C "$rules_dir" diff "$head" "$new" -- .claude/hooks scripts/ai_tools.py install.sh .claude/settings.json
+      local reply
+      printf 'Apply this hook change? [y/N] '
+      read -r reply
+      if [ "$reply" != y ] && [ "$reply" != Y ] && [ "$reply" != yes ] && [ "$reply" != Yes ] && [ "$reply" != YES ]; then
+        echo "dforge: nothing changed."
+        return 1
+      fi
+    else
+      command git -C "$rules_dir" --no-pager diff "$head" "$new" -- .claude/hooks scripts/ai_tools.py install.sh .claude/settings.json
+      echo "dforge: the hook changed. Nothing was applied. Run dforge-update in your own terminal to review and approve it." >&2
+      return 1
+    fi
+  fi
+
+  # Check out the commit that was reviewed, by its SHA, not by a name a
+  # fetch could move in the meantime.
+  if [ "$mode" = main ]; then
+    if ! command git -C "$rules_dir" checkout --quiet -B main "$new"; then
+      echo "dforge: couldn't move to the latest main." >&2
+      return 1
+    fi
+  elif ! command git -C "$rules_dir" checkout --quiet --detach "$new"; then
+    echo "dforge: couldn't check out $label." >&2
+    return 1
+  fi
+
+  # Checkout first, then run the installer, so the script never changes mid-run.
+  DFORGE_UPDATE=1 bash "$rules_dir/install.sh" || { echo "dforge: install.sh failed" >&2; return 1; }
+
+  version=$(command grep -m1 -oE '\*\*Version:\*\* *[0-9]+\.[0-9]+\.[0-9]+' "$rules_dir/CLAUDE_LAWS.md" 2>/dev/null | awk '{print $2}')
+  if [ "$mode" = main ]; then
+    echo "dforge: ready (DESIGN_FORGE v${version:-?}, main)."
+  else
+    echo "dforge: ready (DESIGN_FORGE v${version:-?}, tag $label)."
+  fi
 }
 # design-forge:fn:end
 EOF
@@ -292,7 +406,7 @@ if [ -n "$SHELL_RC" ]; then
   install_or_update_function "$SHELL_RC"
 else
   warn "Unknown shell; skipped function install."
-  warn "Update manually with: git -C $LOCAL_DIR pull --ff-only"
+  warn "Update manually with: git -C $LOCAL_DIR fetch --tags && git -C $LOCAL_DIR checkout --detach <newest vX.Y.Z tag>"
 fi
 
 # 8. Done (dforge-update prints its own one-line summary instead)
@@ -309,7 +423,7 @@ Five things are now wired up:
   1. Claude global memory  →  $GLOBAL_MEMORY
      (every Claude Code session auto-loads the Design Forge rules)
   2. dforge-update         →  shell function in ${SHELL_RC:-<no rc found>}
-     (pulls the clone, then re-runs this installer)
+     (installs the newest release, then re-runs this installer)
   3. Law 32 guardrail hook →  $GLOBAL_SETTINGS
      (mechanically blocks merge/push-to-main/bad-commit-message/secret-commit tool calls)
   4. Agents                →  $AGENTS_DIR ($AGENT_COUNT linked)
