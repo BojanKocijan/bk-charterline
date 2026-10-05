@@ -8,7 +8,8 @@ blocks (exit 2 + reason on stderr) the ones that would break Law 5/7
 Law 13 (Conventional Commits), Law 14 (secret scan), Law 32 (never
 skip git hooks) or Law 34 (ask before PR screenshots), or returns
 permissionDecision "ask" so the user approves in Claude Code's own
-prompt: changing a guardrail file, or deleting a tracked file (Law 8).
+prompt: changing a guardrail file or the Law 38 tool registry or
+approvals (`ai_tools.py set` included), or deleting a tracked file (Law 8).
 Every block check runs before any ask. Everything else passes through.
 
 MCP tool calls (`mcp__*`) get Law 38's tier from the registry
@@ -320,9 +321,11 @@ ASK_DENIED_MODES: set[str] = set()
 FILE_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit")
 
 # Files under the installed clone that its own tools write (relative paths
-# or name prefixes); everything else in ~/.design-forge is protected.
+# or name prefixes); everything else in ~/.design-forge is protected. The
+# Law 38 registry and approvals are protected too: a tier is the user's call
+# and an approval is the user's click (#138).
 DF_DATA_PREFIXES = ("hook-log.", "ai-inventory.")
-DF_DATA_FILES = ("ai-tools.json", "projects.yaml", os.path.join("knowledge", "PATTERNS.md"))
+DF_DATA_FILES = ("projects.yaml", os.path.join("knowledge", "PATTERNS.md"))
 
 
 def resolve_path(path: str, cwd: str) -> str:
@@ -353,9 +356,15 @@ def protected_target(path: str, cwd: str) -> str | None:
     if os.path.basename(real) in ("settings.json", "settings.local.json") \
             and os.path.basename(os.path.dirname(real)) == ".claude":
         return "a project's Claude Code settings"
+    if os.path.basename(real) == _fold("ai-tools.json") and os.path.basename(os.path.dirname(real)) == ".claude":
+        return "a project's Law 38 tool registry"
     forge = _fold(os.path.realpath(os.path.join(os.path.expanduser("~"), ".design-forge")))
     if real == forge or real.startswith(forge + os.sep):
         rel = os.path.relpath(real, forge)
+        if rel == _fold("ai-tools.json"):
+            return "your Law 38 tool registry"
+        if rel.startswith(_fold("ai-approvals")):
+            return "your Law 38 approvals"
         if rel.startswith(tuple(_fold(p) for p in DF_DATA_PREFIXES)) or rel in {_fold(f) for f in DF_DATA_FILES}:
             return None
         return "the installed Design Forge"
@@ -401,6 +410,31 @@ def deleted_paths(segment: str) -> list[str]:
     if tokens and os.path.basename(tokens[0]) in ("rm", "unlink"):
         return [t for t in tokens[1:] if not t.startswith("-")]
     return []
+
+
+PYTHON_RE = re.compile(r"python(\d+(\.\d+)?)?")
+
+
+def writes_registry(segment: str) -> bool:
+    """`ai_tools.py set …`, run directly or through python (`-m ai_tools`
+    too). `show` only reads. Untokenisable input is False (fail open)."""
+    try:
+        tokens = strip_command_prefix(shlex.split(segment))
+    except ValueError:
+        return False
+    if tokens and PYTHON_RE.fullmatch(os.path.basename(tokens[0])):
+        i = 1
+        while i < len(tokens) and tokens[i].startswith("-"):
+            if tokens[i] == "-m" and i + 1 < len(tokens):
+                tokens[i + 1] = tokens[i + 1].rsplit(".", 1)[-1] + ".py"
+                i += 1
+                break
+            i += 2 if tokens[i] in ("-W", "-X") else 1  # these take a value
+        tokens = tokens[i:]
+    if not tokens or os.path.basename(tokens[0]) != "ai_tools.py":
+        return False
+    args = [t for t in tokens[1:] if not t.startswith("-")]
+    return bool(args) and args[0] == "set"
 
 
 def tracked_by_git(path: str, cwd: str) -> bool:
@@ -710,6 +744,13 @@ def check_bash(command: str, base: str) -> None:
                     "which git tracks. Approve only if you want it removed.",
                     "tracked-delete",
                 )
+        # Law 38 — a tier is only written after the user approves it (#138).
+        if pending_ask is None and writes_registry(segment):
+            pending_ask = (
+                "Law 38: this command writes a tool's tier to the registry "
+                "(ai_tools.py set). Approve only if you approved this classification.",
+                "registry-write",
+            )
 
     is_commit = bool(re.search(r"\bgit\s+commit\b", scan))
     push_matches = list(PUSH_RE.finditer(scan))

@@ -546,7 +546,6 @@ class GuardrailAskTests(unittest.TestCase):
             f"{self.forge}/hook-log.jsonl",
             f"{self.forge}/hook-log.1.jsonl",
             f"{self.forge}/ai-inventory.md",
-            f"{self.forge}/ai-tools.json",
             f"{self.forge}/projects.yaml",
             f"{self.forge}/knowledge/PATTERNS.md",
             dev,
@@ -596,6 +595,52 @@ class GuardrailAskTests(unittest.TestCase):
         ):
             self.assertEqual(self.bash(command), "ask", command)
         self.assertEqual(self.edit(f"{self.forge}/hook-logger.py", "Write"), "ask")
+
+    def test_law_38_registry_and_approvals_ask(self) -> None:
+        for path, what in (
+            (f"{self.forge}/ai-tools.json", "your Law 38 tool registry"),
+            (f"{self.forge}/ai-approvals.jsonl", "your Law 38 approvals"),
+            (f"{self.forge}/ai-approvals.jsonl.tmp", "your Law 38 approvals"),
+            (f"{self.project}/.claude/ai-tools.json", "a project's Law 38 tool registry"),
+        ):
+            result = self.run_payload({"tool_name": "Write", "tool_input": {"file_path": path}})
+            self.assertEqual(self.decision(result), "ask", path)
+            self.assertIn(what, json.loads(result.stdout)["hookSpecificOutput"]["permissionDecisionReason"])
+        for command in (
+            "echo '{}' > ~/.design-forge/ai-tools.json",
+            "echo x >> ~/.design-forge/ai-approvals.jsonl",
+            "cp /tmp/x.json .claude/ai-tools.json",
+        ):
+            self.assertEqual(self.bash(command), "ask", command)
+
+    def test_registry_set_asks_and_show_is_free(self) -> None:
+        for command in (
+            "python3 ~/.design-forge/scripts/ai_tools.py set mcp:db --tier 2 --owner a --personal",
+            "python ~/.design-forge/scripts/ai_tools.py set mcp:db --tier 2 --owner a --personal",
+            "python3.12 -B scripts/ai_tools.py set mcp:db --tier 2 --owner a --personal",
+            "python3 -W ignore scripts/ai_tools.py set mcp:db --tier 2 --owner a --personal",
+            "./scripts/ai_tools.py set mcp:db --tier 2 --owner a --personal",
+            "cd scripts && python3 -m ai_tools set mcp:db --tier 2 --owner a --personal",
+            "env FOO=1 python3 scripts/ai_tools.py set mcp:db --tier 2 --owner a --personal",
+        ):
+            self.assertEqual(self.bash(command), "ask", command)
+        result = self.run_payload({"tool_name": "Bash", "tool_input": {
+            "command": "python3 scripts/ai_tools.py set mcp:db --tier 2 --owner a --personal"}})
+        reason = json.loads(result.stdout)["hookSpecificOutput"]["permissionDecisionReason"]
+        self.assertIn("Law 38", reason)
+        for command in (
+            "python3 ~/.design-forge/scripts/ai_tools.py show mcp:db",
+            "python3 scripts/ai_tools.py show set",
+            "python3 scripts/ai_inventory.py --project . --session set",
+            "grep set scripts/ai_tools.py",
+        ):
+            self.assertEqual(self.bash(command), "allow", command)
+
+    def test_registry_write_is_logged_under_law_38(self) -> None:
+        self.bash("python3 scripts/ai_tools.py set mcp:db --tier 2 --owner a --personal")
+        with open(os.path.join(self.forge, "hook-log.jsonl")) as f:
+            [record] = [json.loads(line) for line in f]
+        self.assertEqual((record["type"], record["law"], record["check"]), ("ask", 38, "registry-write"))
 
     def test_relative_write_is_judged_before_a_later_cd(self) -> None:
         self.assertEqual(self.bash("echo x > .claude/settings.local.json && cd /tmp"), "ask")
