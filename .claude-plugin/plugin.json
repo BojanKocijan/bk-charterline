@@ -1,6 +1,6 @@
 {
   "name": "design-forge",
-  "version": "2.26.0",
+  "version": "2.27.0",
   "description": "Claude Code plugin for UX and frontend work — binding laws, React scaffolding with library choice (shadcn/ui, MUI, Ant Design, Chakra UI, or custom), React Router architecture, Figma craft, design critique, UX research, developer handoff, and fullstack workflow. Library-agnostic, no corporate toolchain required.",
   "homepage": "https://github.com/bojankocijan/design-forge",
   "repository": "https://github.com/bojankocijan/design-forge",

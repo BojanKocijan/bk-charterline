@@ -187,6 +187,12 @@ Tools: `vitest-axe` in unit tests, `@axe-core/playwright` in E2E.
 - **One logical change per commit.** Don't bundle unrelated changes.
 - **PR description:** why the change was needed, what was changed, how to test it, screenshots for UI changes.
 
+## 6.a Working in a cloud session
+
+- **One assigned branch.** Use the branch the session was given, and start it again from the latest default branch before new work and after each merge (Law 5, "Assigned branch").
+- **Images in a new message.** Images sent while Claude is still working may not be saved in a cloud session; only images in a fresh message are. When an image Claude needs isn't on disk, Claude asks for it to be sent again in a new message. It never guesses what the image showed.
+- **CI that can't run.** If GitHub Actions don't run, the PR summary says `not run ⚠` and lists the local checks instead (Law 7).
+
 ---
 
 ## 7. Motion
