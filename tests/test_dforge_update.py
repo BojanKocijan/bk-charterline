@@ -148,6 +148,265 @@ class Fixture:
         return proc.wait(timeout=30), out.decode(errors="replace")
 
 
+@unittest.skipUnless(SHELLS, "needs bash or zsh")
+class DforgeUpdateTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+
+    def fixture(self) -> Fixture:
+        sub = tempfile.mkdtemp(dir=self._tmp.name)
+        return Fixture(os.path.realpath(sub))
+
+    def each_shell(self):
+        for shell in SHELLS:
+            with self.subTest(shell=shell):
+                yield shell, self.fixture()
+
+    def test_from_main_moves_to_the_newest_tag(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone()
+            newest = fx.release("2.1.0")
+            result = fx.run(shell)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual((fx.head(), fx.branch()), (newest, ""))
+            self.assertIn("ready (DESIGN_FORGE v2.1.0, tag v2.1.0)", result.stdout)
+            self.assertTrue(fx.installed())
+
+    def test_from_an_older_tag_moves_to_the_newest(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            newest = fx.release("2.1.0")
+            self.assertEqual(fx.run(shell).returncode, 0)
+            self.assertEqual(fx.head(), newest)
+
+    def test_main_flag_follows_main_from_a_tag(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            tip = fx.release("2.1.0-dev", tag=None)
+            result = fx.run(shell, "--main")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual((fx.head(), fx.branch()), (tip, "main"))
+            self.assertIn(", main).", result.stdout)
+
+    def test_already_on_the_newest_tag(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            before = fx.head()
+            result = fx.run(shell)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("already on v2.0.0", result.stdout)
+            self.assertEqual(fx.head(), before)
+            self.assertTrue(fx.installed())
+
+    def test_no_tags_follows_main_with_a_warning(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0", tag=None)
+            fx.make_clone()
+            tip = fx.release("2.1.0", tag=None)
+            result = fx.run(shell)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("no release tags yet", result.stderr)
+            self.assertEqual((fx.head(), fx.branch()), (tip, "main"))
+
+    def test_never_downgrades_a_clone_ahead_of_the_last_release(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.release("2.1.0", tag=None)
+            fx.make_clone()
+            before = fx.head()
+            result = fx.run(shell)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("ahead of the latest release, v2.0.0 (on v2.1.0)", result.stdout)
+            self.assertEqual((fx.head(), fx.branch()), (before, "main"))
+            self.assertFalse(fx.installed())
+
+    def test_version_order_and_tag_shape(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.9.0")
+            fx.make_clone(at="v2.9.0")
+            ten = fx.release("2.10.0")
+            fx.release("2.11.0-rc1", tag="v2.11.0-rc1")
+            fx.release("3.0.0", tag="vfoo")
+            self.assertEqual(fx.run(shell).returncode, 0)
+            self.assertEqual(fx.head(), ten)
+
+    def test_hook_change_without_a_terminal_applies_nothing(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            before = fx.head()
+            fx.release("2.1.0", hook="# hook v2\n")
+            result = fx.run(shell)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("+# hook v2", result.stdout)
+            self.assertIn("Nothing was applied. Run dforge-update in your own terminal", result.stderr)
+            self.assertEqual(fx.head(), before)
+            self.assertFalse(fx.installed())
+
+    def test_hook_change_in_a_terminal_asks(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            before = fx.head()
+            newest = fx.release("2.1.0", hook="# hook v2\n")
+            code, out = fx.run_tty(shell, "n")
+            self.assertEqual(code, 1, out)
+            self.assertIn("Apply this hook change? [y/N]", out)
+            self.assertEqual(fx.head(), before)
+            code, out = fx.run_tty(shell, "y")
+            self.assertEqual(code, 0, out)
+            self.assertEqual(fx.head(), newest)
+            self.assertTrue(fx.installed())
+
+    def test_other_hook_paths_count(self) -> None:
+        for path in ("scripts/ai_tools.py", "install.sh", ".claude/settings.json"):
+            for shell, fx in self.each_shell():
+                fx.release("2.0.0")
+                fx.make_clone(at="v2.0.0")
+                fx.write(path, "# changed\n")
+                fx.release("2.1.0")
+                self.assertEqual(fx.run(shell).returncode, 1, path)
+
+    def test_main_flag_is_gated_too(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            before = fx.head()
+            fx.release("2.1.0", tag=None, hook="# hook v2\n")
+            self.assertEqual(fx.run(shell, "--main").returncode, 1)
+            self.assertEqual(fx.head(), before)
+
+    def test_applies_the_reviewed_commit_when_main_moves_during_the_prompt(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            reviewed = fx.release("2.1.0", tag=None, hook="# hook v2\n")
+
+            def main_moves() -> None:
+                fx.release("2.2.0", tag=None, hook="# hook v3 unreviewed\n")
+                fx.git("fetch", "-q", "origin", cwd=fx.clone)
+
+            code, out = fx.run_tty(shell, "y", "--main", at_prompt=main_moves)
+            self.assertEqual(code, 0, out)
+            self.assertEqual(fx.head(), reviewed)
+
+    def test_applies_the_reviewed_commit_when_the_tag_moves_during_the_prompt(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            reviewed = fx.release("2.1.0", hook="# hook v2\n")
+
+            def tag_moves() -> None:
+                fx.release("2.1.1", tag=None, hook="# hook v3 unreviewed\n")
+                fx.git("tag", "-f", "-a", "v2.1.0", "-m", "moved")
+                fx.git("push", "-q", "--force", fx.origin, "refs/tags/v2.1.0")
+                fx.git("fetch", "-q", "--force", "--tags", "origin", cwd=fx.clone)
+
+            code, out = fx.run_tty(shell, "y", at_prompt=tag_moves)
+            self.assertEqual(code, 0, out)
+            self.assertEqual(fx.head(), reviewed)
+
+    def test_main_flag_refuses_local_main_commits(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone()
+            with open(os.path.join(fx.clone, ".claude/hooks/enforce-laws.py"), "w") as f:
+                f.write("# local hook\n")
+            fx.git("commit", "-q", "-am", "local", cwd=fx.clone)
+            fx.git("checkout", "-q", "--detach", "v2.0.0", cwd=fx.clone)
+            before = fx.head()
+            result = fx.run(shell, "--main")
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("local main has commits", result.stderr)
+            self.assertEqual(fx.head(), before)
+
+    def test_already_on_the_tag_from_a_branch_detaches(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone()
+            self.assertEqual(fx.run(shell).returncode, 0)
+            self.assertEqual(fx.branch(), "")
+
+    def test_a_deleted_tag_is_not_installed(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            fx.release("2.1.0")
+            fx.git("fetch", "-q", "--tags", "origin", cwd=fx.clone)
+            fx.git("push", "-q", fx.origin, ":refs/tags/v2.1.0")
+            result = fx.run(shell)
+            self.assertIn("already on v2.0.0", result.stdout)
+
+    def test_strict_user_shell_options_and_aliases(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0", tag=None)
+            fx.make_clone()
+            setup = "set -e -o pipefail; alias grep='grep --color=always'; alias git='false'"
+            if shell == "zsh":
+                setup = "setopt errexit pipefail aliases; alias grep='grep --color=always'; alias git='false'"
+            cmd = [shell, "-c", f'{setup}; . "{fx.fn}"; dforge-update; echo "shell survived"']
+            result = subprocess.run(cmd, env=fx.env, cwd=fx.home, capture_output=True, text=True,
+                                    stdin=subprocess.DEVNULL, timeout=60)
+            self.assertIn("shell survived", result.stdout, result.stderr)
+
+    def test_law_only_change_applies_without_asking(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            fx.write("README.md", "docs\n")
+            newest = fx.release("2.1.0")
+            result = fx.run(shell)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertNotIn("hook", result.stdout.lower())
+            self.assertEqual(fx.head(), newest)
+
+    def test_local_changes_are_refused(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            fx.release("2.1.0")
+            with open(os.path.join(fx.clone, "projects.yaml"), "w") as f:
+                f.write("mine: true\n")  # gitignored: doesn't count
+            before = fx.head()
+            with open(os.path.join(fx.clone, "CLAUDE_LAWS.md"), "a") as f:
+                f.write("my edit\n")
+            result = fx.run(shell)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("has local changes", result.stderr)
+            self.assertIn("CLAUDE_LAWS.md", result.stderr)
+            self.assertNotIn("projects.yaml", result.stderr)
+            self.assertEqual(fx.head(), before)
+            subprocess.run(["git", "checkout", "-q", "CLAUDE_LAWS.md"], cwd=fx.clone, check=True)
+            self.assertEqual(fx.run(shell).returncode, 0)
+
+    def test_fetch_failure_changes_nothing(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            before = fx.head()
+            shutil.rmtree(fx.origin)
+            result = fx.run(shell)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("fetch failed. Nothing changed.", result.stderr)
+            self.assertEqual(fx.head(), before)
+
+    def test_help_and_unknown_flags(self) -> None:
+        for shell, fx in self.each_shell():
+            result = fx.run(shell, "--help")
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("usage: dforge-update [--main]", result.stdout)
+            for args in (("--bogus",), ("--main", "--bogus")):
+                result = fx.run(shell, *args)
+                self.assertEqual(result.returncode, 2, args)
+                self.assertIn("usage:", result.stderr)
+            self.assertIn("is not a git clone", fx.run(shell).stderr)  # no clone yet
+
+
 @unittest.skipUnless(shutil.which("bash"), "needs bash")
 class InstallScriptTests(unittest.TestCase):
     """The real install.sh, run against a temp HOME."""
