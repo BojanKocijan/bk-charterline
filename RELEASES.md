@@ -2,6 +2,18 @@
 
 ---
 
+## v2.27.0 — October 5, 2026
+
+### Rules for cloud sessions ([#146](https://github.com/BojanKocijan/design-forge/issues/146))
+- **Assigned branch (Laws 5 and 9):** in a cloud session that may push to one branch only, Claude uses that branch and starts it again from the latest default branch before new work and after each merge. It never builds on merged history, and it keeps unmerged commits by rebasing them.
+- **Hand over SQL; never run it (Law 35):** Claude never applies a migration or writing SQL to a hosted database. It hands over the SQL and a check query with its expected result, and the dependent PR waits for your confirmation.
+- **CI that didn't run (Law 7):** the PR summary gains `not run ⚠ (<reason>)`, with the local checks that passed. Never `green` for checks that didn't run.
+- **Images in a new message (`knowledge/SKILLS.md` §6.a):** when an image isn't on disk, Claude asks for it in a new message instead of guessing.
+- The README version badge is back in sync (it still said 2.24.0).
+- The Laws, `plugin.json` and `marketplace.json` are at 2.27.0.
+
+---
+
 ## v2.26.0 — October 5, 2026
 
 ### The Law 32 hook enforces Law 38 tool tiers ([#138](https://github.com/BojanKocijan/design-forge/issues/138))

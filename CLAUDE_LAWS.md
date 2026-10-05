@@ -1,6 +1,6 @@
 # Master Claude Laws — Design Forge
 
-**Version:** 2.26.0
+**Version:** 2.27.0
 **Last Updated:** 2026-10-05
 **Rules Repo:** https://github.com/bojankocijan/design-forge
 **Inspired by:** Asimov's Three Laws of Robotics
@@ -53,6 +53,8 @@
 
     No code is written on a stale branch, on `main` directly, or without a corresponding issue.
 
+    **Assigned branch (cloud sessions).** When the environment assigns Claude one branch and allows pushing nowhere else (a Claude Code cloud session), Claude uses that branch instead of creating `feat/…`. Before new work, and after each merge, Claude starts it again from the latest default branch: `git fetch origin <default-branch> && git checkout -B <assigned-branch> origin/<default-branch>`. It never adds commits on top of already-merged history. If the branch still holds unmerged commits, Claude keeps them and rebases them onto the new base; it resets only a branch that holds nothing but merged history. This applies only when pushing elsewhere is not allowed. Everywhere else, the steps above stand.
+
 5a. **Check for existing open or merged PRs before starting new work.** Before opening a new issue or branching, Claude must check if there's already an open or recently merged PR for the same work:
 
 - **Open PR exists:** Claude updates the existing PR instead of creating new branch/issue. Claude pulls the branch, makes changes, commits, and pushes to that PR.
@@ -74,10 +76,12 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
 
     **PR:** <PR title> — <full GitHub PR URL>
     **Issue:** <issue title> — <full GitHub issue URL>
-    **CI:** <green ✓ | pending ⏳ | failed ✗>
+    **CI:** <green ✓ | pending ⏳ | failed ✗ | not run ⚠ (<reason>)>
 
     Merge it yourself in the GitHub UI when you're satisfied.
     ```
+
+    **CI that didn't run.** When GitHub Actions didn't run at all (billing, an outage, Actions disabled), the `CI:` line says `not run ⚠ (<reason>)`, and the next line lists the local checks that passed (for example `Local: lint, typecheck, 862 tests, build`). Claude never writes `green` for checks that didn't run on GitHub.
 
     A `merge it` / `merge the PR` / `ship it` instruction from the user does **not** authorize Claude to merge. Claude never runs `gh pr merge` or any merge automation.
 
@@ -95,6 +99,7 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
         3. Delete the local branch: `git branch -D <branch>`.
         4. Confirm the linked issue is closed; close it via `gh issue close <N>` if not.
     - **Report cleanup in every response after a merge**, e.g.: `Branch \`feat/my-feature\` deleted (remote + local). Issue #N closed.`
+    - **Assigned branch (Law 5).** Step 2 (deleting the remote branch) is skipped for a branch the environment assigned. GitHub usually deletes it on merge, and the next push recreates it from the latest default branch.
     - **Never delete an unmerged branch.** If the ancestor check fails and the PR is not `MERGED`, leave the branch and report it.
     - At session start (Law 25), Claude also sweeps for orphaned merged branches and clears them without being asked.
     - **Pull the default branch immediately after, unprompted.** The moment a PR merges, Claude runs `git checkout <default-branch> && git pull origin <default-branch>` right away as part of the same cleanup — not just at the next branch-creation moment (Law 5). This keeps local `main` continuously current as work lands instead of going stale between sessions.
@@ -352,6 +357,8 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
     4. Set PAGEVIEW_INGEST_SECRET to the same value on both Netlify sites.
     5. Redeploy both sites.
     ```
+
+    **Hand over SQL; never run it.** Claude never applies a migration or runs writing SQL on a hosted (shared or production) database, not even through a tool that allows it. It writes the migration in the repo (idempotent where possible) and puts in the checklist both the SQL to run and a short **check query** with its expected result (for example `select count(*) from plans where active;` → `1 row: 13`). A PR that depends on the migration is merged only after the owner confirms the check result. Law 38's tier 4 still applies to any read-only call Claude makes to that database.
 
     If a step genuinely can't be fully specified yet (the exact project/site isn't identified, a value needs to be generated first), Claude says so explicitly and offers to resolve it (e.g. "want me to generate this secret now?") rather than silently omitting the step. This checklist is not optional ceremony on top of the PR-ready summary — for a multi-step change it **is** the part the human actually needs, so it must be complete: every manual step across every repo involved in the change, not only the one Claude happens to be focused on at that moment. When new steps are discovered later (e.g. a follow-up PR's migration), Claude restates the full remaining sequence rather than mentioning only the new step in isolation, so the human never has to reconstruct order from scattered messages.
 
