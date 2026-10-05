@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 
@@ -206,6 +207,9 @@ def extract_commit_messages(command: str, cwd: str) -> list[str]:
 PUSH_RE = re.compile(r"\bgit\s+push\b([^\n;&|]*)")
 
 
+PUSH_VALUE_FLAGS = ("-o", "--push-option", "--repo", "--receive-pack", "--exec")
+
+
 def push_targets_default(push_args: str, current: str | None, default: str) -> bool:
     """Decide whether one `git push ...` invocation would advance the
     default branch on origin. Deliberately conservative: an explicit
@@ -216,7 +220,20 @@ def push_targets_default(push_args: str, current: str | None, default: str) -> b
     fix.
     """
     args = push_args.strip()
-    tokens = [t for t in args.split() if t]
+    # A leading `+` on a refspec forces that one ref (`+main`, `+HEAD:main`);
+    # strip it so the branch name underneath is still recognised. Values of
+    # options that take a separate argument (`-o a:b`) are not refspecs.
+    raw = [t for t in args.split() if t]
+    tokens: list[str] = []
+    skip = False
+    for t in raw:
+        if skip:
+            skip = False
+            continue
+        if t in PUSH_VALUE_FLAGS:
+            skip = True
+            continue
+        tokens.append(t[1:] if t.startswith("+") and len(t) > 1 else t)
 
     delete_idx = None
     for flag in ("--delete", "-d"):
@@ -230,7 +247,7 @@ def push_targets_default(push_args: str, current: str | None, default: str) -> b
                 ref = ref[len(prefix):]
         return ref == default
 
-    refspec_tokens = [t for t in tokens if ":" in t]
+    refspec_tokens = [t for t in tokens if ":" in t and not t.startswith("-")]
     if refspec_tokens:
         dst = refspec_tokens[0].split(":", 1)[1]
         for prefix in ("refs/heads/",):
@@ -248,6 +265,8 @@ def push_targets_default(push_args: str, current: str | None, default: str) -> b
     # implicit push of the current branch.
     non_flags = [t for t in tokens if not t.startswith("-")]
     explicit_branch = non_flags[1] if len(non_flags) >= 2 else None
+    if explicit_branch == "HEAD":
+        explicit_branch = current  # `git push origin HEAD` pushes the current branch
     if explicit_branch is not None:
         return explicit_branch == default
     return current is not None and current == default
@@ -266,6 +285,106 @@ class Blocked(Exception):
 
 def block(reason: str, check: str) -> None:
     raise Blocked(reason, check)
+
+
+FORCE_FLAGS = ("--force", "-f", "--force-with-lease", "--force-if-includes")
+
+
+def push_is_forced(push_args: str) -> bool:
+    for t in push_args.split():
+        if t.startswith("+") and len(t) > 1:
+            return True
+        if t in FORCE_FLAGS or t.startswith("--force-with-lease="):
+            return True
+        if re.fullmatch(r"-[A-Za-z]*f[A-Za-z]*", t):  # short cluster such as -uf
+            return True
+    return False
+
+
+PREFIX_WORDS = ("sudo", "command", "exec", "env", "nohup", "time")
+
+
+def strip_command_prefix(tokens: list[str]) -> list[str]:
+    """Drop leading `VAR=value` assignments and wrappers such as `sudo`,
+    `env` or `command`, so `HUSKY=0 git commit …` is still `git commit`."""
+    i = 0
+    while i < len(tokens) and (
+        tokens[i] in PREFIX_WORDS or re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", tokens[i])
+    ):
+        i += 1
+    return tokens[i:]
+
+
+def git_invocation(segment: str, sub: str) -> tuple[list[str], list[str]] | None:
+    """(global options, arguments) of `git [global options] <sub> …` in one
+    command segment, or None if it isn't that git command or can't be
+    tokenised (callers then fail open)."""
+    try:
+        tokens = strip_command_prefix(shlex.split(segment))
+    except ValueError:
+        return None
+    if not tokens or os.path.basename(tokens[0]) != "git":
+        return None
+    i = 1
+    while i < len(tokens) and tokens[i].startswith("-"):
+        i += 2 if tokens[i] in ("-C", "-c") else 1  # these take a value
+    if i < len(tokens) and tokens[i] == sub:
+        return tokens[1:i], tokens[i + 1:]
+    return None
+
+
+def git_subcommand_args(segment: str, sub: str) -> list[str] | None:
+    found = git_invocation(segment, sub)
+    return found[1] if found else None
+
+
+# git commit options whose value follows as the next token.
+COMMIT_VALUE_FLAGS = ("-m", "--message", "-F", "--file", "-C", "--reuse-message",
+                      "-c", "--reedit-message", "-t", "--template", "--author", "--date",
+                      "--fixup", "--squash", "--cleanup", "--trailer")
+
+
+def commit_skips_hooks(args: list[str]) -> bool:
+    skip = False
+    for t in args:
+        if skip:
+            skip = False
+            continue
+        if t == "--":
+            return False  # pathspecs follow
+        if t == "--no-verify":
+            return True
+        if t in COMMIT_VALUE_FLAGS:
+            skip = True  # its value is the next token, not a flag
+            continue
+        if re.fullmatch(r"-[A-Za-z]+", t):
+            for ch in t[1:]:
+                if ch == "n":
+                    return True
+                if ch in "mFCct":
+                    if ch == t[-1]:
+                        skip = True  # value is the next token
+                    break  # otherwise the rest of the cluster is the value
+                if ch in "uS":
+                    break  # optional value attached, e.g. -uno
+    return False
+
+
+def skips_git_hooks(segment: str) -> bool:
+    """`git commit --no-verify` / `-n` (anywhere among the flags, alone or in
+    a short cluster such as `-an`), `git push --no-verify`, or pointing git at
+    another hooks folder with `-c core.hooksPath=…`. `git push -n` is a dry run."""
+    for sub in ("commit", "push"):
+        found = git_invocation(segment, sub)
+        if found is None:
+            continue
+        global_opts, args = found
+        if any(o.lower().startswith("core.hookspath") for o in global_opts):
+            return True
+        if sub == "commit":
+            return commit_skips_hooks(args)
+        return "--no-verify" in args
+    return False
 
 
 HEREDOC_BODY_RE = re.compile(r"(<<-?\s*['\"]?(\w+)['\"]?\n)(.*?)(\n\2\b)", re.DOTALL)
@@ -336,6 +455,15 @@ def check_bash(command: str, base: str) -> None:
             "screenshots",
         )
 
+    # Law 32 — never skip git hooks (Claude's behaviour on a block forbids any bypass).
+    for segment in split_segments(scan) or []:
+        if skips_git_hooks(segment):
+            block(
+                "Blocked (Law 32): `--no-verify` / `git commit -n` skips git "
+                "hooks. Fix whatever the hook objects to instead of bypassing it.",
+                "no-verify",
+            )
+
     is_commit = bool(re.search(r"\bgit\s+commit\b", scan))
     push_matches = list(PUSH_RE.finditer(scan))
 
@@ -352,6 +480,13 @@ def check_bash(command: str, base: str) -> None:
             )
 
         for match in push_matches:
+            if push_targets_default(match.group(1), branch, default) and push_is_forced(match.group(1)):
+                block(
+                    f"Blocked (Law 7): refusing to force-push to `{default}`. "
+                    "Rewriting the shared history of the default branch is "
+                    "never Claude's call; force-push only a feature branch.",
+                    "force-push-default",
+                )
             if push_targets_default(match.group(1), branch, default):
                 block(
                     f"Blocked (Law 7): refusing to push to `{default}`. "
