@@ -3,7 +3,7 @@
 Spec: [spec.md](./spec.md) (approved) · Gate tier: Significant · Issue: #138 · Roadmap: #123
 Branches: `feat/mcp-approvals-1-store`, `feat/mcp-approvals-2-hook`, `feat/mcp-approvals-3-registry`, each targeting `main` and stacked by commits
 Work pile: judgment-heavy for the lookup and approval boundaries; delegable for the tests
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-05, chat
 
 ## Design
 
