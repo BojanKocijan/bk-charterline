@@ -622,6 +622,10 @@ class GuardrailAskTests(unittest.TestCase):
             "./scripts/ai_tools.py set mcp:db --tier 2 --owner a --personal",
             "cd scripts && python3 -m ai_tools set mcp:db --tier 2 --owner a --personal",
             "env FOO=1 python3 scripts/ai_tools.py set mcp:db --tier 2 --owner a --personal",
+            'bash -c "python3 scripts/ai_tools.py set mcp:db --tier 1 --owner a --personal"',
+            "sh -c 'cd scripts && ./ai_tools.py set mcp:db --tier 1 --owner a --personal'",
+            "uv run scripts/ai_tools.py set mcp:db --tier 1 --owner a --personal",
+            "uv run python3 scripts/ai_tools.py set mcp:db --tier 1 --owner a --personal",
         ):
             self.assertEqual(self.bash(command), "ask", command)
         result = self.run_payload({"tool_name": "Bash", "tool_input": {

@@ -416,12 +416,18 @@ PYTHON_RE = re.compile(r"python(\d+(\.\d+)?)?")
 
 
 def writes_registry(segment: str) -> bool:
-    """`ai_tools.py set …`, run directly or through python (`-m ai_tools`
-    too). `show` only reads. Untokenisable input is False (fail open)."""
+    """`ai_tools.py set …`, run directly, through python (`-m ai_tools`
+    too), `uv run` or a nested `bash|sh|zsh -c`. `show` only reads.
+    Untokenisable input is False (fail open)."""
     try:
         tokens = strip_command_prefix(shlex.split(segment))
     except ValueError:
         return False
+    if tokens and os.path.basename(tokens[0]) in ("bash", "sh", "zsh") and "-c" in tokens[1:-1]:
+        inner = tokens[tokens.index("-c", 1) + 1]
+        return any(writes_registry(s) for s in split_segments(inner) or [])
+    if tokens[:2] == ["uv", "run"]:
+        tokens = tokens[2:]
     if tokens and PYTHON_RE.fullmatch(os.path.basename(tokens[0])):
         i = 1
         while i < len(tokens) and tokens[i].startswith("-"):
@@ -995,7 +1001,7 @@ def main() -> None:
         log_block(asked, command, base, "ask" if decision == "ask" else "block")
         reason = asked.reason if decision == "ask" else (
             asked.reason + f" In `{mode}` mode this can't be confirmed in a prompt, so it's "
-            "blocked: make the change yourself or switch permission mode."
+            "blocked: do it yourself or switch permission mode."
         )
         print(json.dumps({"hookSpecificOutput": {
             "hookEventName": "PreToolUse",
