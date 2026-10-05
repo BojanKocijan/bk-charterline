@@ -2,7 +2,7 @@
 
 Intent: [#115](https://github.com/BojanKocijan/design-forge/issues/115) (the issue is the intent: problem, outcome, tier table) · Roadmap: #123
 Design: none (no UI; behavior of Claude plus `ai inventory` output)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-05, chat
 
 ## Decisions already taken (owner, 2026-10-05)
 
