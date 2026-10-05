@@ -2,7 +2,7 @@
 
 Spec: [#114](https://github.com/BojanKocijan/design-forge/issues/114) (the issue is the spec) · Gate tier: Standard · Branch: `feat/ai-inventory` · Issue: #114 · Roadmap: #123
 Work pile: delegable (one stdlib script plus docs, verifiable with fixture tests)
-Approved-by: <pending> (revision 2; revision 1 approved by BojanKocijan, 2026-10-05, chat)
+Approved-by: BojanKocijan, 2026-10-05, chat (revision 2; revision 1 approved the same day)
 
 ## Revision 2 — why
 
