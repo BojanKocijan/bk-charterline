@@ -49,7 +49,7 @@ Out of the box, an AI coding assistant will happily push to `main`, invent APIs,
 | Inconsistent components | 4-file component folders, no inline styles, TypeScript, accessibility baked in |
 | No audit trail | Pre-execution announcements, Conventional Commits, living `PROJECT_KNOWLEDGE.md` |
 | Stale repos | Auto branch cleanup, orphaned issue detection, README kept current with every PR |
-| "Claude might forget and merge/push to `main` anyway" | **Law 32** — a `PreToolUse` hook mechanically blocks merge, push or force-push to `main`, skipped git hooks, malformed commits and secret commits, and asks you in the app before Claude changes its own guardrails or deletes tracked files |
+| "Claude might forget and merge/push to `main` anyway" | **Law 32** — a `PreToolUse` hook mechanically blocks merge, push or force-push to `main`, skipped git hooks, malformed commits and secret commits, and asks you in the app before Claude changes its own guardrails, deletes tracked files or calls a tier 3 or 4 MCP tool |
 
 ---
 
@@ -150,7 +150,7 @@ Design Forge has three layers:
 - **Engineering rigor** — YAGNI, edge-case thinking, verify-before-claiming, reason-before-executing
 - **Repo hygiene** — immediate branch cleanup, stale branch sweeps, orphaned issue detection, README always current
 - **Human gates** — gate tier from severity, committed `intent.md` → `spec.md` → `plan.md` approvals, risk-scaled review, cap of 3 AI PRs awaiting review (Law 37)
-- **AI tool risk tiers** — every MCP server, extension and plugin has a tier (1–4) and an owner; Claude asks before tier 3 tools and before every tier 4 call (Law 38)
+- **AI tool risk tiers** — every MCP server, extension and plugin has a tier (1–4) and an owner; the Law 32 hook asks you in the app before a tier 3 tool's first call each session and before every tier 4 call (Law 38)
 - **Safety controls** — `arm` / `disarm` toggle; `dry run` mode; three hard-safety rails always survive (never merge, no secrets, no PII)
 
 ### Personas
@@ -230,7 +230,7 @@ Eight specialized agents compose into a single pipeline. `install.sh` links each
 | `skip gates` | Lower the gate tier for this change, with a reason |
 | `hook log` | Law 32 blocks and permission prompts for the last 30 days, including false positives |
 | `ai inventory` | Every MCP server, extension, plugin, skill, agent, hook and permission rule your sessions can use, with tiers, owners and what's new since last time |
-| `ai classify` | Give each unclassified tool a Law 38 risk tier and owner; Claude proposes, you approve |
+| `ai classify` | Give each unclassified tool a Law 38 risk tier and owner; Claude proposes, you approve in chat, then confirm each write in the app's prompt |
 
 ---
 
