@@ -1,6 +1,7 @@
 ---
 name: feature-workflow
 description: Feature lifecycle — 3-question triage at "start feature", 5 states (in-design → … → handed-off), one-active-at-a-time with pause/resume. Drives PROJECT_KNOWLEDGE.md §11. Invoke on start / pause / resume / finish feature.
+license: GPL-3.0-only
 ---
 
 # Feature Workflow

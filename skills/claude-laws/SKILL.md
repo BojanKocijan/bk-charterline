@@ -1,6 +1,7 @@
 ---
 name: claude-laws
 description: Master binding laws for all Design Forge work — pre-execution announcement, branch+issue, never push to main, never merge, no file deletion, Conventional Commits, secret scan, PII-free mocks, on-demand knowledge, resolve UI to the chosen library. Load on every Design Forge session; overrides everything else.
+license: GPL-3.0-only
 ---
 
 # Master Claude Laws — Design Forge
