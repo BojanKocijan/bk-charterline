@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""AI inventory (#114): every MCP server and desktop extension a
-Claude Code session can use.
+"""AI inventory (#114): every MCP server, extension, plugin, skill,
+agent, hook and permission rule a Claude Code session can use.
 
 Writes ~/.design-forge/ai-inventory.md (also printed) and keeps
 first-seen dates in ~/.design-forge/ai-inventory.json, so a re-run marks
@@ -20,6 +20,7 @@ import argparse
 import json
 import os
 import re
+import shlex
 import sys
 from datetime import date
 from urllib.parse import urlparse
@@ -36,6 +37,11 @@ SECRET_PATTERNS = [
 SECTIONS = [
     ("mcp", "MCP servers"),
     ("extension", "Desktop extensions"),
+    ("plugin", "Plugins"),
+    ("skill", "Skills"),
+    ("agent", "Agents"),
+    ("hook", "Hooks"),
+    ("permission", "Permission rules"),
 ]
 
 
@@ -98,6 +104,59 @@ def add_servers(inv: Inventory, servers, scope: str, source: str, note=lambda na
             inv.add("mcp", scope, name, server_detail(cfg) + note(name), source)
 
 
+def hook_script(command: str) -> str:
+    try:
+        tokens = shlex.split(command)
+    except ValueError:
+        tokens = command.split()
+    for t in tokens:
+        if t.endswith((".py", ".sh", ".js", ".ts")) or "/" in t:
+            return os.path.basename(t)
+    return os.path.basename(tokens[0]) if tokens else "?"
+
+
+def collect_settings(inv: Inventory, path: str, scope: str) -> None:
+    data = inv.load_json(path)
+    if not isinstance(data, dict):
+        return
+    plugins = data.get("enabledPlugins")
+    if isinstance(plugins, dict):
+        for name, on in plugins.items():
+            inv.add("plugin", scope, name, "enabled" if on else "disabled", path)
+    elif isinstance(plugins, list):
+        for name in plugins:
+            inv.add("plugin", scope, name, "enabled", path)
+    hooks = data.get("hooks")
+    if isinstance(hooks, dict):
+        for event, groups in hooks.items():
+            for group in groups if isinstance(groups, list) else []:
+                if not isinstance(group, dict):
+                    continue
+                matcher = group.get("matcher") or "*"
+                for h in group.get("hooks", []):
+                    cmd = h.get("command", "") if isinstance(h, dict) else ""
+                    inv.add("hook", scope, f"{event} · {matcher} · {hook_script(cmd)}",
+                            h.get("type", "command") if isinstance(h, dict) else "?", path)
+    perms = data.get("permissions")
+    if isinstance(perms, dict):
+        for verdict in ("allow", "ask", "deny"):
+            for rule in perms.get(verdict, []) or []:
+                inv.add("permission", scope, rule, verdict, path)
+
+
+def collect_dir_entries(inv: Inventory, folder: str, kind: str, scope: str) -> None:
+    if not os.path.isdir(folder):
+        return
+    for entry in sorted(os.listdir(folder)):
+        if entry.startswith("."):
+            continue
+        path = os.path.join(folder, entry)
+        if kind == "agent" and not entry.endswith(".md"):
+            continue
+        detail = f"→ {tilde(os.path.realpath(path))}" if os.path.islink(path) else "local"
+        inv.add(kind, scope, entry[:-3] if kind == "agent" else entry, detail, folder)
+
+
 def desktop_dir() -> str:
     mac = os.path.join(home(), "Library", "Application Support", "Claude")
     return mac if os.path.isdir(mac) else os.path.join(home(), ".config", "Claude")
@@ -116,6 +175,8 @@ def collect(project: str, session: list[str] | None) -> Inventory:
         for path, cfg in projects.items():
             if isinstance(cfg, dict):
                 add_servers(inv, cfg.get("mcpServers"), "local", f"{claude_json} ({tilde(path)})")
+        for plugin_id in (data.get("pluginUsage") or {}):
+            inv.add("plugin", "desktop", plugin_id, "used", claude_json)
         this = projects.get(project) if isinstance(projects.get(project), dict) else {}
         enabled = set(this.get("enabledMcpjsonServers") or [])
         disabled = set(this.get("disabledMcpjsonServers") or [])
@@ -140,6 +201,25 @@ def collect(project: str, session: list[str] | None) -> Inventory:
             if isinstance(manifest, dict):
                 inv.add("extension", "desktop", manifest.get("name") or ext,
                         f"v{manifest.get('version', '?')}", os.path.join(ext_dir, ext))
+
+    installed = inv.load_json(os.path.join(h, ".claude", "plugins", "installed_plugins.json"))
+    if isinstance(installed, dict):
+        names = installed.get("plugins") if isinstance(installed.get("plugins"), dict) else installed
+        for name in names:
+            if name != "version":
+                inv.add("plugin", "user", name, "installed",
+                        os.path.join(h, ".claude", "plugins", "installed_plugins.json"))
+
+    for path, scope in (
+        (os.path.join(h, ".claude", "settings.json"), "user"),
+        (os.path.join(project, ".claude", "settings.json"), "project"),
+        (os.path.join(project, ".claude", "settings.local.json"), "local"),
+    ):
+        collect_settings(inv, path, scope)
+
+    for base, scope in ((os.path.join(h, ".claude"), "user"), (os.path.join(project, ".claude"), "project")):
+        collect_dir_entries(inv, os.path.join(base, "skills"), "skill", scope)
+        collect_dir_entries(inv, os.path.join(base, "agents"), "agent", scope)
 
     for name in session or []:
         inv.add("mcp", "session", name, "connected in this session", "Claude session tools")

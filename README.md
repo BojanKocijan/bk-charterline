@@ -228,6 +228,7 @@ Eight specialized agents compose into a single pipeline. `install.sh` links each
 | `review cap <N>` / `review cap off` | Change the cap on AI PRs awaiting review (default 3) |
 | `skip gates` | Lower the gate tier for this change, with a reason |
 | `hook log` | Law 32 blocks per law for the last 30 days, including false positives |
+| `ai inventory` | Every MCP server, extension, plugin, skill, agent, hook and permission rule your sessions can use, with what's new since last time |
 
 ---
 

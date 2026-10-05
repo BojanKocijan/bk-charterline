@@ -25,6 +25,7 @@ SECRETS = [
     "url-path-secret",
     "url-query-secret",
     "sk-arg0123456789abcdefghij",
+    "ghp_permtoken0123456789",
     "desktop-config-marker",
 ]
 
@@ -74,12 +75,25 @@ class AiInventoryTests(unittest.TestCase):
                 }},
                 "enabledMcpjsonServers": ["team-tracker"],
             }},
+            "pluginUsage": {"engineering@inline": {}},
         })
         write(os.path.join(p, ".mcp.json"), {"mcpServers": {"team-tracker": {"command": "npx"}}})
         desk = os.path.join(h, "Library", "Application Support", "Claude")
         write(os.path.join(desk, "config.json"), {"oauth:tokenCache": "desktop-config-marker"})
         write(os.path.join(desk, "Claude Extensions", "ext1", "manifest.json"),
               {"name": "notes-ext", "version": "1.2.0"})
+        write(os.path.join(h, ".claude", "settings.json"), {
+            "enabledPlugins": {"design@market": True},
+            "hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": [
+                {"type": "command", "command": 'python3 "/x/enforce-laws.py" --token ghp_permtoken0123456789'}
+            ]}]},
+            "permissions": {"allow": ["Bash(npm run *)", "Bash(curl -H token=ghp_permtoken0123456789)"]},
+        })
+        write(os.path.join(p, ".claude", "settings.local.json"), {"permissions": {"deny": ["Read(.env)"]}})
+        os.makedirs(os.path.join(h, "skill-src", "ux-writing"))
+        os.makedirs(os.path.join(h, ".claude", "skills"))
+        os.symlink(os.path.join(h, "skill-src", "ux-writing"), os.path.join(h, ".claude", "skills", "ux-writing"))
+        write(os.path.join(h, ".claude", "agents", "tester.md"), "# tester")
 
     def test_lists_every_source(self) -> None:
         self.plant_everything()
@@ -91,6 +105,13 @@ class AiInventoryTests(unittest.TestCase):
             "| local-api | local | http · api.example.com |",
             "| team-tracker | project | stdio · npx · enabled |",
             "| notes-ext | desktop | v1.2.0 |",
+            "| engineering@inline | desktop | used |",
+            "| design@market | user | enabled |",
+            "| ux-writing | user | → ~/skill-src/ux-writing |",
+            "| tester | user | local |",
+            "| PreToolUse · Bash · enforce-laws.py | user |",
+            "| Bash(npm run \\*) | user | allow |".replace("\\*", "*"),
+            "| Read(.env) | local | deny |",
             "| gmail | session |",
             "| supabase | session |",
             "Session servers: 2",
@@ -103,13 +124,14 @@ class AiInventoryTests(unittest.TestCase):
         everything = self.outputs()
         for secret in SECRETS:
             self.assertNotIn(secret, everything)
+        self.assertIn("[masked]", everything)
 
     def test_empty_home_writes_a_valid_inventory(self) -> None:
         result = self.run_inventory()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("0 items (first run)", result.stdout)
         self.assertIn("Session servers not provided", result.stdout)
-        self.assertEqual(result.stdout.count("_None found._"), 2)
+        self.assertEqual(result.stdout.count("_None found._"), 7)
 
     def test_broken_file_is_reported_and_the_rest_collected(self) -> None:
         self.plant_everything()
@@ -118,7 +140,7 @@ class AiInventoryTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("## Couldn't parse", result.stdout)
         self.assertIn("`~/.claude.json`", result.stdout)
-        self.assertIn("| team-tracker | project |", result.stdout)
+        self.assertIn("| tester | user |", result.stdout)
 
     def test_first_seen_new_and_removed(self) -> None:
         self.plant_everything()
