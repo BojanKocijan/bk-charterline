@@ -88,6 +88,9 @@ PYEOF
 # 2. Clone or pull the rules repo (dforge-update has already pulled)
 if [ -n "${DFORGE_UPDATE:-}" ]; then
   :
+elif [ -d "$LOCAL_DIR/.git" ] && ! git -C "$LOCAL_DIR" symbolic-ref -q HEAD >/dev/null; then
+  # A release checkout (detached HEAD) can't be pulled; dforge-update moves it.
+  ok "On release $(git -C "$LOCAL_DIR" describe --tags --exact-match 2>/dev/null || echo "(detached)"); run dforge-update to update."
 elif [ -d "$LOCAL_DIR/.git" ]; then
   say "Updating existing rules clone at $LOCAL_DIR ..."
   git -C "$LOCAL_DIR" pull --quiet --ff-only || die "git pull failed in $LOCAL_DIR"
