@@ -2,7 +2,7 @@
 
 Intent: [#138](https://github.com/BojanKocijan/design-forge/issues/138) (the issue is the intent) · Roadmap: #123 · Builds on: #115 (Law 38), #117 (`ask`)
 Design: none (no UI; hook behavior and the app's permission prompt)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-05, chat
 
 ## Decisions already taken (owner, 2026-10-05)
 
@@ -87,7 +87,7 @@ Lowering a tier is the same as approving in advance, so the registry gets the sa
 - [ ] Tier 1 and 2 calls get no hook output.
 - [ ] Unclassified tools, invalid entries, a broken project registry and a lookup exception all behave as tier 3. Per-tool overrides apply.
 - [ ] `PostToolUse` records only tier 3 calls and never stores arguments or output. Lines older than 7 days are pruned.
-- [ ] Edits and Bash writes to `ai-approvals.jsonl`, `~/.design-forge/ai-tools.json` and a project's `.claude/ai-tools.json` ask, and so does `ai_tools.py set`. `ai_tools.py list` and `check` don't.
+- [ ] Edits and Bash writes to `ai-approvals.jsonl`, `~/.design-forge/ai-tools.json` and a project's `.claude/ai-tools.json` ask, and so does `ai_tools.py set`. `ai_tools.py show` and `ai inventory` don't.
 - [ ] Asks are logged with check ids `tier3-first-use`, `tier4-unapproved` and `registry-write`.
 - [ ] `install.sh` registers the `mcp__.*` `PreToolUse` matcher and the `PostToolUse` entry, merging as today; the repo's `.claude/settings.json` matches. `.gitignore` covers `ai-approvals*`.
 - [ ] Unit tests for each row above, plus the probe re-run against the real hook, recorded in the PR. Interactive prompt checked by hand once.
