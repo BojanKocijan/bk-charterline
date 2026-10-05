@@ -169,5 +169,102 @@ class AiInventoryTests(unittest.TestCase):
             self.assertIn("mcp|session|gmail", json.load(f))
 
 
+class TierColumnTests(unittest.TestCase):
+    """`ai inventory` shows Law 38 tiers and owners (#115)."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.home = os.path.join(self.tmp.name, "home")
+        self.project = os.path.realpath(os.path.join(self.tmp.name, "project"))
+        os.makedirs(self.home)
+        os.makedirs(self.project)
+        write(os.path.join(self.project, ".mcp.json"), {"mcpServers": {
+            "db": {"command": "db-mcp"}, "tracker": {"command": "npx"},
+        }})
+        self.personal = os.path.join(self.home, ".design-forge", "ai-tools.json")
+        self.shared = os.path.join(self.project, ".claude", "ai-tools.json")
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def run_inventory(self) -> str:
+        result = subprocess.run(
+            [sys.executable, "-B", SCRIPT, "--project", self.project],
+            capture_output=True, text=True, env={**os.environ, "HOME": self.home},
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout
+
+    def test_classified_row_shows_tier_owner_and_overrides(self) -> None:
+        write(self.personal, {"version": 1, "tools": {"mcp:db": {
+            "tier": 2, "owner": "alice", "overrides": {"execute_sql": 4}}}})
+        out = self.run_inventory()
+        self.assertIn("| Name | Scope | Detail | Tier | Owner | Source |", out)
+        self.assertIn("| db | project | stdio · db-mcp · overrides: execute_sql → 4 | 2 | alice |", out)
+
+    def test_unclassified_rows_are_flagged_and_counted(self) -> None:
+        write(self.personal, {"version": 1, "tools": {"mcp:db": {"tier": 2, "owner": "alice"}}})
+        out = self.run_inventory()
+        self.assertIn("| tracker | project | stdio · npx | unclassified (tier 3) |  |", out)
+        self.assertIn("· 1 unclassified", out)
+
+    def test_project_entry_wins(self) -> None:
+        write(self.personal, {"version": 1, "tools": {"mcp:db": {"tier": 2, "owner": "alice"}}})
+        write(self.shared, {"version": 1, "tools": {"mcp:db": {"tier": 4, "owner": "team-lead"}}})
+        self.assertIn("| db | project | stdio · db-mcp | 4 | team-lead |", self.run_inventory())
+
+    def test_broken_registry_is_reported(self) -> None:
+        write(self.personal, "{not json")
+        out = self.run_inventory()
+        self.assertIn("## Couldn't parse", out)
+        self.assertIn("~/.design-forge/ai-tools.json", out)
+        self.assertIn("· 2 unclassified", out)
+
+
+    def test_invalid_project_entry_shows_unclassified_not_personal(self) -> None:
+        write(self.personal, {"version": 1, "tools": {"mcp:db": {"tier": 1, "owner": "alice"}}})
+        write(self.shared, {"version": 1, "tools": {"mcp:db": {"tier": "4", "owner": "lead"}}})
+        out = self.run_inventory()
+        self.assertIn("| db | project | stdio · db-mcp | unclassified (tier 3) |", out)
+        self.assertNotIn("| 1 | alice |", out)
+
+    def test_masked_names_are_never_looked_up(self) -> None:
+        write(self.personal, {"version": 1, "tools": {"mcp:[masked]": {"tier": 1, "owner": "alice"}}})
+        result = subprocess.run(
+            [sys.executable, "-B", SCRIPT, "--project", self.project,
+             "--session", "ghp_abcdefghijklmnopqrstuvwxyz"],
+            capture_output=True, text=True, env={**os.environ, "HOME": self.home},
+        )
+        self.assertIn("| [masked] | session | connected in this session | unclassified (tier 3) |", result.stdout)
+        self.assertIn("· 3 unclassified", result.stdout)  # db, tracker and the masked server
+
+    def test_label_is_shown_and_unclassified_counts_unique_tools(self) -> None:
+        write(self.personal, {"version": 1, "tools": {"mcp:db": {"tier": 2, "owner": "alice", "label": "Database"}}})
+        write(os.path.join(self.home, ".claude.json"),
+              {"projects": {self.project: {"mcpServers": {"tracker": {"command": "npx"}}}}})
+        out = self.run_inventory()
+        self.assertIn("| db | project | Database · stdio · db-mcp | 2 | alice |", out)
+        self.assertIn("· 1 unclassified", out)  # tracker appears in two scopes, counted once
+
+
+    def test_hand_edited_secrets_in_the_registry_are_masked(self) -> None:
+        write(self.personal, {"version": 1, "tools": {"mcp:db": {
+            "tier": 2, "owner": "ghp_abcdefghijklmnopqrstuv", "label": "token=abcdefghijklmnopqrstuvwx",
+            "overrides": {"sk-abcdefghijklmnopqrstuvwx": 4}}}})
+        out = self.run_inventory()
+        for secret in ("ghp_abcdefghijklmnopqrstuv", "token=abcdefghijklmnopqrstuvwx", "sk-abcdefghijklmnopqrstuvwx"):
+            self.assertNotIn(secret, out)
+        self.assertIn("| db | project | [masked] · stdio · db-mcp · overrides: [masked] → 4 | 2 | [masked] |", out)
+
+
+    def test_broken_project_file_shows_every_tool_unclassified(self) -> None:
+        write(self.personal, {"version": 1, "tools": {"mcp:db": {"tier": 1, "owner": "alice"}}})
+        write(self.shared, "{not json")
+        out = self.run_inventory()
+        self.assertIn("| db | project | stdio · db-mcp | unclassified (tier 3) |", out)
+        self.assertIn("every tool counts as unclassified (tier 3) until this file is fixed", out)
+        self.assertIn("· 2 unclassified", out)
+
+
 if __name__ == "__main__":
     unittest.main()

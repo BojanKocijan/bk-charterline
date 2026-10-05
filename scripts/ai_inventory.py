@@ -19,20 +19,17 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
 import shlex
 import sys
 from datetime import date
 from urllib.parse import urlparse
 
-# Law 14 patterns: anything matching is shown as [masked].
-SECRET_PATTERNS = [
-    re.compile(r"-----BEGIN (RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----"),
-    re.compile(r"AKIA[0-9A-Z]{16}"),
-    re.compile(r"\b(ghp|gho|github_pat|glpat|xoxb|xoxp)_[A-Za-z0-9_-]{10,}"),
-    re.compile(r"\bsk-[A-Za-z0-9_-]{16,}"),
-    re.compile(r"(?i)\b(api[_-]?key|secret|token|password)\s*[:=]\s*\S{16,}"),
-]
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.dont_write_bytecode = True  # keep the ~/.design-forge clone clean
+import ai_tools  # noqa: E402  Law 38 tiers and owners (#115)
+
+
+TIERED = {"mcp", "extension", "plugin"}
 
 SECTIONS = [
     ("mcp", "MCP servers"),
@@ -57,7 +54,7 @@ def tilde(path: str) -> str:
 
 
 def mask(text: str) -> str:
-    return "[masked]" if any(p.search(text) for p in SECRET_PATTERNS) else text
+    return ai_tools.MASKED if ai_tools.looks_secret(text) else text
 
 
 class Inventory:
@@ -226,6 +223,39 @@ def collect(project: str, session: list[str] | None) -> Inventory:
     return inv
 
 
+def registry(project: str, inv: Inventory) -> dict:
+    """Law 38 classifications through ai_tools.resolve: project entries
+    win, and an invalid entry stays unclassified rather than falling
+    through to a personal one. Maps key -> entry, or None if invalid."""
+    resolved, problems = ai_tools.resolve(os.path.realpath(project))
+    for problem in problems:
+        for h in (home(), os.path.realpath(home())):
+            problem = problem.replace(h + os.sep, "~" + os.sep, 1)
+        inv.problems.append(problem)
+    return {key: entry for key, (entry, _path) in resolved.items()}
+
+
+def classification(tools: dict, kind: str, name: str) -> dict | None:
+    """A masked name is never looked up, and a broken project file makes
+    everything unclassified: both always show tier 3."""
+    if name == ai_tools.MASKED or ai_tools.BROKEN in tools:
+        return None
+    return tools.get(f"{kind}:{name}")
+
+
+def tier_cells(entry: dict | None, detail: str) -> tuple[str, str, str]:
+    """Detail (with label and overrides), Tier and Owner cells."""
+    if entry is None:
+        return detail, "unclassified (tier 3)", ""
+    # Hand-edited values skip the checks `ai_tools.py set` applies, so mask them here too.
+    if entry.get("label"):
+        detail = f"{mask(str(entry['label']))} · {detail}"
+    overrides = entry.get("overrides", {})
+    if overrides:
+        detail += " · overrides: " + ", ".join(f"{mask(t)} → {v}" for t, v in sorted(overrides.items()))
+    return detail, str(entry["tier"]), mask(entry["owner"])
+
+
 def cell(text: str) -> str:
     return str(text).replace("|", "\\|").replace("\n", " ")
 
@@ -238,6 +268,13 @@ def render(inv: Inventory, state: dict, first_run: bool, project: str, session) 
         new_state.update({k: v for k, v in state.items() if k.startswith("mcp|session|")})
     new_keys = [] if first_run else [k for k in inv.items if k not in state]
     removed = sorted(k for k in state if k not in new_state)
+    tools = registry(project, inv)
+    # Unique tools; masked rows can't be told apart, so each counts on its own.
+    unclassified = len({
+        row if v["name"] == ai_tools.MASKED else f"{v['kind']}:{v['name']}"
+        for row, v in inv.items.items()
+        if v["kind"] in TIERED and classification(tools, v["kind"], v["name"]) is None
+    })
 
     lines = [
         "# AI inventory",
@@ -248,7 +285,8 @@ def render(inv: Inventory, state: dict, first_run: bool, project: str, session) 
                 "run via the `ai inventory` trigger"),
         "",
         f"{len(inv.items)} items"
-        + (" (first run)" if first_run else f" · {len(new_keys)} new · {len(removed)} removed"),
+        + (" (first run)" if first_run else f" · {len(new_keys)} new · {len(removed)} removed")
+        + f" · {unclassified} unclassified",
     ]
     for kind, title in SECTIONS:
         rows = [k for k, v in inv.items.items() if v["kind"] == kind]
@@ -256,11 +294,20 @@ def render(inv: Inventory, state: dict, first_run: bool, project: str, session) 
         if not rows:
             lines.append("_None found._")
             continue
-        lines += ["| Name | Scope | Detail | Source | First seen | |", "|---|---|---|---|---|---|"]
+        tiered = kind in TIERED
+        if tiered:
+            lines += ["| Name | Scope | Detail | Tier | Owner | Source | First seen | |",
+                      "|---|---|---|---|---|---|---|---|"]
+        else:
+            lines += ["| Name | Scope | Detail | Source | First seen | |", "|---|---|---|---|---|---|"]
         for k in sorted(rows, key=lambda k: (inv.items[k]["scope"], inv.items[k]["name"].lower())):
             v = inv.items[k]
+            detail, extra = v["detail"], ""
+            if tiered:
+                detail, tier, owner = tier_cells(classification(tools, kind, v["name"]), detail)
+                extra = f" {cell(tier)} | {cell(owner)} |"
             lines.append(
-                f"| {cell(v['name'])} | {v['scope']} | {cell(v['detail'])} | {cell(v['source'])} "
+                f"| {cell(v['name'])} | {v['scope']} | {cell(detail)} |{extra} {cell(v['source'])} "
                 f"| {new_state[k]['first_seen']} | {'**new**' if k in new_keys else ''} |"
             )
     if removed:
