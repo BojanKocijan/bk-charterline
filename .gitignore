@@ -51,3 +51,6 @@ hook-log*
 
 # AI inventory output and its first-seen state — local to each machine.
 ai-inventory*
+
+# Personal Law 38 tool registry (projects commit their own .claude/ai-tools.json).
+/ai-tools.json
