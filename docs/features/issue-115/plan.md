@@ -2,7 +2,7 @@
 
 Spec: [spec.md](./spec.md) (approved) · Gate tier: Significant · Branch: `feat/ai-tool-tiers` · Issue: #115 · Roadmap: #123
 Work pile: judgment-heavy for the law text; delegable for the registry and inventory code
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-05, chat
 
 ## Files to change — four PRs, all targeting `main`, stacked by commits
 
