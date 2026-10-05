@@ -419,6 +419,8 @@ class SkipAndForceTests(unittest.TestCase):
             'command git commit -n -m "fix: x"',
             'env CI=1 git commit -n -m "fix: x"',
             'git -c core.hooksPath=/dev/null commit -m "fix: x"',
+            'git -ccore.hooksPath=/dev/null commit -m "fix: x"',
+            'GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null git commit -m "fix: x"',
         ):
             self.assertBlocked(command, "--no-verify")
 
@@ -505,6 +507,18 @@ class GuardrailAskTests(unittest.TestCase):
     def bash(self, command: str, cwd: str | None = None) -> str:
         return self.decision(self.run_payload({"tool_name": "Bash", "tool_input": {"command": command}}, cwd))
 
+    @unittest.skipUnless(sys.platform == "darwin", "case-insensitive file systems")
+    def test_wrong_case_paths_still_ask_on_macos(self) -> None:
+        self.assertEqual(self.edit(f"{self.home}/.Claude/Settings.json", "Write"), "ask")
+        self.assertEqual(self.edit(f"{self.home}/.DESIGN-FORGE/CLAUDE_LAWS.md", "Write"), "ask")
+        self.assertEqual(self.edit(f"{self.home}/.design-forge/Hook-Log.jsonl", "Write"), "allow")
+
+    def test_non_object_payload_fails_open(self) -> None:
+        for raw in ("[]", '"x"', "null", "42"):
+            result = subprocess.run([sys.executable, HOOK], input=raw, capture_output=True, text=True,
+                                    cwd=self.project, env=env_with_home(self.home))
+            self.assertEqual((result.returncode, result.stdout), (0, ""), raw)
+
     def test_editing_a_guardrail_file_asks(self) -> None:
         h = self.home
         for path in (
@@ -554,6 +568,41 @@ class GuardrailAskTests(unittest.TestCase):
             "chmod 777 .claude/settings.local.json",
         ):
             self.assertEqual(self.bash(command), "ask", command)
+
+    def test_review_bypasses_of_the_write_guard_ask(self) -> None:
+        os.makedirs(os.path.join(self.home, ".claude"), exist_ok=True)
+        for command in (
+            'echo x >> "$HOME/.claude/CLAUDE.md"',
+            "cp /tmp/x.py $HOME/.design-forge/.claude/hooks/enforce-laws.py",
+            'rm -rf "$HOME/.design-forge/.claude/hooks"',
+            "cp /tmp/settings.json ~/.claude/",
+            "mv /tmp/settings.json ~/.claude",
+            "cp -t ~/.claude /tmp/settings.json",
+            "perl -pi -e 's/a/b/' ~/.claude/settings.json",
+            "sed --in-place 's/a/b/' ~/.claude/settings.json",
+            "sed -Ei 's/a/b/' ~/.claude/settings.json",
+            "ln -sf /tmp/evil.json ~/.claude/settings.json",
+            "install -m 644 /tmp/x ~/.claude/settings.json",
+            "unlink ~/.claude/settings.json",
+            "truncate -s 0 ~/.claude/CLAUDE.md",
+            "chown root ~/.claude/settings.json",
+            "echo x 2> ~/.claude/settings.json",
+            "echo x &> ~/.claude/settings.json",
+            "echo x >| ~/.claude/settings.json",
+            "HOME_COPY=1 tee ~/.claude/settings.json < /tmp/x",
+            "cp /tmp/settings.json ~/.claude/settings.json 2>/dev/null",
+            "cp /tmp/settings.json ~/.claude/ 2>/dev/null",
+            "cp /tmp/settings.json ~/.claude/settings.json > /dev/null 2>&1",
+        ):
+            self.assertEqual(self.bash(command), "ask", command)
+        self.assertEqual(self.edit(f"{self.forge}/hook-logger.py", "Write"), "ask")
+
+    def test_relative_write_is_judged_before_a_later_cd(self) -> None:
+        self.assertEqual(self.bash("echo x > .claude/settings.local.json && cd /tmp"), "ask")
+
+    def test_quoted_redirect_text_is_not_a_write(self) -> None:
+        self.assertEqual(self.bash('git commit -m "docs: mention > ~/.claude/settings.json"'), "allow")
+        self.assertEqual(self.bash("echo x 2>&1 | tee build.log"), "allow")
 
     def test_bash_reads_and_updates_are_free(self) -> None:
         for command in (

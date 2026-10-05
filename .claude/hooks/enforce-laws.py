@@ -143,6 +143,10 @@ def split_segments(command: str) -> list[str] | None:
             stack.pop()
         elif c == "`":
             stack.append("`")
+        elif not stack and c in "&|" and (
+            (i > 0 and command[i - 1] == ">") or command.startswith(">", i + 1)
+        ):
+            pass  # part of a redirection (`>|`, `>&`, `2>&1`, `&>`), not a separator
         elif not stack and c in "&|;\n":
             segments.append(command[start:i])
             if command.startswith(("&&", "||"), i):
@@ -305,31 +309,42 @@ FILE_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit")
 
 # Files under the installed clone that its own tools write (relative paths
 # or name prefixes); everything else in ~/.design-forge is protected.
-DF_DATA_PREFIXES = ("hook-log", "ai-inventory")
+DF_DATA_PREFIXES = ("hook-log.", "ai-inventory.")
 DF_DATA_FILES = ("ai-tools.json", "projects.yaml", os.path.join("knowledge", "PATTERNS.md"))
 
 
+def resolve_path(path: str, cwd: str) -> str:
+    """Absolute, symlink-resolved path, with ~ and $VARS expanded."""
+    return os.path.realpath(os.path.join(cwd, os.path.expandvars(os.path.expanduser(path))))
+
+
+def _fold(path: str) -> str:
+    # macOS file systems ignore case by default: ~/.Claude/Settings.json is
+    # the same file as ~/.claude/settings.json, so compare case-folded there.
+    return path.casefold() if sys.platform == "darwin" else path
+
+
 def protected_target(path: str, cwd: str) -> str | None:
-    """What a path protects, or None. Compared after resolving symlinks,
-    so ~/.claude/skills/x (a link into ~/.design-forge) counts. Fails open
-    (None) if the path can't be resolved."""
+    """What a path protects, or None. Compared after expanding ~ and $VARS
+    and resolving symlinks, so ~/.claude/skills/x (a link into
+    ~/.design-forge) counts. Fails open (None) if it can't be resolved."""
     try:
-        real = os.path.realpath(os.path.join(cwd, os.path.expanduser(path)))
-        home = os.path.realpath(os.path.expanduser("~"))
+        real = _fold(resolve_path(path, cwd))
+        home = _fold(os.path.realpath(os.path.expanduser("~")))
     except Exception:
         return None
     claude = os.path.join(home, ".claude")
     if real in (os.path.join(claude, "settings.json"), os.path.join(claude, "settings.local.json")):
         return "your Claude Code settings"
-    if real == os.path.join(claude, "CLAUDE.md"):
+    if real == os.path.join(claude, "claude.md" if sys.platform == "darwin" else "CLAUDE.md"):
         return "your global CLAUDE.md"
     if os.path.basename(real) in ("settings.json", "settings.local.json") \
             and os.path.basename(os.path.dirname(real)) == ".claude":
         return "a project's Claude Code settings"
-    forge = os.path.realpath(os.path.join(home, ".design-forge"))
+    forge = _fold(os.path.realpath(os.path.join(os.path.expanduser("~"), ".design-forge")))
     if real == forge or real.startswith(forge + os.sep):
         rel = os.path.relpath(real, forge)
-        if rel.startswith(DF_DATA_PREFIXES) or rel in DF_DATA_FILES:
+        if rel.startswith(tuple(_fold(p) for p in DF_DATA_PREFIXES)) or rel in {_fold(f) for f in DF_DATA_FILES}:
             return None
         return "the installed Design Forge"
     return None
@@ -348,30 +363,86 @@ def check_file_edit(tool: str, tool_input: dict, base: str) -> None:
         )
 
 
-WRITE_VERBS = {"tee", "cp", "mv", "ln", "install", "rm", "unlink", "truncate", "chmod", "chown"}
-DEST_ONLY_VERBS = {"cp", "ln", "install"}  # reading the source is fine
-REDIRECT_RE = re.compile(r"(?:^|[^<>&\d])\d?(?:>>?|&>)\s*(\"[^\"]+\"|'[^']+'|[^\s;&|<>]+)")
+WRITE_VERBS = {"tee", "rm", "unlink", "truncate", "chmod", "chown"}
+COPY_VERBS = {"cp", "mv", "ln", "install"}  # write to a destination
 
 
-def bash_write_targets(segment: str) -> list[str]:
-    """Paths one command segment writes to: redirection targets, plus the
-    arguments of a write verb (only the destination for cp/ln/install).
-    Best-effort; an untokenisable segment yields nothing (fail open)."""
-    targets = [m.group(1).strip("'\"") for m in REDIRECT_RE.finditer(segment)]
+def redirect_targets(segment: str) -> list[str]:
+    """Files a segment redirects output into (`>`, `>>`, `&>`, `>|`, `2>`).
+    Quote-aware: a `>` inside a quoted message is not a redirection."""
     try:
-        tokens = shlex.split(segment)
+        lex = shlex.shlex(segment, posix=True, punctuation_chars=True)
+        lex.whitespace_split = True
+        tokens = list(lex)
+    except ValueError:
+        return []
+    targets = []
+    for op, target in zip(tokens, tokens[1:]):
+        if set(op) <= set(">&|") and ">" in op and not target.isdigit() and not target.startswith("&") \
+                and not (op.endswith("&") and target.isdigit()):
+            if not set(target) <= set("<>&|;"):
+                targets.append(target)
+    return targets
+
+
+def bash_write_targets(segment: str, cwd: str) -> list[str]:
+    """Paths one command segment writes to: redirection targets, the
+    arguments of a write verb, the destination of cp/mv/ln/install (a file
+    inside it when it's a folder, or `-t DIR`) plus mv's sources, and the
+    files of `sed`/`perl` run in place. Best-effort; an untokenisable
+    segment yields only its redirections (fail open)."""
+    targets = redirect_targets(segment)
+    try:
+        lex = shlex.shlex(segment, posix=True, punctuation_chars=True)
+        lex.whitespace_split = True
+        raw = list(lex)
     except ValueError:
         return targets
-    while tokens and tokens[0] in ("sudo", "command", "exec"):
-        tokens = tokens[1:]
+    # Drop redirections (`2>/dev/null`, `> out 2>&1`) and their targets, so
+    # a trailing redirect can't pose as cp's destination.
+    tokens, skip = [], False
+    for i, t in enumerate(raw):
+        if skip:
+            skip = False
+            continue
+        if set(t) <= set("<>&|") and ">" in t:
+            skip = True
+            continue
+        if t.isdigit() and i + 1 < len(raw) and set(raw[i + 1]) <= set("<>&|") and ">" in raw[i + 1]:
+            continue  # the fd number in `2>`
+        tokens.append(t)
+    tokens = strip_command_prefix(tokens)
     if not tokens:
         return targets
     verb = os.path.basename(tokens[0])
-    args = [t for t in tokens[1:] if not t.startswith("-") and not t.startswith(">")]
-    in_place = any(t == "-i" or t.startswith("-i") for t in tokens[1:])
-    if verb in DEST_ONLY_VERBS and args:
-        targets.append(args[-1])
-    elif verb in WRITE_VERBS or (verb in ("sed", "perl") and in_place):
+    rest = tokens[1:]
+    target_dir = None
+    for i, t in enumerate(rest):
+        if t in ("-t", "--target-directory") and i + 1 < len(rest):
+            target_dir = rest[i + 1]
+        elif t.startswith("--target-directory="):
+            target_dir = t.split("=", 1)[1]
+    args = [t for t in rest if not t.startswith("-") and set(t) - set("<>&|") and t != target_dir]
+    if verb in COPY_VERBS and args:
+        if target_dir is not None:
+            dest_dir, sources = target_dir, args
+        else:
+            dest, sources = args[-1], args[:-1]
+            dest_dir = dest if dest.endswith("/") or os.path.isdir(resolve_path(dest, cwd)) else None
+            if dest_dir is None:
+                targets.append(dest)
+        if dest_dir is not None:
+            targets.append(dest_dir)
+            targets += [os.path.join(dest_dir, os.path.basename(src.rstrip("/"))) for src in sources]
+        if verb == "mv":
+            targets += sources  # moving a guardrail file away changes it too
+    elif verb in WRITE_VERBS:
+        targets += args
+    elif verb in ("sed", "perl") and any(
+        t == "--in-place" or t.startswith("--in-place=")
+        or (re.match(r"-[A-Za-z]*i", t) and not t.startswith("--"))
+        for t in rest
+    ):
         targets += args
     return targets
 
@@ -468,7 +539,8 @@ def skips_git_hooks(segment: str) -> bool:
         if found is None:
             continue
         global_opts, args = found
-        if any(o.lower().startswith("core.hookspath") for o in global_opts):
+        if any((o[2:] if o.startswith("-c") else o).lower().startswith("core.hookspath") for o in global_opts) \
+                or re.search(r"\bGIT_CONFIG_KEY_\d+=core\.hooksPath\b", segment, re.IGNORECASE):
             return True
         if sub == "commit":
             return commit_skips_hooks(args)
@@ -557,9 +629,12 @@ def check_bash(command: str, base: str) -> None:
     # Held until the end: every block check below must still run, so an
     # approved prompt can never let a blocked command through.
     pending_ask = None
-    write_cwd = resolve_cwd(scan, base)
-    for segment in split_segments(scan) or []:
-        for target in bash_write_targets(segment):
+    segments = split_segments(scan) or []
+    for index, segment in enumerate(segments):
+        # Each segment's paths resolve against the cwd at that point, so a
+        # later `cd` can't move an earlier relative path somewhere harmless.
+        write_cwd = resolve_cwd("\n".join(segments[:index]), base)
+        for target in bash_write_targets(segment, write_cwd):
             what = protected_target(target, write_cwd)
             if what and pending_ask is None:
                 pending_ask = (
@@ -668,6 +743,8 @@ def main() -> None:
         payload = json.load(sys.stdin)
     except Exception:
         return  # fail open — can't parse input
+    if not isinstance(payload, dict):
+        return  # fail open — not a tool-call object
 
     tool = payload.get("tool_name")
     tool_input = payload.get("tool_input") if isinstance(payload.get("tool_input"), dict) else {}
