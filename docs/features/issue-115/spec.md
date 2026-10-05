@@ -54,7 +54,7 @@ Things that act: **MCP servers** (every scope, including the claude.ai connector
   ```
 
 - **Keys are `<kind>:<name>`, without scope**, so a connector is classified once however it's attached. `label` gives opaque connector ids (UUIDs) a readable name.
-- **Lookup order:** the project file first, then the personal file. A missing or broken file means "no entries", and a broken one is reported by `ai inventory`.
+- **Lookup order:** the project file first, then the personal file. A missing file means "no entries". A broken personal file means "no entries" and is reported. **A broken project file makes every tool unclassified (tier 3) until it's fixed**, so personal entries never stand in for the team's (amended below).
 
 ### `ai inventory` (from #114) shows the classification
 
@@ -95,6 +95,10 @@ Things that act: **MCP servers** (every scope, including the claude.ai connector
   1. **Tier 2 still moves data into the conversation.** Reading mail is free under this law, but what may then be sent elsewhere is #119's data-flow rule. Until #119, the existing safety rules govern that.
   2. **Asking once per session for tier 3 tools adds questions in long sessions with many tools.** That's intended. A per-tool `"ask": "never"` exemption is deliberately left out: it would let a tier 3 tool act silently.
   3. **The per-session approval lives in Claude's context, not on disk.** After context compaction, Claude may ask again. That's safe, just repetitive. The follow-up hook will hold approval state mechanically.
+
+## Amendments
+
+- **2026-10-05, after the independent review:** a project `.claude/ai-tools.json` that can't be read as a registry (a JSON syntax error, no `tools` object, or a duplicated top-level key) makes **every tool unclassified (tier 3)** until it's fixed, instead of falling back to personal entries. An invalid or duplicated entry inside a readable file stays unclassified and never falls through to a personal entry either. Approved-by: BojanKocijan, 2026-10-05, chat.
 
 ## Out of scope
 

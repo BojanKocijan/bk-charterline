@@ -112,16 +112,17 @@ class AiToolsTests(unittest.TestCase):
             "nokind": {"tier": 1, "owner": "alice"},
             "mcp:ok": {"tier": 1, "owner": "alice"},
         }})
-        tools, problems = ai_tools.load(self.personal)
+        tools, invalid, problems = ai_tools.load(self.personal)
         self.assertEqual(list(tools), ["mcp:ok"])
+        self.assertEqual(invalid, {"mcp:a", "mcp:b", "mcp:c", "nokind"})
         self.assertEqual(len(problems), 4)
         entry, _, _ = ai_tools.lookup("mcp", "a", None)
         self.assertEqual(ai_tools.tier_for(entry), 3)
 
     def test_broken_file_is_reported_and_never_overwritten(self) -> None:
         self.write(self.personal, "{not json")
-        tools, problems = ai_tools.load(self.personal)
-        self.assertEqual(tools, {})
+        tools, invalid, problems = ai_tools.load(self.personal)
+        self.assertEqual((tools, invalid), ({}, {ai_tools.BROKEN}))
         self.assertEqual(len(problems), 1)
         r = self.cli("set", "mcp:gmail", "--tier", "2", "--owner", "alice", "--personal")
         self.assertEqual(r.returncode, 2)
@@ -136,6 +137,107 @@ class AiToolsTests(unittest.TestCase):
         folder = os.path.dirname(self.personal)
         self.assertEqual(sorted(os.listdir(folder)), ["ai-tools.json"])
         self.assertEqual(len(self.read(self.personal)["tools"]), 5)
+
+
+    def test_invalid_project_entry_never_falls_through_to_personal(self) -> None:
+        self.write(self.personal, {"version": 1, "tools": {"mcp:db": {"tier": 1, "owner": "alice"}}})
+        self.write(self.shared, {"version": 1, "tools": {
+            "mcp:db": {"tier": 2, "owner": "lead", "overrides": {"execute_sql": "4"}}}})
+        entry, path, problems = ai_tools.lookup("mcp", "db", self.project)
+        self.assertIsNone(entry)
+        self.assertEqual(path, self.shared)
+        self.assertEqual(ai_tools.tier_for(entry, "execute_sql"), 3)
+        self.assertTrue(any("treated as unclassified" in p for p in problems))
+        out = self.cli("show", "mcp:db", "--project", self.project).stdout
+        self.assertIn("unclassified (tier 3) — invalid entry", out)
+
+    def test_duplicate_keys_count_as_unclassified(self) -> None:
+        self.write(self.personal,
+                   '{"version": 1, "tools": {"mcp:x": {"tier": 4, "owner": "a"}, "mcp:x": {"tier": 1, "owner": "a"}}}')
+        entry, _, problems = ai_tools.lookup("mcp", "x", None)
+        self.assertIsNone(entry)
+        self.assertTrue(any("listed more than once" in p for p in problems))
+
+    def test_secrets_are_refused(self) -> None:
+        for args in (
+            ["mcp:ghp_abcdefghijklmnopqrstuvwxyz", "--tier", "1", "--owner", "alice"],
+            ["mcp:db", "--tier", "1", "--owner", "alice", "--note", "token=sk-abcdefghijklmnopqrstuvwx"],
+            ["mcp:db", "--tier", "1", "--owner", "alice", "--label", "AKIAABCDEFGHIJKLMNOP"],
+        ):
+            r = self.cli("set", *args, "--personal")
+            self.assertEqual(r.returncode, 2, args)
+            self.assertIn("looks like a secret", r.stderr)
+        self.assertFalse(os.path.exists(self.personal))
+
+    def test_masked_name_cannot_be_classified(self) -> None:
+        r = self.cli("set", "mcp:[masked]", "--tier", "1", "--owner", "alice", "--personal")
+        self.assertEqual(r.returncode, 2)
+        self.assertFalse(os.path.exists(self.personal))
+
+    def test_project_folder_must_exist(self) -> None:
+        missing = os.path.join(self.tmp.name, "typo")
+        r = self.cli("set", "mcp:db", "--tier", "2", "--owner", "alice", "--project", missing)
+        self.assertEqual(r.returncode, 2)
+        self.assertFalse(os.path.exists(missing))
+
+    def test_set_refuses_to_leave_an_invalid_entry(self) -> None:
+        self.write(self.personal, {"version": 1, "tools": {
+            "mcp:z": {"tier": 2, "owner": "alice", "overrides": {"q": "4"}}}})
+        r = self.cli("set", "mcp:z", "--tier", "2", "--owner", "alice", "--personal")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("would still be invalid", r.stderr)
+        r = self.cli("set", "mcp:z", "--tier", "2", "--owner", "alice", "--clear-overrides", "--personal")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(self.read(self.personal)["tools"]["mcp:z"]["overrides"], {})
+
+    def test_write_keeps_mode_key_order_and_symlink(self) -> None:
+        real = os.path.join(self.tmp.name, "shared-registry.json")
+        self.write(real, {"version": 1, "tools": {"mcp:b": {"tier": 2, "owner": "a"},
+                                                   "mcp:a": {"tier": 2, "owner": "a"}}})
+        os.chmod(real, 0o644)
+        os.makedirs(os.path.dirname(self.personal))
+        os.symlink(real, self.personal)
+        self.assertEqual(self.cli("set", "mcp:c", "--tier", "1", "--owner", "a", "--personal").returncode, 0)
+        self.assertTrue(os.path.islink(self.personal))
+        self.assertEqual(oct(os.stat(real).st_mode & 0o777), "0o644")
+        self.assertEqual(list(self.read(real)["tools"]), ["mcp:b", "mcp:a", "mcp:c"])
+
+
+    def test_duplicates_at_any_level_are_never_resolved_to_the_last_value(self) -> None:
+        self.write(self.personal, '{"version": 1, "tools": {"mcp:a": {"tier": 4, "owner": "x", "tier": 1}}}')
+        entry, _, problems = ai_tools.lookup("mcp", "a", None)
+        self.assertIsNone(entry)
+        self.assertTrue(any("a field is listed more than once" in p for p in problems))
+        self.write(self.personal,
+                   '{"tools": {"mcp:b": {"tier": 4, "owner": "x"}}, "tools": {"mcp:b": {"tier": 1, "owner": "x"}}}')
+        entry, _, problems = ai_tools.lookup("mcp", "b", None)
+        self.assertIsNone(entry)
+        self.assertTrue(any("top-level key is listed more than once" in p for p in problems))
+
+    def test_set_refuses_a_file_with_duplicates_instead_of_erasing_them(self) -> None:
+        text = '{"version": 1, "tools": {"mcp:x": {"tier": 4, "owner": "a"}, "mcp:x": {"tier": 1, "owner": "a"}}}'
+        self.write(self.personal, text)
+        r = self.cli("set", "mcp:other", "--tier", "2", "--owner", "a", "--personal")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("listed more than once", r.stderr)
+        with open(self.personal) as f:
+            self.assertEqual(f.read(), text)
+        self.assertIn("unclassified (tier 3)", self.cli("show", "mcp:x").stdout)
+
+
+    def test_broken_project_file_makes_every_tool_unclassified(self) -> None:
+        self.write(self.personal, {"version": 1, "tools": {"mcp:db": {"tier": 1, "owner": "alice"}}})
+        self.write(self.shared, "{not json")
+        entry, path, problems = ai_tools.lookup("mcp", "db", self.project)
+        self.assertIsNone(entry)
+        self.assertEqual(path, self.shared)
+        self.assertTrue(any("every tool counts as unclassified" in p for p in problems))
+
+    def test_broken_personal_file_leaves_project_entries_working(self) -> None:
+        self.write(self.personal, "{not json")
+        self.write(self.shared, {"version": 1, "tools": {"mcp:db": {"tier": 4, "owner": "lead"}}})
+        entry, _, _ = ai_tools.lookup("mcp", "db", self.project)
+        self.assertEqual(entry["tier"], 4)
 
 
 if __name__ == "__main__":
