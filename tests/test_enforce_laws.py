@@ -729,5 +729,145 @@ class TrackedDeleteTests(unittest.TestCase):
         self.assertEqual((record["type"], record["law"], record["check"]), ("ask", 8, "tracked-delete"))
 
 
+class McpTierTests(unittest.TestCase):
+    """Law 38 tier 3 and 4 asks for MCP tool calls (#138)."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.home = os.path.realpath(os.path.join(self.tmp.name, "home"))
+        self.forge = os.path.join(self.home, ".design-forge")
+        os.makedirs(self.forge)
+        self.project = os.path.realpath(os.path.join(self.tmp.name, "project"))
+        make_repo(self.project, "feat/x")
+        self.write_registry(os.path.join(self.forge, "ai-tools.json"), {
+            "mcp:notes": {"tier": 1, "owner": "alice"},
+            "mcp:mail": {"tier": 2, "owner": "alice", "label": "Mail", "overrides": {"send_message": 3}},
+            "mcp:wiki": {"tier": 3, "owner": "bob"},
+            "mcp:db": {"tier": 4, "owner": "carol", "label": "Prod DB", "overrides": {"list_tables": 2}},
+        })
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def write_registry(self, path: str, tools: dict) -> None:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            json.dump({"version": 1, "tools": tools}, f)
+
+    def run_event(self, tool: str, event: str = "PreToolUse", session: str | None = "s1",
+                  hook: str = HOOK, **extra) -> subprocess.CompletedProcess:
+        payload = {"hook_event_name": event, "tool_name": tool, "tool_input": {}, "cwd": self.project, **extra}
+        if session is not None:
+            payload["session_id"] = session
+        return subprocess.run([sys.executable, "-B", hook], input=json.dumps(payload), capture_output=True,
+                              text=True, cwd=self.project, env=env_with_home(self.home))
+
+    def decision(self, tool: str, session: str | None = "s1", hook: str = HOOK) -> str:
+        result = self.run_event(tool, session=session, hook=hook)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        if not result.stdout.strip():
+            return "allow"
+        return json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"]
+
+    def ran(self, tool: str, session: str | None = "s1") -> None:
+        result = self.run_event(tool, event="PostToolUse", session=session)
+        self.assertEqual((result.returncode, result.stdout), (0, ""))
+
+    def log_checks(self) -> list[tuple[str, str]]:
+        with open(os.path.join(self.forge, "hook-log.jsonl")) as f:
+            return [(r["type"], r["check"]) for r in map(json.loads, f)]
+
+    def test_tier_1_and_2_get_no_output(self) -> None:
+        self.assertEqual(self.decision("mcp__notes__search"), "allow")
+        self.assertEqual(self.decision("mcp__mail__search_threads"), "allow")
+
+    def test_tier_4_asks_every_call_and_is_never_recorded(self) -> None:
+        result = self.run_event("mcp__db__execute_sql")
+        reason = json.loads(result.stdout)["hookSpecificOutput"]["permissionDecisionReason"]
+        self.assertIn("tier 4 (Prod DB, owner carol)", reason)
+        self.ran("mcp__db__execute_sql")
+        self.assertEqual(self.decision("mcp__db__execute_sql"), "ask")
+        self.assertFalse(os.path.exists(os.path.join(self.forge, "ai-approvals.jsonl")))
+
+    def test_tier_3_asks_until_it_ran_in_that_session(self) -> None:
+        self.assertEqual(self.decision("mcp__wiki__create_page"), "ask")
+        self.ran("mcp__wiki__create_page")
+        self.assertEqual(self.decision("mcp__wiki__create_page"), "allow")
+        self.assertEqual(self.decision("mcp__wiki__create_page", session="s2"), "ask")
+        self.assertEqual(self.decision("mcp__wiki__delete_page"), "ask")
+
+    def test_no_session_id_means_no_session_memory(self) -> None:
+        self.ran("mcp__wiki__create_page", session=None)
+        self.assertEqual(self.decision("mcp__wiki__create_page", session=None), "ask")
+        self.assertFalse(os.path.exists(os.path.join(self.forge, "ai-approvals.jsonl")))
+
+    def test_unclassified_counts_as_tier_3(self) -> None:
+        result = self.run_event("mcp__new_server__do_thing")
+        reason = json.loads(result.stdout)["hookSpecificOutput"]["permissionDecisionReason"]
+        self.assertIn("unclassified", reason)
+        self.assertIn("ai classify", reason)
+        self.ran("mcp__new_server__do_thing")
+        self.assertEqual(self.decision("mcp__new_server__do_thing"), "allow")
+
+    def test_overrides_raise_or_lower_one_tool(self) -> None:
+        self.assertEqual(self.decision("mcp__mail__send_message"), "ask")
+        self.assertEqual(self.decision("mcp__db__list_tables"), "allow")
+
+    def test_project_entry_wins_and_invalid_entries_count_as_tier_3(self) -> None:
+        registry = os.path.join(self.project, ".claude", "ai-tools.json")
+        self.write_registry(registry, {"mcp:notes": {"tier": 4, "owner": "dana"}})
+        self.assertEqual(self.decision("mcp__notes__search"), "ask")
+        self.write_registry(registry, {"mcp:mail": {"tier": 9, "owner": "dana"}})
+        self.assertEqual(self.decision("mcp__mail__search_threads"), "ask")
+
+    def test_a_broken_project_registry_makes_everything_tier_3(self) -> None:
+        os.makedirs(os.path.join(self.project, ".claude"))
+        with open(os.path.join(self.project, ".claude", "ai-tools.json"), "w") as f:
+            f.write("{ not json")
+        self.assertEqual(self.decision("mcp__notes__search"), "ask")
+        self.assertEqual(self.decision("mcp__db__execute_sql"), "ask")
+
+    def test_registry_import_failure_counts_as_tier_3(self) -> None:
+        # A copy of the hook with no scripts/ folder next to it.
+        hooks = os.path.join(self.tmp.name, "bare", ".claude", "hooks")
+        os.makedirs(hooks)
+        for name in ("enforce-laws.py", "hook_log.py", "ai_approvals.py"):
+            shutil.copy(os.path.join(HOOKS_DIR, name), hooks)
+        self.assertEqual(self.decision("mcp__notes__search", hook=os.path.join(hooks, "enforce-laws.py")), "ask")
+
+    def test_names_that_dont_split_count_as_tier_3(self) -> None:
+        for tool in ("mcp__notes", "mcp____search", "mcp__notes__"):
+            self.assertEqual(self.decision(tool), "ask", tool)
+
+    def test_post_tool_use_records_only_tier_3(self) -> None:
+        for tool in ("mcp__notes__search", "mcp__mail__search_threads", "mcp__db__execute_sql"):
+            self.ran(tool)
+        self.assertFalse(os.path.exists(os.path.join(self.forge, "ai-approvals.jsonl")))
+        self.ran("mcp__wiki__create_page")
+        with open(os.path.join(self.forge, "ai-approvals.jsonl")) as f:
+            self.assertEqual([json.loads(line)["tool"] for line in f], ["mcp__wiki__create_page"])
+
+    def test_post_tool_use_is_silent_for_other_tools_and_bad_payloads(self) -> None:
+        result = self.run_event("Bash", event="PostToolUse", tool_input={"command": "git push origin main"})
+        self.assertEqual((result.returncode, result.stdout, result.stderr), (0, "", ""))
+        result = self.run_event("mcp__wiki__create_page", event="PostToolUse", session=["not", "a", "string"])
+        self.assertEqual((result.returncode, result.stdout, result.stderr), (0, "", ""))
+
+    def test_asks_are_logged_with_their_check_ids(self) -> None:
+        self.decision("mcp__db__execute_sql")
+        self.decision("mcp__wiki__create_page")
+        self.assertEqual(self.log_checks(), [("ask", "tier4-unapproved"), ("ask", "tier3-first-use")])
+
+    def test_a_listed_mode_turns_the_mcp_ask_into_a_deny(self) -> None:
+        patched = os.path.join(HOOKS_DIR, f"hook-patched-{os.getpid()}.py")
+        with open(HOOK) as f:
+            code = f.read().replace('ASK_DENIED_MODES: set[str] = set()', 'ASK_DENIED_MODES: set[str] = {"bypassPermissions"}')
+        with open(patched, "w") as f:
+            f.write(code)
+        self.addCleanup(os.remove, patched)
+        result = self.run_event("mcp__db__execute_sql", hook=patched, permission_mode="bypassPermissions")
+        self.assertEqual(json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"], "deny")
+
+
 if __name__ == "__main__":
     unittest.main()

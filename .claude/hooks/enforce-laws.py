@@ -11,6 +11,11 @@ permissionDecision "ask" so the user approves in Claude Code's own
 prompt: changing a guardrail file, or deleting a tracked file (Law 8).
 Every block check runs before any ask. Everything else passes through.
 
+MCP tool calls (`mcp__*`) get Law 38's tier from the registry
+(`scripts/ai_tools.py`): tier 4 asks on every call, tier 3 asks until
+the tool has run once in the session (#138). As a PostToolUse hook, the
+same script records that run in `ai_approvals.py`; it never blocks there.
+
 Fails open: if anything here can't be parsed confidently, the call is
 allowed rather than blocked on an infrastructure fluke. This is a
 backstop against mechanical slips, not a replacement for the judgment
@@ -782,6 +787,101 @@ def check_bash(command: str, base: str) -> None:
         ask(*pending_ask)
 
 
+HOOKS_DIR = os.path.dirname(os.path.abspath(__file__))
+SCRIPTS_DIR = os.path.join(os.path.dirname(os.path.dirname(HOOKS_DIR)), "scripts")
+
+
+def import_from(folder: str, name: str):
+    """A sibling module of this script or of the clone's scripts/."""
+    if folder not in sys.path:
+        sys.path.insert(0, folder)
+    sys.dont_write_bytecode = True  # keep the ~/.design-forge clone clean
+    return __import__(name)
+
+
+def split_mcp(tool_name: str) -> tuple[str, str] | None:
+    """`mcp__<server>__<tool>` → (server, tool), split at the first `__`
+    after the prefix. None if the name doesn't have both parts."""
+    if not tool_name.startswith("mcp__"):
+        return None
+    server, sep, tool = tool_name[len("mcp__"):].partition("__")
+    return (server, tool) if server and sep and tool else None
+
+
+def git_toplevel(cwd: str) -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", "-C", cwd, "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, timeout=5,
+        )
+    except Exception:
+        return None
+    if result.returncode != 0:
+        return None
+    return result.stdout.strip() or None
+
+
+def mcp_tier(tool_name: str, base: str) -> tuple[int, dict | None]:
+    """Law 38 tier and registry entry for an MCP tool. Anything that goes
+    wrong counts as tier 3: a mistake must never lower a tier."""
+    try:
+        parts = split_mcp(tool_name)
+        if parts is None:
+            return 3, None
+        ai_tools = import_from(SCRIPTS_DIR, "ai_tools")
+        entry, _, _ = ai_tools.lookup("mcp", parts[0], git_toplevel(base))
+        tier = ai_tools.tier_for(entry, parts[1])
+        return (tier, entry) if tier in (1, 2, 3, 4) else (3, None)
+    except Exception:
+        return 3, None
+
+
+def session_approved(session_id: object, tool_name: str) -> bool:
+    if not isinstance(session_id, str) or not session_id:
+        return False
+    try:
+        return import_from(HOOKS_DIR, "ai_approvals").approved(session_id, tool_name)
+    except Exception:
+        return False
+
+
+def check_mcp(tool_name: str, session_id: object, base: str) -> None:
+    tier, entry = mcp_tier(tool_name, base)
+    if tier <= 2:
+        return
+    parts = split_mcp(tool_name)
+    label = (entry or {}).get("label") or (parts[0] if parts else tool_name)
+    owner = (entry or {}).get("owner") or "none"
+    if tier == 4:
+        ask(
+            f"Law 38: {tool_name} is tier 4 ({label}, owner {owner}). Approve only "
+            "this call. Check the arguments below. Nothing carries over to the next call.",
+            "tier4-unapproved",
+        )
+    if session_approved(session_id, tool_name):
+        return
+    if entry is None:
+        ask(
+            f"Law 38: {tool_name} is unclassified, so it counts as tier 3. Approving "
+            "lets it run for the rest of the session. Run `ai classify` to give it a tier.",
+            "tier3-first-use",
+        )
+    ask(
+        f"Law 38: first use of {tool_name} this session (tier 3, owner {owner}). "
+        "Approving lets this tool run for the rest of the session.",
+        "tier3-first-use",
+    )
+
+
+def record_mcp(tool_name: str, session_id: object, base: str) -> None:
+    """PostToolUse: the call ran, so the user approved it. Remember tier 3
+    tools for the session. Tier 1, 2 and 4 calls are never recorded."""
+    if not isinstance(session_id, str) or not session_id:
+        return
+    if mcp_tier(tool_name, base)[0] == 3:
+        import_from(HOOKS_DIR, "ai_approvals").record(session_id, tool_name)
+
+
 def log_block(blocked: Blocked, command: str, base: str, record_type: str = "block") -> None:
     """Record the block in the local block log (`hook_log.py`, #113).
     Never raises: a missing module, an unwritable log or a held lock
@@ -811,7 +911,20 @@ def main() -> None:
 
     tool = payload.get("tool_name")
     tool_input = payload.get("tool_input") if isinstance(payload.get("tool_input"), dict) else {}
-    if tool == "Bash":
+    is_mcp = isinstance(tool, str) and tool.startswith("mcp__")
+    if payload.get("hook_event_name") == "PostToolUse":
+        # Runs after the call; it can't block anything and must not try.
+        if is_mcp:
+            try:
+                cwd = payload.get("cwd")
+                record_mcp(tool, payload.get("session_id"),
+                           cwd if isinstance(cwd, str) and os.path.isdir(cwd) else os.getcwd())
+            except Exception:
+                pass
+        return
+    if is_mcp:
+        command = tool  # what the log hashes for an MCP call
+    elif tool == "Bash":
         command = tool_input.get("command")
         if not isinstance(command, str) or not command.strip():
             return
@@ -829,7 +942,9 @@ def main() -> None:
         base = os.getcwd()
 
     try:
-        if tool == "Bash":
+        if is_mcp:
+            check_mcp(tool, payload.get("session_id"), base)
+        elif tool == "Bash":
             check_bash(command, base)
         else:
             check_file_edit(tool, tool_input, base)
