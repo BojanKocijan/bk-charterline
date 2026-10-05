@@ -2,7 +2,7 @@
 
 Intent: [#117](https://github.com/BojanKocijan/design-forge/issues/117) (the issue is the intent) · Roadmap: #123
 Design: none (no UI; hook behavior and the app's permission prompt)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-05, chat
 
 ## Decisions already taken (owner, 2026-10-05)
 
