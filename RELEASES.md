@@ -2,6 +2,19 @@
 
 ---
 
+## v2.28.0 — October 5, 2026
+
+### `dforge-update` installs tagged releases and asks before a hook change ([#116](https://github.com/BojanKocijan/design-forge/issues/116))
+- **Releases, not `main`:** `dforge-update` checks out the newest `vX.Y.Z` tag. `--main` follows `main` as before.
+- **A hook change waits for your yes:** if `dforge-update` would change `.claude/hooks/`, `scripts/ai_tools.py`, `install.sh` or `.claude/settings.json`, you see the diff and answer `y` in your own terminal. Without a terminal (when Claude runs it), nothing is applied. It checks out exactly the commit you reviewed, by SHA.
+- **Safe by default:** it never downgrades a clone that's ahead of the latest release, refuses to run over local edits, and changes nothing when the fetch fails.
+- **Tags are automatic:** the Release Tag workflow tags each release on `main` once `scripts/release_version.py check` confirms the four version files agree (#161). The GitHub Actions are pinned to commit SHAs (#160).
+- The session-start update check compares with the newest release tag, not `main`.
+- **Upgrading:** run `dforge-update` twice. The first run is still the old function.
+- The Laws, `plugin.json` and `marketplace.json` are at 2.28.0.
+
+---
+
 ## v2.27.0 — October 5, 2026
 
 ### Rules for cloud sessions ([#146](https://github.com/BojanKocijan/design-forge/issues/146))

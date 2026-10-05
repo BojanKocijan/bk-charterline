@@ -39,7 +39,7 @@ If a task spans several scopes, read each file as you reach it — never preload
 
 When Claude Code loads this file (via `~/.claude/CLAUDE.md` global memory, or the local project `CLAUDE.md`, or claude.ai Custom Instructions), do the following **before** responding to the user's first request:
 
-1. **Check for rule updates (Law 28).** Quietly fetch and compare the loaded version against the remote: `git -C ~/.design-forge fetch -q origin main`, then compare the local `CLAUDE_LAWS.md` version header with `git -C ~/.design-forge show origin/main:CLAUDE_LAWS.md` (or `HEAD` vs `origin/main`). If a **newer version exists on the remote**, surface one line — *"Design Forge update available: v<loaded> → v<remote>. Run `update rules` to pull and reload."* — and proceed on the current version. Fallback if fetch isn't possible: use `git -C ~/.design-forge log -1 --format=%ct`; if >24 h since the last pull, suggest `update rules`. Never auto-pull without the user's go-ahead.
+1. **Check for rule updates (Law 28).** Quietly list the remote's release tags with `git -C ~/.design-forge ls-remote --tags origin 'v*'`, take the highest `vX.Y.Z` (ignore `^{}` lines and any other tag shape) and compare it with the loaded `CLAUDE_LAWS.md` version header. If a **newer release exists**, surface one line — *"Design Forge update available: v<loaded> → v<remote>. Run `update rules` to pull and reload."* — and proceed on the current version. Fallback if the remote can't be reached: use `git -C ~/.design-forge log -1 --format=%ct`; if >24 h since the last pull, suggest `update rules`. Never auto-pull without the user's go-ahead.
    - Skip step 1 entirely on claude.ai web (no shell, no clone).
 2. Load `CLAUDE_LAWS.md` (the only auto-imported file). **Do not** read the knowledge files yet — load each on demand when its scope/trigger fires (see "Knowledge — loaded on demand").
 3. Extract the version number from `CLAUDE_LAWS.md`'s header.
@@ -85,9 +85,9 @@ The binding set is in [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) (loaded above) — do
 
 | Phrase | Action |
 |---|---|
-| **`update rules`** | Run `dforge-update` via the Bash tool, then re-import every `@./...` above, then reprint the confirmation with the new version. |
+| **`update rules`** | Run `dforge-update` via the Bash tool, then re-import every `@./...` above, then reprint the confirmation with the new version. If it stops because the hook changed, report its stat lines and ask the user to run `dforge-update` in their own terminal; never retry with `--main` unless asked. |
 | **`load rules`** | Re-import every `@./...` above without pulling. Then reprint the confirmation. |
-| **`check rules`** | Print the loaded `DESIGN_FORGE` version + result of `git -C ~/.design-forge log -1 --format='%ci %h %s'` + whether remote `main` is ahead. No file re-import. |
+| **`check rules`** | Print the loaded `DESIGN_FORGE` version + result of `git -C ~/.design-forge log -1 --format='%ci %h %s'` + whether a newer release tag (`vX.Y.Z`) exists on the remote. No file re-import. |
 | **`new project`** | Ask the user to choose a UI library (shadcn/ui, MUI, Ant Design, Chakra UI, No library, or Other). Then follow [`knowledge/PROJECT_SCAFFOLD.md`](./knowledge/PROJECT_SCAFFOLD.md) end-to-end. No registration in any external registry. |
 | **`fullstack mode`** | Activate Fullstack persona. From this point, every code-related turn follows the pair-programming discipline in [`agents/fullstack.md`](./agents/fullstack.md). Stays active until `frontend mode`, `research mode`, etc. |
 | **`frontend mode`** | Activate Frontend persona. Return to mockup/prototype work per [`agents/frontend.md`](./agents/frontend.md). |
