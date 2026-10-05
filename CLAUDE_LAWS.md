@@ -1,6 +1,6 @@
 # Master Claude Laws — Design Forge
 
-**Version:** 2.27.0
+**Version:** 2.28.0
 **Last Updated:** 2026-10-05
 **Rules Repo:** https://github.com/bojankocijan/design-forge
 **Inspired by:** Asimov's Three Laws of Robotics
@@ -230,13 +230,14 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
     - **Version sync on every release:** when bumping the version, update **all four** in the same PR — `plugin.json`, `marketplace.json`, the `CLAUDE_LAWS.md` header, and `RELEASES.md`. `scripts/release_version.py check` confirms they agree. After the merge, the Release Tag workflow tags `vX.Y.Z` on `main`; Claude doesn't push release tags, and the workflow never moves an existing tag.
     - **Quality + security gate (for official directory submission):** an open source `LICENSE` present (GPL-3.0), professional `README.md`, no secrets in the repo or history (Law 14), no personal data shipped (`projects.yaml` gitignored), CI green. Submit to `anthropics/claude-plugins-official` only when these hold.
 
-28. **Notify consuming sessions when a new rules version ships.** Design Forge loads globally — every project shares one `~/.design-forge` clone — so a single update reaches all consuming projects at once. At session start (Law 25 / the `CLAUDE.md` rules-update check), Claude compares the loaded version against the remote and, if a newer version exists, surfaces **one line** before proceeding:
+28. **Notify consuming sessions when a new rules version ships.** Design Forge loads globally — every project shares one `~/.design-forge` clone — so a single update reaches all consuming projects at once. At session start (Law 25 / the `CLAUDE.md` rules-update check), Claude compares the loaded version against the newest release tag (`vX.Y.Z`) on the remote and, if a newer release exists, surfaces **one line** before proceeding:
 
     ```
     Design Forge update available: v<loaded> → v<remote>. Run `update rules` to pull and reload.
     ```
 
     - The update command is **`update rules`** in-session (runs `dforge-update`, re-imports the rules, and reprints the confirmation with the new version). The shell equivalent is **`dforge-update`**.
+    - **`dforge-update` installs the newest release tag** (the clone sits on a detached HEAD); `dforge-update --main` follows `main` instead. Before switching, it diffs everything the Law 32 hook runs (`.claude/hooks/`, `scripts/ai_tools.py`, `install.sh`, `.claude/settings.json`). A change there needs a `y` in the user's own terminal; without a terminal (Claude's Bash tool), it shows the diff, applies nothing and exits 1. It never downgrades, refuses when the clone has local edits, and checks out exactly the commit whose diff was shown. The gate lives in `dforge-update` only: git commands run by hand in `~/.design-forge` skip it.
     - Claude **never auto-pulls** without the user's go-ahead — it notifies and continues on the current version until the user runs the command.
     - On claude.ai web (no clone) this check is skipped.
 
@@ -331,7 +332,7 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
 
     **Not a replacement for git-level hooks.** A `commitlint`/`husky` or `detect-secrets` pre-commit hook (if the project has one) catches a *human* committing directly with git. Law 32's hook operates one layer up: it stops Claude's own tool calls before they ever reach git or GitHub, whether or not the project has those hooks installed.
 
-    **Where it lives.** `.claude/hooks/enforce-laws.py` + a `PreToolUse` entry in `.claude/settings.json`, both committed in this repo as the canonical reference implementation. `install.sh` registers the same hook globally in `~/.claude/settings.json` (merging into whatever's already there, never overwriting it), pointing at `~/.design-forge/.claude/hooks/enforce-laws.py` — so the checks run in every repo a session touches, not just this one. Because the registered command points at that fixed path inside the clone, a `dforge-update` pull picks up any change to the script's *logic* automatically. Since v2.18.0, `dforge-update` also re-runs `install.sh` after pulling, so a newly added registration (such as a new hook entry) applies on the next update too. Changing or removing an existing entry still needs a manual edit of `~/.claude/settings.json`.
+    **Where it lives.** `.claude/hooks/enforce-laws.py` + a `PreToolUse` entry in `.claude/settings.json`, both committed in this repo as the canonical reference implementation. `install.sh` registers the same hook globally in `~/.claude/settings.json` (merging into whatever's already there, never overwriting it), pointing at `~/.design-forge/.claude/hooks/enforce-laws.py` — so the checks run in every repo a session touches, not just this one. Because the registered command points at that fixed path inside the clone, a `dforge-update` picks up any change to the script's *logic*, and `dforge-update` applies a hook change only after the user approves its diff in their own terminal (Law 28). Since v2.18.0, `dforge-update` also re-runs `install.sh` after updating, so a newly added registration (such as a new hook entry) applies on the next update too. Changing or removing an existing entry still needs a manual edit of `~/.claude/settings.json`.
 
     **Block log.** Every block appends one line to `~/.design-forge/hook-log.jsonl`: the time, law, a fixed check id (`commit-on-default`, `commit-message`, …), the repo and branch the hook judged, and a SHA-256 of the command. It never stores the command, the commit message or the block reason. The log rotates to `hook-log.1.jsonl` at 1 MB. Writes hold an exclusive lock on `hook-log.lock` for at most 200 ms, so concurrent sessions never interleave lines. The code lives in `.claude/hooks/hook_log.py`, which the hook imports in a guarded way: a missing module, an unwritable log or a busy lock skips the line and never changes the decision. The log stays local and gitignored. `hook log` runs `python3 ~/.design-forge/.claude/hooks/hook_log.py --summary` (blocks per law and check for the last 30 days, plus false positives and permission prompts). Asks are logged as type `ask`.
 
