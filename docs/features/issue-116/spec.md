@@ -2,7 +2,7 @@
 
 Intent: [#116](https://github.com/BojanKocijan/design-forge/issues/116) (the issue is the intent) · Roadmap: #123
 Design: none (no UI; shell function, CI workflows)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-05, chat (approve spec) and PR #157
 
 ## Decisions already taken (owner, 2026-10-05, chat)
 
