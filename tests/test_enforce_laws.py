@@ -371,5 +371,99 @@ class BlockLogWiringTests(unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join(HOOKS_DIR, "__pycache__")))
 
 
+class SkipAndForceTests(unittest.TestCase):
+    """Never skip git hooks; never force-push the default branch (#117)."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.feat = os.path.join(self.tmp.name, "feat-repo")
+        make_repo(self.feat, "feat/x")
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def run_hook(self, command: str) -> subprocess.CompletedProcess:
+        payload = {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": self.feat}
+        return subprocess.run(
+            [sys.executable, HOOK], input=json.dumps(payload),
+            capture_output=True, text=True, cwd=self.feat, env=env_with_home(self.tmp.name),
+        )
+
+    def assertBlocked(self, command: str, needle: str) -> None:
+        result = self.run_hook(command)
+        self.assertEqual(result.returncode, 2, f"{command!r}: {result.stderr}")
+        self.assertIn(needle, result.stderr)
+
+    def assertAllowed(self, command: str) -> None:
+        result = self.run_hook(command)
+        self.assertEqual(result.returncode, 0, f"{command!r}: {result.stderr}")
+
+    def test_skipping_git_hooks_is_blocked(self) -> None:
+        for command in (
+            'git commit --no-verify -m "fix: x"',
+            'git commit -n -m "fix: x"',
+            'git commit -an -m "fix: x"',
+            'git -C . commit --no-verify -m "fix: x"',
+            "git push --no-verify origin feat/x",
+            'git add . && git commit -n -m "fix: x"',
+        ):
+            self.assertBlocked(command, "--no-verify")
+
+    def test_review_bypasses_of_the_hook_skip_check_are_blocked(self) -> None:
+        for command in (
+            'git commit -m "fix: x" -n',
+            'git commit -m "fix: x" --no-verify',
+            'git commit -am "fix: x" -n',
+            'git commit -F msg.txt --no-verify',
+            'HUSKY=0 git commit --no-verify -m "fix: x"',
+            'command git commit -n -m "fix: x"',
+            'env CI=1 git commit -n -m "fix: x"',
+            'git -c core.hooksPath=/dev/null commit -m "fix: x"',
+        ):
+            self.assertBlocked(command, "--no-verify")
+
+    def test_untracked_files_flag_is_not_no_verify(self) -> None:
+        self.assertAllowed('git commit -uno -m "fix: x"')
+        self.assertAllowed('git -c user.name=x commit -m "fix: x"')
+
+    def test_dry_run_and_flag_text_in_messages_are_allowed(self) -> None:
+        self.assertAllowed("git push -n origin feat/x")
+        self.assertAllowed('git commit -m "fix: document the -n flag"')
+        self.assertAllowed('git commit -m "fix: x" -m "mentions --no-verify in prose"')
+
+    def test_force_push_to_default_is_blocked(self) -> None:
+        for command in (
+            "git push --force origin main",
+            "git push -f origin HEAD:main",
+            "git push -uf origin main",
+            "git push --force-with-lease=main origin main",
+            "git push --force-if-includes origin main",
+            "git push origin +main",
+            "git push origin +HEAD:main",
+        ):
+            self.assertBlocked(command, "force-push")
+
+    def test_review_bypasses_of_the_push_checks_are_blocked(self) -> None:
+        main_repo = os.path.join(self.tmp.name, "main-repo")
+        make_repo(main_repo, "main")
+        for command, cwd in (
+            ("git push --force-with-lease=main:abc123 origin main", self.feat),
+            ("git push --force-with-lease=main:abc123 origin main", main_repo),
+            ("git push -o ci.skip=a:b origin main", self.feat),
+            ("git push -f origin HEAD", main_repo),
+            ("git push origin HEAD", main_repo),
+        ):
+            payload = {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": cwd}
+            result = subprocess.run([sys.executable, HOOK], input=json.dumps(payload), capture_output=True,
+                                    text=True, cwd=cwd, env=env_with_home(self.tmp.name))
+            self.assertEqual(result.returncode, 2, f"{command!r} in {cwd}: {result.stderr}")
+        self.assertAllowed("git push origin HEAD")  # feature branch
+
+    def test_force_push_to_a_feature_branch_is_allowed(self) -> None:
+        self.assertAllowed("git push --force origin feat/x")
+        self.assertAllowed("git push --force-with-lease origin feat/x")
+        self.assertAllowed("git push origin +feat/x")
+
+
 if __name__ == "__main__":
     unittest.main()
