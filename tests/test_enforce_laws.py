@@ -631,9 +631,102 @@ class GuardrailAskTests(unittest.TestCase):
                                  text=True, env=env_with_home(self.home)).stdout
         self.assertIn("Permission prompts (asks): 1 — guardrail-edit: 1", summary)
 
+    def test_a_listed_mode_turns_the_ask_into_a_deny(self) -> None:
+        patched = os.path.join(self.tmp.name, "hook-patched.py")
+        with open(HOOK) as f:
+            code = f.read().replace('ASK_DENIED_MODES: set[str] = set()', 'ASK_DENIED_MODES: set[str] = {"bypassPermissions"}')
+        with open(patched, "w") as f:
+            f.write(code)
+        payload = {"tool_name": "Write", "tool_input": {"file_path": f"{self.home}/.claude/settings.json"},
+                   "cwd": self.project, "permission_mode": "bypassPermissions"}
+        result = subprocess.run([sys.executable, patched], input=json.dumps(payload), capture_output=True,
+                                text=True, cwd=self.project, env=env_with_home(self.home))
+        out = json.loads(result.stdout)["hookSpecificOutput"]
+        self.assertEqual(out["permissionDecision"], "deny")
+        self.assertIn("switch permission mode", out["permissionDecisionReason"])
+        payload["permission_mode"] = "default"
+        result = subprocess.run([sys.executable, patched], input=json.dumps(payload), capture_output=True,
+                                text=True, cwd=self.project, env=env_with_home(self.home))
+        self.assertEqual(json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"], "ask")
+
     def test_unparsable_input_fails_open(self) -> None:
         self.assertEqual(self.bash("echo 'unbalanced > ~/.claude/settings.json"), "allow")
         self.assertEqual(self.decision(self.run_payload({"tool_name": "Write", "tool_input": {}})), "allow")
+
+
+class TrackedDeleteTests(unittest.TestCase):
+    """Deleting a file git tracks asks the user (Law 8, #117)."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.home = os.path.join(self.tmp.name, "home")
+        os.makedirs(self.home)
+        self.repo = os.path.realpath(os.path.join(self.tmp.name, "repo"))
+        make_repo(self.repo, "feat/x")
+        os.makedirs(os.path.join(self.repo, "src"))
+        for name, text in (("tracked.txt", "t"), ("src/app.ts", "a"), (".gitignore", "build/\n")):
+            with open(os.path.join(self.repo, name), "w") as f:
+                f.write(text)
+        subprocess.run(["git", "add", "."], cwd=self.repo, check=True)
+        subprocess.run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com",
+                        "commit", "-q", "-m", "chore: files"], cwd=self.repo, check=True)
+        os.makedirs(os.path.join(self.repo, "build"))
+        for name in ("untracked.txt", "build/out.js"):
+            with open(os.path.join(self.repo, name), "w") as f:
+                f.write("x")
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def bash(self, command: str) -> str:
+        payload = {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": self.repo}
+        result = subprocess.run([sys.executable, HOOK], input=json.dumps(payload), capture_output=True,
+                                text=True, cwd=self.repo, env=env_with_home(self.home))
+        if result.returncode == 2:
+            return "block"
+        if not result.stdout.strip():
+            return "allow"
+        return json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"]
+
+    def test_deleting_tracked_files_asks(self) -> None:
+        for command in ("rm tracked.txt", "rm -f tracked.txt", "git rm tracked.txt",
+                        "rm -r src", "unlink tracked.txt", "ls && rm tracked.txt"):
+            self.assertEqual(self.bash(command), "ask", command)
+
+    def test_untracked_ignored_outside_and_cached_are_free(self) -> None:
+        for command in ("rm untracked.txt", "rm -rf build", "rm /tmp/not-in-repo.txt",
+                        "git rm --cached tracked.txt", "rm -rf node_modules"):
+            self.assertEqual(self.bash(command), "allow", command)
+
+    def test_review_bypasses_of_the_delete_guard_ask(self) -> None:
+        outside = os.path.join(self.tmp.name, "elsewhere")
+        os.makedirs(outside)
+        for command, cwd in (
+            ("rm tracked.txt && cd /tmp", self.repo),
+            (f"rm {self.repo}/tracked.txt", outside),
+            (f"git -C {self.repo} rm tracked.txt", outside),
+            ("rm ~/../repo/tracked.txt", outside),
+            ('rm "$HOME/../repo/src/app.ts"', outside),
+            (f"rm -r {self.repo}/src", outside),
+            ("sudo rm tracked.txt", self.repo),
+            ("rm -- tracked.txt", self.repo),
+        ):
+            payload = {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": cwd}
+            result = subprocess.run([sys.executable, HOOK], input=json.dumps(payload), capture_output=True,
+                                    text=True, cwd=cwd, env=env_with_home(self.home))
+            decision = json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"] if result.stdout.strip() else "allow"
+            self.assertEqual(decision, "ask", f"{command!r} from {cwd}")
+
+    def test_globs_match_like_the_shell(self) -> None:
+        self.assertEqual(self.bash("rm -f *.md"), "allow")  # only src/ has tracked files, none .md here
+        self.assertEqual(self.bash("rm -f *.txt"), "ask")   # tracked.txt
+        self.assertEqual(self.bash("rm -f src/*.ts"), "ask")
+
+    def test_tracked_delete_is_logged_under_law_8(self) -> None:
+        self.bash("rm tracked.txt")
+        with open(os.path.join(self.home, ".design-forge", "hook-log.jsonl")) as f:
+            [record] = [json.loads(line) for line in f]
+        self.assertEqual((record["type"], record["law"], record["check"]), ("ask", 8, "tracked-delete"))
 
 
 if __name__ == "__main__":

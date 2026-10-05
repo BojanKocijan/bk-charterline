@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """PreToolUse hook — mechanically enforces Law 32 (CLAUDE_LAWS.md).
 
-Reads the tool-call JSON Claude Code sends on stdin, inspects Bash
-commands for a narrow set of patterns, and blocks (exit 2 + reason on
-stderr) the ones that would break Law 7 (never merge / never push to
-the default branch), Law 13 (Conventional Commits), Law 14 (secret
-scan before commit), or Law 34 (ask before PR screenshots). Everything else passes through untouched.
+Reads the tool-call JSON Claude Code sends on stdin (Bash commands and
+the file-editing tools), checks a narrow set of patterns, and either
+blocks (exit 2 + reason on stderr) the ones that would break Law 5/7
+(never commit, push or force-push to the default branch, never merge),
+Law 13 (Conventional Commits), Law 14 (secret scan), Law 32 (never
+skip git hooks) or Law 34 (ask before PR screenshots), or returns
+permissionDecision "ask" so the user approves in Claude Code's own
+prompt: changing a guardrail file, or deleting a tracked file (Law 8).
+Every block check runs before any ask. Everything else passes through.
 
 Fails open: if anything here can't be parsed confidently, the call is
 allowed rather than blocked on an infrastructure fluke. This is a
@@ -302,7 +306,10 @@ def ask(reason: str, check: str) -> None:
 
 
 # Permission modes in which an "ask" would let the call through without
-# a prompt; there the hook denies instead (filled from the live probe).
+# a prompt; there the hook denies instead. Empty: a live probe
+# (2026-10-05, Claude Code 2.1.289) found no such mode — default,
+# acceptEdits, auto, dontAsk, plan and bypassPermissions all withheld
+# the edit. Add a mode here if a later version changes that.
 ASK_DENIED_MODES: set[str] = set()
 
 FILE_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit")
@@ -365,6 +372,54 @@ def check_file_edit(tool: str, tool_input: dict, base: str) -> None:
 
 WRITE_VERBS = {"tee", "rm", "unlink", "truncate", "chmod", "chown"}
 COPY_VERBS = {"cp", "mv", "ln", "install"}  # write to a destination
+
+
+def deleted_paths(segment: str) -> list[str]:
+    """Paths deleted by `rm`, `unlink` or `git rm` (not `--cached`, which
+    keeps the file) in one segment; `git -C DIR rm x` yields DIR/x.
+    Untokenisable input yields nothing (fail open)."""
+    found = git_invocation(segment, "rm")
+    if found is not None:
+        global_opts, args = found
+        if "--cached" in args:
+            return []
+        git_dir = None
+        for i, opt in enumerate(global_opts):
+            if opt == "-C" and i + 1 < len(global_opts):
+                git_dir = global_opts[i + 1]
+        paths = [a for a in args if not a.startswith("-")]
+        return [os.path.join(git_dir, a) if git_dir else a for a in paths]
+    try:
+        tokens = strip_command_prefix(shlex.split(segment))
+    except ValueError:
+        return []
+    if tokens and os.path.basename(tokens[0]) in ("rm", "unlink"):
+        return [t for t in tokens[1:] if not t.startswith("-")]
+    return []
+
+
+def tracked_by_git(path: str, cwd: str) -> bool:
+    """True if `path` (a file, folder or glob, relative or absolute, with ~
+    and $VARS expanded) matches files git tracks. git runs in the folder the
+    path is in, so absolute paths into another repo count too. Any error —
+    not a repo, a missing folder — is False (fail open)."""
+    try:
+        expanded = os.path.join(cwd, os.path.expandvars(os.path.expanduser(path)))
+        if os.path.isdir(expanded):
+            run_dir, spec = os.path.realpath(expanded), "."
+        else:
+            run_dir, spec = os.path.realpath(os.path.dirname(expanded)), os.path.basename(expanded)
+        if not os.path.isdir(run_dir) or not spec:
+            return False
+        if any(ch in spec for ch in "*?["):
+            spec = f":(glob){spec}"  # shell-like: `*` stays within one folder
+        out = subprocess.run(
+            ["git", "ls-files", "--", spec],
+            capture_output=True, text=True, timeout=5, cwd=run_dir,
+        )
+        return out.returncode == 0 and bool(out.stdout.strip())
+    except Exception:
+        return False
 
 
 def redirect_targets(segment: str) -> list[str]:
@@ -641,6 +696,14 @@ def check_bash(command: str, base: str) -> None:
                     f"Law 32 (guardrail): this command writes to {what} ({target}). "
                     "Approve only if you asked for this change.",
                     "guardrail-write",
+                )
+        # Law 8 — deleting a file git tracks needs the user's approval.
+        for target in deleted_paths(segment):
+            if pending_ask is None and tracked_by_git(target, write_cwd):
+                pending_ask = (
+                    f"Law 8 (no deletion without approval): this deletes {target}, "
+                    "which git tracks. Approve only if you want it removed.",
+                    "tracked-delete",
                 )
 
     is_commit = bool(re.search(r"\bgit\s+commit\b", scan))

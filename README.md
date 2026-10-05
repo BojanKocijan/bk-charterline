@@ -49,7 +49,7 @@ Out of the box, an AI coding assistant will happily push to `main`, invent APIs,
 | Inconsistent components | 4-file component folders, no inline styles, TypeScript, accessibility baked in |
 | No audit trail | Pre-execution announcements, Conventional Commits, living `PROJECT_KNOWLEDGE.md` |
 | Stale repos | Auto branch cleanup, orphaned issue detection, README kept current with every PR |
-| "Claude might forget and merge/push to `main` anyway" | **Law 32** — a `PreToolUse` hook mechanically blocks merge/push-to-main/malformed-commit/secret-commit tool calls, not just a reminder |
+| "Claude might forget and merge/push to `main` anyway" | **Law 32** — a `PreToolUse` hook mechanically blocks merge, push or force-push to `main`, skipped git hooks, malformed commits and secret commits, and asks you in the app before Claude changes its own guardrails or deletes tracked files |
 
 ---
 
@@ -228,7 +228,7 @@ Eight specialized agents compose into a single pipeline. `install.sh` links each
 | `review queue` | Risk-sorted digest of open PRs awaiting your review |
 | `review cap <N>` / `review cap off` | Change the cap on AI PRs awaiting review (default 3) |
 | `skip gates` | Lower the gate tier for this change, with a reason |
-| `hook log` | Law 32 blocks per law for the last 30 days, including false positives |
+| `hook log` | Law 32 blocks and permission prompts for the last 30 days, including false positives |
 | `ai inventory` | Every MCP server, extension, plugin, skill, agent, hook and permission rule your sessions can use, with tiers, owners and what's new since last time |
 | `ai classify` | Give each unclassified tool a Law 38 risk tier and owner; Claude proposes, you approve |
 

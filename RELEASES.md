@@ -2,6 +2,17 @@
 
 ---
 
+## v2.25.0 — October 5, 2026
+
+### The Law 32 hook guards the guardrails ([#117](https://github.com/BojanKocijan/design-forge/issues/117))
+- **Blocked:** `git commit --no-verify` / `-n` and `git push --no-verify`; force-pushes to the default branch in any form, including a `+main` refspec that used to slip past.
+- **Asks you in the app's permission prompt:** changing a guardrail file (Claude Code settings, `~/.claude/CLAUDE.md`, a project's `.claude/settings*.json`, the installed `~/.design-forge`) through Edit/Write or a Bash write, and deleting files git tracks (the mechanical backstop for Law 8). Only your click approves.
+- A block always wins over an ask. A live test showed no permission mode lets an ask through without a prompt.
+- `install.sh` registers a second hook entry for the file-editing tools; asks show up in `hook log`.
+- The Laws, `plugin.json` and `marketplace.json` are at 2.25.0.
+
+---
+
 ## v2.24.0 — October 5, 2026
 
 ### Law 38 — every AI tool has a risk tier and an owner ([#115](https://github.com/BojanKocijan/design-forge/issues/115))
