@@ -2,7 +2,7 @@
 
 Spec: [#146](https://github.com/BojanKocijan/design-forge/issues/146) (the issue is the spec) · Gate tier: Standard (changes the laws) · Branch: `feat/cloud-session-laws` (carried over from the cloud session's `claude/review-open-prs-5p8k5o`, 2026-10-05) · Issue: #146
 Work pile: judgment-heavy (law wording)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-05, chat
 
 ## Changes since the cloud draft (2026-10-05)
 
