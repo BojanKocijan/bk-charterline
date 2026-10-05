@@ -54,3 +54,6 @@ ai-inventory*
 
 # Personal Law 38 tool registry (projects commit their own .claude/ai-tools.json).
 /ai-tools.json
+
+# Per-session Law 38 tier 3 approvals the hook records (#138) — local to each machine.
+ai-approvals*
