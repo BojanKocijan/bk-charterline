@@ -1,6 +1,7 @@
 ---
 name: developer-handoff
 description: Package a completed UX design for developer implementation — generates docs/handoffs/<id>.md (13-section template) and opens a tracking issue in the GitHub Issues repo. Invoke when the user says "hand off", "ship to dev", "create the handoff for <id>", or runs the `handoff <id>` trigger. Never reply with chat-only links — always generate the file and the issue.
+license: GPL-3.0-only
 ---
 
 # Developer Handoff

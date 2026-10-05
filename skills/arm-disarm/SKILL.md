@@ -1,6 +1,7 @@
 ---
 name: arm-disarm
 description: Toggle Design Forge governance on or off for this session. "disarm" suspends all binding laws so Claude operates without governance constraints — useful for quick explorations or unconstrained pair-programming. "arm" restores the full ruleset. Hard-safety rails (never merge, no secrets, no PII) survive disarm and cannot be toggled off.
+license: GPL-3.0-only
 ---
 
 # Arm / Disarm — Design Forge governance toggle

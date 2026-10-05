@@ -1,6 +1,7 @@
 ---
 name: frontend-guide
 description: React + TypeScript coding standards under Design Forge — 4-file component pattern, no inline styles, styled-components base, library-agnostic, WCAG 2.2 AA, PII-free mocks, resolve every UI to the chosen library (Law 30). Invoke for any React/frontend code, component creation, styling, or a11y review.
+license: GPL-3.0-only
 ---
 
 # Frontend Guide

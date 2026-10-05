@@ -1,6 +1,7 @@
 ---
 name: figma-craft
 description: Figma construction craft — Auto Layout (→ flexbox), constraints, layout grids + breakpoints (1280/720/390), Figma variables bound to design tokens, components/variants/properties, pixel-perfect checklist, Dev Mode handoff readiness, naming conventions. Invoke when the user is building or reviewing a Figma file, asking about Auto Layout, variants, variables, constraints, or handoff-readiness. The Figma MCP is read — the agent guides/reviews/specs; it does not hand-author the canvas.
+license: GPL-3.0-only
 ---
 
 # Figma Craft

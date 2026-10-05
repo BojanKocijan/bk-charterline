@@ -1,6 +1,7 @@
 ---
 name: design-resources
 description: Design persona craft and inspiration catalogue — curated Figma official learning, UX/UI theory (NN/g, Laws of UX, Refactoring UI), platform guidelines (Apple HIG, Material Design, Fluent), accessibility resources (WCAG, APG, WebAIM), design-system galleries, inspiration galleries (Mobbin, Dribbble, Lyssna), color/type/motion tools. Also covers the live browse→capture→translate workflow using Claude in Chrome. Invoke when the user asks "where do I learn X", "show me examples", or requests design inspiration/resources.
+license: GPL-3.0-only
 ---
 
 # Design Resources
