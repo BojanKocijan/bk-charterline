@@ -9,6 +9,7 @@
 - **Tier 3 and unclassified MCP calls** ask on the first call per session per tool. Once the tool has run, a `PostToolUse` entry (session id, tool name and time only, kept 7 days) in `~/.design-forge/ai-approvals.jsonl` lets later calls in that session through.
 - Any registry lookup error counts as tier 3, never lower. Asks show up in `hook log` as `tier4-unapproved` and `tier3-first-use`.
 - **The registry and approvals are guarded:** editing `~/.design-forge/ai-tools.json`, `ai-approvals*` or a project's `.claude/ai-tools.json`, and running `ai_tools.py set` (logged as `registry-write`), asks you first. `ai_tools.py show` stays free.
+- **Known limits:** a repo that commits a `.claude/ai-tools.json` can still lower a tier while Claude works in it (the project entry wins, by design), and a hook crash on a tier 3 call counts as that session's approval. Both are written down in Law 38. Moving or linking a folder onto `.claude` now asks too.
 - `install.sh` registers a `PreToolUse` and a `PostToolUse` entry for `mcp__.*`. Run `ai classify` before `dforge-update`, so the app's own MCP tools don't each prompt once.
 - The Laws, `plugin.json` and `marketplace.json` are at 2.26.0.
 

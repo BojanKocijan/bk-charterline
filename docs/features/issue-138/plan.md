@@ -111,3 +111,13 @@ Expected sizes: PR 1 ~150 lines, PR 2 ~300, PR 3 ~200. All under Law 31's 400-li
 - **Keying approvals on `tool_use_id`:** it isn't known before the call, so it can't carry a session-wide approval.
 - **A separate script for `PostToolUse`:** a second command to register and keep in sync. One script dispatching on `hook_event_name` is enough.
 - **Caching the registry lookup between calls:** not needed at this size (Law 21). Revisit only if latency is a problem.
+
+## Review outcome (2026-10-05)
+
+The fresh-context review of the combined diff found:
+
+- **Fixed in PR 3:** `ai_tools.py set` behind `bash -c` / `uv run`; a Bash write onto a `.claude` folder; the deny text for MCP calls; which law each registry ask is logged under.
+- **Owner decisions, in chat:**
+  - Keep "the project entry wins". A committed `.claude/ai-tools.json` can lower a tier; documented in Law 38 as a known limit.
+  - A PreToolUse crash on a tier 3 call that is then recorded by PostToolUse is accepted and documented, not engineered around.
+- **Noted:** about 140 ms per hook run (python start and `git rev-parse`), so about 280 ms per MCP call for both events; under the 200 ms per-run threshold above. `approved()` ignores age until the next prune.
