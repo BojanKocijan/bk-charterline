@@ -5,6 +5,8 @@
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
   <img src="https://img.shields.io/badge/laws-37-orange?style=flat-square" alt="37 Laws" />
   <a href="https://ko-fi.com/bojaforjelena"><img src="https://img.shields.io/badge/buy_her_a_coffee-Ko--fi-6f4e37?style=flat-square&logo=kofi" alt="Buy her a coffee on Ko-fi" /></a>
+
+Using Design Forge at a company that can't use GPL? See the [commercial license](./COMMERCIAL.md).
 </p>
 
 # Design Forge
@@ -369,6 +371,8 @@ See [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) for the full governance framework.
 ## License
 
 [GPL-3.0](./LICENSE) &copy; Bojan Kocijan. Free to use for personal and commercial projects. If you modify it and share your version, you must publish your changes under the same license. See [CONTRIBUTING.md](./CONTRIBUTING.md) to send your improvements back.
+
+**Commercial license.** If your company wants to ship a changed version without publishing the changes, or can't use GPL software, a commercial license is available. See [COMMERCIAL.md](./COMMERCIAL.md).
 
 Version 2.18.0 and earlier were published under the MIT License, and version 2.18.1 under an all-rights-reserved license. Copies obtained under those licenses keep their terms.
 

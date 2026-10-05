@@ -8,6 +8,7 @@ By opening a pull request you agree that:
 
 - You wrote the contribution or have the right to submit it.
 - Your contribution is licensed under the same GPL-3.0 license as the rest of the project.
+- You also give Bojan Kocijan a non-exclusive, worldwide, royalty-free right to license your contribution under other terms, including the [commercial license](./COMMERCIAL.md). Your contribution stays available to everyone under GPL-3.0.
 - You keep the copyright in your contribution.
 
 If you do not agree, please do not submit a contribution.
