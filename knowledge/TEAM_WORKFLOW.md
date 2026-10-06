@@ -16,7 +16,7 @@
 | **Frontend** | `frontend.md` | UI implementation | `FRONTEND_GUIDE`, `COMPONENT_PATTERNS`, `FULLSTACK_WORKFLOW §7` |
 | **Backend** | `backend.md` | API / DB / server / observability / migrations | `FULLSTACK_WORKFLOW §6` |
 | **Tester** | `tester.md` | Tests + axe/coverage gate + acceptance-criteria check | `FULLSTACK_WORKFLOW §8`, `SKILLS` |
-| Design / Research / Analyst | `design.md` / `research.md` / `analyst.md` | Supporting — Lead calls them when the work needs them | their guides |
+| Design / Research / Analyst / Incident | `design.md` / `research.md` / `analyst.md` / `incident.md` | Supporting — Lead calls them when the work needs them | their guides |
 
 **Documentation is a shared team duty — there is no separate Docs role.** Each role documents its own change as part of doing it (Frontend/Backend write the README/API/PROJECT_KNOWLEDGE updates for what they built; the Tester records what was tested). The **Lead enforces** the doc standards in §6 as a gate before review — undocumented change = not done.
 

@@ -156,7 +156,7 @@ Design Forge has three layers:
 
 ### Personas
 
-Eight specialized agents compose into a single pipeline. `install.sh` links each one into `~/.claude/agents/`, so `claude agents` lists them.
+Nine specialized agents compose into a single pipeline. `install.sh` links each one into `~/.claude/agents/`, so `claude agents` lists them.
 
 | Persona | Scope | Trigger | Model |
 |---|---|---|---|
