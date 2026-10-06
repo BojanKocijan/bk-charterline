@@ -34,7 +34,8 @@ Already isolated, no change: a cloud session with one assigned branch (Law 5), a
 
 - One branch per worktree; git refuses to check out a branch another worktree has.
 - **Never bare `git stash` / `git stash pop`:** the stash is shared by every worktree of the repo. Prefer a WIP commit; if a stash is unavoidable, `git stash push -u -m <unique-tag>` and apply it by SHA.
-- **Plain git commands:** a Claude Code session isolated in a worktree may refuse a compound git command it can't verify stays inside the worktree. Run git commands one at a time from the worktree.
+- **Plain git commands:** a Claude Code session isolated in a worktree may refuse a compound git command it can't verify stays inside the worktree, `git -C` into another worktree, and any nested shell. Run git commands one at a time from the worktree.
+- **`update rules` runs outside the worktree:** `dforge-update` is a shell function, so an isolated session can't start it. The session asks the owner, steps out of the worktree (keeping it), runs `update rules`, and steps back in. It runs no git command in the shared folder meanwhile.
 - **Previews (Law 18):** the session in the main folder keeps the project's locked port. A worktree session runs `npm run dev -- --port <locked + 1>` (then +2 … +9 if taken; `strictPort` stays on, so it fails loudly instead of drifting) and writes that port in its `Preview:` footer, marked `(worktree)`.
 
 ### Recovering when two sessions collided
@@ -50,7 +51,7 @@ Already isolated, no change: a cloud session with one assigned branch (Law 5), a
 
 ### Cleanup after the merge (Law 9)
 
-A branch checked out in a worktree can't be deleted. After the merge: if `git -C <path> status --porcelain` is empty, `git worktree remove <path>`, then the usual branch cleanup. If the worktree has changes, stop and ask.
+A branch checked out in a worktree can't be deleted. After the merge, from another worktree: `git worktree remove <path>` without `--force`, which refuses a worktree with changes, so it doubles as the check. Then the usual branch cleanup. If it refuses, stop and ask.
 
 ## Where it lives
 
