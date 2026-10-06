@@ -467,23 +467,8 @@ class SkipAndForceTests(unittest.TestCase):
         self.assertAllowed("git push origin +feat/x")
 
 
-class GuardrailAskTests(unittest.TestCase):
-    """Changing a guardrail file hands the call to the user (#117)."""
-
-    def setUp(self) -> None:
-        self.tmp = tempfile.TemporaryDirectory()
-        self.home = os.path.realpath(os.path.join(self.tmp.name, "home"))
-        self.forge = os.path.join(self.home, ".design-forge")
-        os.makedirs(os.path.join(self.forge, "skills", "ux-writing"))
-        os.makedirs(os.path.join(self.forge, "knowledge"))
-        os.makedirs(os.path.join(self.home, ".claude", "skills"))
-        os.symlink(os.path.join(self.forge, "skills", "ux-writing"),
-                   os.path.join(self.home, ".claude", "skills", "ux-writing"))
-        self.project = os.path.realpath(os.path.join(self.tmp.name, "project"))
-        make_repo(self.project, "feat/x")
-
-    def tearDown(self) -> None:
-        self.tmp.cleanup()
+class HookRunner:
+    """Pipes a payload into the hook and reads its decision."""
 
     def run_payload(self, payload: dict, cwd: str | None = None) -> subprocess.CompletedProcess:
         payload.setdefault("cwd", cwd or self.project)
@@ -506,6 +491,25 @@ class GuardrailAskTests(unittest.TestCase):
 
     def bash(self, command: str, cwd: str | None = None) -> str:
         return self.decision(self.run_payload({"tool_name": "Bash", "tool_input": {"command": command}}, cwd))
+
+
+class GuardrailAskTests(HookRunner, unittest.TestCase):
+    """Changing a guardrail file hands the call to the user (#117)."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.home = os.path.realpath(os.path.join(self.tmp.name, "home"))
+        self.forge = os.path.join(self.home, ".design-forge")
+        os.makedirs(os.path.join(self.forge, "skills", "ux-writing"))
+        os.makedirs(os.path.join(self.forge, "knowledge"))
+        os.makedirs(os.path.join(self.home, ".claude", "skills"))
+        os.symlink(os.path.join(self.forge, "skills", "ux-writing"),
+                   os.path.join(self.home, ".claude", "skills", "ux-writing"))
+        self.project = os.path.realpath(os.path.join(self.tmp.name, "project"))
+        make_repo(self.project, "feat/x")
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
 
     @unittest.skipUnless(sys.platform == "darwin", "case-insensitive file systems")
     def test_wrong_case_paths_still_ask_on_macos(self) -> None:
@@ -661,7 +665,7 @@ class GuardrailAskTests(unittest.TestCase):
             "cat ~/.claude/settings.json",
             "grep -n hooks ~/.claude/settings.json",
             "cp ~/.claude/settings.json /tmp/settings-backup.json",
-            "git -C ~/.design-forge pull --ff-only",
+            '"$SHELL" -ic dforge-update',  # git by hand in the clone asks now (#170)
             "python3 ~/.design-forge/scripts/ai_tools.py show mcp:db",
             "echo hi > notes.txt",
         ):
@@ -704,6 +708,91 @@ class GuardrailAskTests(unittest.TestCase):
     def test_unparsable_input_fails_open(self) -> None:
         self.assertEqual(self.bash("echo 'unbalanced > ~/.claude/settings.json"), "allow")
         self.assertEqual(self.decision(self.run_payload({"tool_name": "Write", "tool_input": {}})), "allow")
+
+
+class InstalledCloneGitTests(HookRunner, unittest.TestCase):
+    """git that changes the installed ~/.design-forge asks the user, since
+    it skips dforge-update's reviewed-diff gate (#170)."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.home = os.path.realpath(os.path.join(self.tmp.name, "home"))
+        self.forge = os.path.join(self.home, ".design-forge")
+        make_repo(self.forge, "main")
+        os.makedirs(os.path.join(self.forge, "knowledge"))
+        self.project = os.path.realpath(os.path.join(self.tmp.name, "project"))
+        make_repo(self.project, "feat/x")
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def test_moving_the_clone_asks(self) -> None:
+        link = os.path.join(self.tmp.name, "forge-link")
+        os.symlink(self.forge, link)
+        for command in (
+            "git -C ~/.design-forge checkout v2.27.0",
+            "cd ~/.design-forge && git pull",
+            "cd ~/.design-forge\ngit fetch && git reset --hard origin/main",
+            'git -C "$HOME/.design-forge" switch main',
+            "git -C ~/.design-forge/knowledge restore .",
+            "git -C ~ -C .design-forge merge origin/main",
+            f"git -C {link} rebase origin/main",
+            "git --git-dir ~/.design-forge/.git --work-tree ~/.design-forge checkout v2.27.0",
+            "git --work-tree=$HOME/.design-forge checkout .",
+            "GIT_WORK_TREE=~/.design-forge git checkout x",
+            'bash -c "cd ~/.design-forge && git switch main"',
+            '"$SHELL" -ic "git -C ~/.design-forge pull --ff-only"',
+            "git -C ~/.design-forge stash pop",
+            "git -C ~/.design-forge stash",
+            "git -C ~/.design-forge clean -fdx",
+            "git -C ~/.design-forge cherry-pick abc123",
+            "git -C ~/.design-forge apply /tmp/x.patch",
+        ):
+            self.assertEqual(self.bash(command), "ask", command)
+
+    def test_the_ask_names_the_command_and_is_logged(self) -> None:
+        result = self.run_payload({"tool_name": "Bash", "tool_input": {"command": "git -C ~/.design-forge pull"}})
+        reason = json.loads(result.stdout)["hookSpecificOutput"]["permissionDecisionReason"]
+        self.assertIn("`git pull`", reason)
+        self.assertIn("dforge-update", reason)
+        with open(os.path.join(self.forge, "hook-log.jsonl")) as f:
+            [record] = [json.loads(line) for line in f]
+        self.assertEqual((record["type"], record["law"], record["check"]), ("ask", 32, "guardrail-git"))
+
+    def test_reads_exceptions_and_updates_are_free(self) -> None:
+        for command in (
+            "git -C ~/.design-forge status",
+            "git -C ~/.design-forge log -1 --format=%ct",
+            "git -C ~/.design-forge fetch --tags",
+            "git -C ~/.design-forge ls-remote --tags origin 'v*'",
+            "git -C ~/.design-forge describe --tags",
+            "git -C ~/.design-forge tag --list",
+            "git -C ~/.design-forge rev-parse HEAD",
+            "git -C ~/.design-forge stash list",
+            "git -C ~/.design-forge stash show -p",
+            "dforge-update",
+            "dforge-update --main",
+            '"$SHELL" -ic dforge-update',
+        ):
+            self.assertEqual(self.bash(command), "allow", command)
+
+    def test_other_repos_are_free(self) -> None:
+        dev = os.path.join(self.tmp.name, "design-forge")
+        make_repo(dev, "main")
+        for command in (
+            f"git -C {dev} pull",
+            f"cd {dev} && git checkout -b feat/x",
+            "git reset --hard HEAD",
+            "git -C ~/.design-forge-old checkout x",
+        ):
+            self.assertEqual(self.bash(command), "allow", command)
+        self.assertEqual(self.bash("git pull", self.forge), "ask")
+
+    def test_a_block_still_wins(self) -> None:
+        self.assertEqual(self.bash("cd ~/.design-forge && git pull && git push"), "block")
+
+    def test_unbalanced_quotes_fail_open(self) -> None:
+        self.assertEqual(self.bash("git -C ~/.design-forge checkout 'x"), "allow")
 
 
 class TrackedDeleteTests(unittest.TestCase):

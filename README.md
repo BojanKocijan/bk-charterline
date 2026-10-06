@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.29.0-blue?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/version-2.30.0-blue?style=flat-square" alt="Version" />
   <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License: GPL-3.0" />
   <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/design-forge/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
@@ -49,7 +49,7 @@ Out of the box, an AI coding assistant will happily push to `main`, invent APIs,
 | Inconsistent components | 4-file component folders, no inline styles, TypeScript, accessibility baked in |
 | No audit trail | Pre-execution announcements, Conventional Commits, living `PROJECT_KNOWLEDGE.md` |
 | Stale repos | Auto branch cleanup, orphaned issue detection, README kept current with every PR |
-| "Claude might forget and merge/push to `main` anyway" | **Law 32** — a `PreToolUse` hook mechanically blocks merge, push or force-push to `main`, skipped git hooks, malformed commits and secret commits, and asks you in the app before Claude changes its own guardrails, deletes tracked files or calls a tier 3 or 4 MCP tool |
+| "Claude might forget and merge/push to `main` anyway" | **Law 32** — a `PreToolUse` hook mechanically blocks merge, push or force-push to `main`, skipped git hooks, malformed commits and secret commits, and asks you in the app before Claude changes its own guardrails (including git in the installed `~/.design-forge`), deletes tracked files or calls a tier 3 or 4 MCP tool |
 
 ---
 
@@ -315,7 +315,7 @@ For professional work we recommend one language, so code, commits, PRs and docs 
 | Manual (Path B) | `git -C ~/.design-forge fetch --tags`, then `git -C ~/.design-forge checkout --detach <newest vX.Y.Z>` |
 | In any session | `update rules` |
 
-- **A hook change asks first.** When `dforge-update` would change anything the Law 32 hook runs (`.claude/hooks/`, `scripts/ai_tools.py`, `install.sh`, `.claude/settings.json`), `dforge-update` shows the diff and asks `Apply this hook change? [y/N]`. Without a terminal (for example when Claude runs it), it applies nothing and tells you to run it yourself. It checks out exactly the commit whose diff you saw. Plain git commands in `~/.design-forge` skip this check.
+- **A hook change asks first.** When `dforge-update` would change anything the Law 32 hook runs (`.claude/hooks/`, `scripts/ai_tools.py`, `install.sh`, `.claude/settings.json`), `dforge-update` shows the diff and asks `Apply this hook change? [y/N]`. Without a terminal (for example when Claude runs it), it applies nothing and tells you to run it yourself. It checks out exactly the commit whose diff you saw. Git commands run by hand in `~/.design-forge` skip this check, so the Law 32 hook asks you before any that would change the clone (`checkout`, `pull`, `reset` and the like).
 - **The clone sits on a release tag** (a detached HEAD), so a plain `git pull` in `~/.design-forge` doesn't work. Use `dforge-update`, or `dforge-update --main` to go back to following `main`.
 - **It never downgrades** a clone that's ahead of the latest release, and it refuses to run over local edits to tracked files.
 - **One run is enough**, even from v2.27.0 or older: the old function pulls `main`, and the installer then moves the clone onto the release tag when `main` is at it. If the tag isn't published yet, the next run moves it. In a Claude session, `update rules` always runs the current function from your rc file.

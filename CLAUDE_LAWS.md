@@ -1,6 +1,6 @@
 # Master Claude Laws — Design Forge
 
-**Version:** 2.29.0
+**Version:** 2.30.0
 **Last Updated:** 2026-10-06
 **Rules Repo:** https://github.com/bojankocijan/design-forge
 **Inspired by:** Asimov's Three Laws of Robotics
@@ -237,7 +237,7 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
     ```
 
     - The update command is **`update rules`** in-session (runs `dforge-update`, re-imports the rules, and reprints the confirmation with the new version). The shell equivalent is **`dforge-update`**.
-    - **`dforge-update` installs the newest release tag** (the clone sits on a detached HEAD); `dforge-update --main` follows `main` instead. Before switching, it diffs everything the Law 32 hook runs (`.claude/hooks/`, `scripts/ai_tools.py`, `install.sh`, `.claude/settings.json`). A change there needs a `y` in the user's own terminal; without a terminal (Claude's Bash tool), it shows the diff, applies nothing and exits 1. It never downgrades, refuses when the clone has local edits, and checks out exactly the commit whose diff was shown. The gate lives in `dforge-update` only: git commands run by hand in `~/.design-forge` skip it.
+    - **`dforge-update` installs the newest release tag** (the clone sits on a detached HEAD); `dforge-update --main` follows `main` instead. Before switching, it diffs everything the Law 32 hook runs (`.claude/hooks/`, `scripts/ai_tools.py`, `install.sh`, `.claude/settings.json`). A change there needs a `y` in the user's own terminal; without a terminal (Claude's Bash tool), it shows the diff, applies nothing and exits 1. It never downgrades, refuses when the clone has local edits, and checks out exactly the commit whose diff was shown. Git commands run by hand in `~/.design-forge` skip that gate, so the Law 32 hook asks before any that would change the clone's files (#170).
     - Claude **never auto-pulls** without the user's go-ahead — it notifies and continues on the current version until the user runs the command.
     - On claude.ai web (no clone) this check is skipped.
 
@@ -321,6 +321,7 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
     | Check | Law | Trigger |
     |---|---|---|
     | Edit / Write / MultiEdit / NotebookEdit on a guardrail file, or a Bash command that writes to one (`>`, `>>`, `tee`, `sed -i`, `perl -i`, `cp`/`ln`/`install` destination, `mv`, `rm`, `unlink`, `truncate`, `chmod`, `chown`) | Law 32 | Changing the guardrails themselves. Guardrails: `~/.claude/settings*.json`, `~/.claude/CLAUDE.md`, any project's `.claude/settings*.json`, and the installed `~/.design-forge` except its own data files (`hook-log*`, `ai-inventory*`, `projects.yaml`, `knowledge/PATTERNS.md`). Compared after resolving symlinks; a Design Forge development checkout isn't the installed copy. Reads and `dforge-update` stay free |
+    | `git checkout`, `switch`, `pull`, `reset`, `merge`, `rebase`, `restore`, `cherry-pick`, `am`, `apply`, `clean`, `revert` or `stash` in the installed `~/.design-forge`, found through `cd`, `-C`, `--git-dir`, `--work-tree`, `GIT_DIR` / `GIT_WORK_TREE` or a nested `bash -c` (logged as `guardrail-git`) | Law 32 | Changing the installed rules without `dforge-update`'s reviewed diff (Law 28). Reads (`status`, `log`, `fetch`, `ls-remote`, `describe`), `stash list` / `show`, `dforge-update` and a development checkout stay free; a wrong ask goes on the hook's exception list with a test |
     | `rm`, `unlink` or `git rm` (not `--cached`) on files git tracks in the command's repo | Law 8 | Deleting tracked files. Untracked, ignored and outside-repo files stay free |
     | An MCP call (`mcp__<server>__<tool>`) whose Law 38 tier is 4 | Law 38 | Every call (`tier4-unapproved`). Nothing is stored, so approval never carries over |
     | An MCP call whose tier is 3, or that is unclassified | Law 38 | The first call per session per tool (`tier3-first-use`). After the tool runs once, a `PostToolUse` entry in `~/.design-forge/ai-approvals.jsonl` (session id, tool name and time only, pruned after 7 days) lets later calls in that session through |

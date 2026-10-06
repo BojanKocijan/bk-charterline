@@ -2,6 +2,15 @@
 
 ---
 
+## v2.30.0 — October 6, 2026
+
+### The hook asks before git changes the installed rules ([#170](https://github.com/BojanKocijan/design-forge/issues/170))
+- **`dforge-update`'s reviewed diff can't be skipped by hand any more.** A `git checkout`, `switch`, `pull`, `reset`, `merge`, `rebase`, `restore`, `cherry-pick`, `am`, `apply`, `clean`, `revert` or `stash` that Claude runs in `~/.design-forge` now shows you the app's permission prompt (Law 32 `guardrail-git`). It finds the clone through `cd`, `-C`, `--git-dir`, `--work-tree`, `GIT_DIR` / `GIT_WORK_TREE`, symlinks and nested `bash -c`.
+- **Still free:** reads (`status`, `log`, `fetch`, `ls-remote`, `describe`), `stash list` / `show`, `dforge-update` itself, and your development checkout. A command that asks wrongly goes on the hook's exception list, with a test.
+- The Laws, `plugin.json` and `marketplace.json` are at 2.30.0.
+
+---
+
 ## v2.29.0 — October 6, 2026
 
 ### Incident mode: read-only production investigation ([#167](https://github.com/BojanKocijan/design-forge/issues/167))
