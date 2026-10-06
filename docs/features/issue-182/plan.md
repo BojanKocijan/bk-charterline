@@ -2,7 +2,7 @@
 
 Spec: [spec.md](spec.md) · Gate tier: Significant · Branch: `docs/parallel-sessions-worktrees` · Issue: #182
 Work pile: judgment-heavy (the wording of a law and a workflow; done interactively in this session's own worktree)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-06, chat
 
 ## One PR
 
