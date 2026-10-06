@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.28.0-blue?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/version-2.28.1-blue?style=flat-square" alt="Version" />
   <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License: GPL-3.0" />
   <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/design-forge/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
@@ -312,7 +312,7 @@ For professional work we recommend one language, so code, commits, PRs and docs 
 - **A hook change asks first.** When `dforge-update` would change anything the Law 32 hook runs (`.claude/hooks/`, `scripts/ai_tools.py`, `install.sh`, `.claude/settings.json`), `dforge-update` shows the diff and asks `Apply this hook change? [y/N]`. Without a terminal (for example when Claude runs it), it applies nothing and tells you to run it yourself. It checks out exactly the commit whose diff you saw. Plain git commands in `~/.design-forge` skip this check.
 - **The clone sits on a release tag** (a detached HEAD), so a plain `git pull` in `~/.design-forge` doesn't work. Use `dforge-update`, or `dforge-update --main` to go back to following `main`.
 - **It never downgrades** a clone that's ahead of the latest release, and it refuses to run over local edits to tracked files.
-- **Updating from v2.27.0 or older:** run `dforge-update` twice. The first run is still the old function, which pulls `main` and installs the new one; the second moves you onto the release tag.
+- **One run is enough**, even from v2.27.0 or older: the old function pulls `main`, and the installer then moves the clone onto the release tag when `main` is at it. If the tag isn't published yet, the next run moves it. In a Claude session, `update rules` always runs the current function from your rc file.
 
 ---
 

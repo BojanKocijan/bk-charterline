@@ -101,6 +101,19 @@ else
   ok "Rules repo cloned."
 fi
 
+# 2b. A clone on a branch that sits exactly on the newest release moves onto
+# that tag. No files change, so one run of any dforge-update (even one from
+# before tagged releases) ends on the release (#168).
+if git -C "$LOCAL_DIR" symbolic-ref -q HEAD >/dev/null \
+    && [ -z "$(git -C "$LOCAL_DIR" status --porcelain --untracked-files=no)" ]; then
+  LATEST_TAG=$(git -C "$LOCAL_DIR" tag --list 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)
+  if [ -n "$LATEST_TAG" ] \
+      && [ "$(git -C "$LOCAL_DIR" rev-parse HEAD)" = "$(git -C "$LOCAL_DIR" rev-parse "$LATEST_TAG^{commit}")" ] \
+      && git -C "$LOCAL_DIR" checkout --quiet --detach "$LATEST_TAG"; then
+    ok "On release $LATEST_TAG."
+  fi
+fi
+
 # 3. Ensure ~/.claude/ exists
 mkdir -p "$(dirname "$GLOBAL_MEMORY")"
 

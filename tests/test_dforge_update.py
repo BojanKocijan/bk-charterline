@@ -424,6 +424,42 @@ class InstallScriptTests(unittest.TestCase):
                 rc = f.read()
             self.assertIn(function_source().strip(), rc)
 
+    def install(self, fx: Fixture, update: bool = True) -> subprocess.CompletedProcess:
+        env = dict(fx.env, SHELL="/bin/bash", **({"DFORGE_UPDATE": "1"} if update else {}))
+        result = subprocess.run(["bash", INSTALL], env=env, capture_output=True, text=True, timeout=120)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        return result
+
+    def test_one_old_style_run_ends_on_the_release_tag(self) -> None:
+        # The pre-v2.28 function pulls main, then runs install.sh with DFORGE_UPDATE=1.
+        for update in (True, False):
+            with self.subTest(dforge_update=update), tempfile.TemporaryDirectory() as tmp:
+                fx = Fixture(os.path.realpath(tmp))
+                tag = fx.release("2.0.0")
+                fx.make_clone()
+                self.assertIn("On release v2.0.0.", self.install(fx, update).stdout)
+                self.assertEqual((fx.head(), fx.branch()), (tag, ""))
+
+    def test_otherwise_the_clone_stays_where_it_is(self) -> None:
+        cases = {
+            "main ahead of the tag": lambda fx: fx.release("2.1.0", tag=None),
+            "no tags": None,
+            "local edits": "edit",
+        }
+        for name, setup in cases.items():
+            with self.subTest(name), tempfile.TemporaryDirectory() as tmp:
+                fx = Fixture(os.path.realpath(tmp))
+                fx.release("2.0.0", tag=None if name == "no tags" else "default")
+                if callable(setup):
+                    setup(fx)
+                fx.make_clone()
+                if setup == "edit":
+                    with open(os.path.join(fx.clone, "CLAUDE_LAWS.md"), "a") as f:
+                        f.write("my edit\n")
+                before = fx.head()
+                self.assertNotIn("On release", self.install(fx).stdout)
+                self.assertEqual((fx.head(), fx.branch()), (before, "main"))
+
 
 if __name__ == "__main__":
     unittest.main()
