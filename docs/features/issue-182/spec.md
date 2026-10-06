@@ -2,7 +2,7 @@
 
 Intent: [#182](https://github.com/BojanKocijan/design-forge/issues/182) (the issue is the intent; the owner said "add it to the design forge", 2026-10-06, chat)
 Design: none (a law sentence, a knowledge section and a skill; no UI)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-06, chat
 
 ## What happened (the case this prevents)
 
