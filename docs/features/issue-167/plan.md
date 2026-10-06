@@ -2,7 +2,7 @@
 
 Spec: [spec.md](spec.md) · Gate tier: Significant · Branch: `feat/incident-mode` · Issue: #167
 Work pile: judgment-heavy (a new persona's rules and wording; done interactively, not delegated)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-06, chat
 
 ## PRs (Law 31)
 
