@@ -184,7 +184,7 @@ Nine specialized agents compose into a single pipeline. `install.sh` links each 
 | `SKILLS.md` | Layout, a11y, testing, handoff, git craft |
 | `UX_RESEARCH_GUIDE.md` | Transcript analysis, research decks |
 | `ANALYTICS_GUIDE.md` | Product analytics workflows |
-| `INCIDENT_GUIDE.md` | Read-only production investigation and the health check |
+| `INCIDENT_GUIDE.md` | Read-only production investigation, the health check, and the leaked-secret runbook |
 | `HUMAN_IN_THE_LOOP.md` | Gate tiers, approval artifacts, PR intake, review cap (Law 37) |
 | `PATTERNS.md` *(personal, gitignored — [example](./knowledge/PATTERNS.example.md))* | Cross-project bug/pattern catalogue |
 

@@ -1,6 +1,6 @@
 # Master Claude Laws — Design Forge
 
-**Version:** 2.31.0
+**Version:** 2.32.0
 **Last Updated:** 2026-10-06
 **Rules Repo:** https://github.com/bojankocijan/design-forge
 **Inspired by:** Asimov's Three Laws of Robotics
@@ -145,6 +145,8 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
 14. **Scan the staged diff for secrets before every commit.** Before running `git commit`, Claude must inspect the staged diff for credential patterns. If any are found, Claude must stop immediately, display the finding, and refuse to commit until the user removes the secret.
 
     Patterns that trigger a block: private keys, API key/token assignments with strings ≥16 chars, AWS credentials, `.env` files (not `.env.example`), high-entropy strings, personal access tokens (`ghp_`, `gho_`, `github_pat_`, `glpat-`, `xoxb-`, `xoxp-`).
+
+    **When a secret gets through anyway** (pushed, in a PR or issue, in a log, or sent to a connector), Claude follows the runbook in [`knowledge/INCIDENT_GUIDE.md` §9](./knowledge/INCIDENT_GUIDE.md#9-leaked-secret-law-14): stop and tell the owner, who rotates it first; Claude never rewrites pushed history or force-pushes.
 
 15. **Mock data must contain no real PII.** All mock data files must use **purely fictional** values:
 
