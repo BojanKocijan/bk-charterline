@@ -2,7 +2,7 @@
 
 Intent: [#167](https://github.com/BojanKocijan/design-forge/issues/167) (the issue is the intent) · Spike: [#155](../issue-155/spike.md) · Roadmap: #123
 Design: none (no UI; a persona, two triggers and a knowledge file)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-06, chat
 
 ## Decisions already taken (owner, in #167)
 
@@ -10,6 +10,8 @@ Approved-by: <pending>
 - **Incident notes stay local and gitignored**, so a missed redaction never reaches a repo.
 - **`health check` ships on day one.**
 - **Linked, not copied:** the installed `engineering:debug` and `engineering:incident-response` skills.
+- **`.git/info/exclude`, not `.gitignore`** (owner, 2026-10-06, chat; conflict 1).
+- **Hosting CLI enforcement is a follow-up:** [#173](https://github.com/BojanKocijan/design-forge/issues/173) (owner, 2026-10-06, chat; conflict 3).
 
 ## Open question settled here: where the incident-note template lives
 
@@ -132,9 +134,9 @@ These are proposals. The owner still approves each one (Law 38).
 
 - Component library, accessibility, copy: not applicable (no UI). The health check output and prompts follow the house style: short, specific, the next action named.
 - **Conflicts flagged for the owner:**
-  1. **`.git/info/exclude` instead of `.gitignore`.** #167 says to add `docs/incidents/` to the project's `.gitignore`. That's a tracked file, so it needs a branch, an issue and a PR (Law 5) before the first note can be written, in the middle of an incident. `.git/info/exclude` is local, untracked and has the same effect. Trade-off: a teammate's clone doesn't ignore the folder, but their notes are theirs. **Recommendation: `.git/info/exclude`.**
+  1. **`.git/info/exclude` instead of `.gitignore`.** #167 says to add `docs/incidents/` to the project's `.gitignore`. That's a tracked file, so it needs a branch, an issue and a PR (Law 5) before the first note can be written, in the middle of an incident. `.git/info/exclude` is local, untracked and has the same effect. Trade-off: a teammate's clone doesn't ignore the folder, but their notes are theirs. **Decided: `.git/info/exclude`** (owner, 2026-10-06).
   2. **Read-only is enforced by instruction, not mechanically.** The persona needs Write (the note) and Bash (the CLIs and `git check-ignore`), so it could still edit code. The hook backstops the worst cases: tier 4 MCP calls ask every time, and deleting tracked files asks. As a subagent, `disallowedTools` can drop `Edit` and `NotebookEdit`. The Supabase server's tool names are per-user ids, so the shipped agent file can't name `execute_sql` there; tier 4 covers it.
-  3. **Hosting CLIs run through Bash, outside Law 38.** `netlify` and `vercel` use your logged-in token and can deploy, roll back or change env vars. The hook doesn't see them. The persona allows only their log and status reads by instruction. A hook ask for `netlify deploy|env:*` and `vercel deploy|rollback|env` would close this. **Recommendation: a follow-up issue, not this one.**
+  3. **Hosting CLIs run through Bash, outside Law 38.** `netlify` and `vercel` use your logged-in token and can deploy, roll back or change env vars. The hook doesn't see them. The persona allows only their log and status reads by instruction. A hook ask for `netlify deploy|env:*` and `vercel deploy|rollback|env` would close this. **Decided: follow-up [#173](https://github.com/BojanKocijan/design-forge/issues/173).**
   4. **The browser tools ask once per session** until you classify `mcp:Claude_Browser`. Running `ai classify` first avoids the prompt.
   5. **`get_advisors` is tier 2 in your personal registry** (as an override on a tier 4 server). A project that commits its own `.claude/ai-tools.json` can change that (Law 38 known limit).
   6. **No branch or issue for an investigation.** Laws 2 and 5 cover changes. An investigation changes nothing tracked, so it gets the short announcement and no branch. The fix gets the full path.
@@ -145,5 +147,5 @@ These are proposals. The owner still approves each one (Law 38).
 - Dependency maps, alerts and SLOs as code (spike gaps 4 and 5), until a project has traces or an observability backend.
 - Any continuous or scheduled scanning.
 - Committed incident notes or postmortems. A postmortem the owner wants to keep goes through `engineering:incident-response` and a normal docs PR.
-- Hook enforcement for the hosting CLIs (conflict 3).
+- Hook enforcement for the hosting CLIs (conflict 3, [#173](https://github.com/BojanKocijan/design-forge/issues/173)).
 - Observability connectors other than Supabase (Sentry, Datadog, …). The guide names the tier defaults; reading them waits until one is connected.
