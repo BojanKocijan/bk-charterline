@@ -63,6 +63,7 @@ One function (for example `find_secret(text) -> kind | None`) serves both the co
 **Never counts as a secret:**
 
 - Placeholders: a body that is one repeated character (`ghp_xxxx…`, `0000…`) or contains `EXAMPLE` (AWS's documented convention).
+- A private-key header with no key body after it, as in docs that name the format (this spec does).
 - References to a secret rather than the secret itself: `${{ secrets.X }}`, `${X}`, `process.env.X`, `os.environ[…]`, `import.meta.env.X`.
 - Stripe test keys (`sk_test_`, `pk_`), Supabase `sb_publishable_` keys, git SHAs, UUIDs, `sha512-…` integrity strings.
 
@@ -92,7 +93,7 @@ Law 14's list matches the shared list, and "high-entropy strings" goes. There's 
 1. **New Law 39** rather than more text in Law 38 (already long) or Law 15 (about mock data). *Recommended: Law 39.*
 2. **JWTs:** block all except a Supabase anon key. *Recommended.* Blocking every JWT would block normal Supabase frontend commits.
 3. **Stripe test keys pass.** They only reach test mode. *Recommended.*
-4. **Placeholders pass** (a repeated character or `EXAMPLE`). *Recommended*, so docs and tests can show key shapes.
+4. **Placeholders pass** (a repeated character, `EXAMPLE`, or a key header with no body). *Recommended*, so docs and tests can show key shapes.
 5. **Law 14 drops "high-entropy strings"** instead of the hook adding an entropy check. *Recommended.*
 
 ## Out of scope
