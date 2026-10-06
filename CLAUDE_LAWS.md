@@ -1,6 +1,6 @@
 # Master Claude Laws — Design Forge
 
-**Version:** 2.33.0
+**Version:** 2.34.0
 **Last Updated:** 2026-10-06
 **Rules Repo:** https://github.com/bojankocijan/design-forge
 **Inspired by:** Asimov's Three Laws of Robotics
@@ -53,6 +53,8 @@
 
     No code is written on a stale branch, on `main` directly, or without a corresponding issue.
 
+    **Parallel sessions.** Before step 2, Claude checks whether another session may use the same folder ([`knowledge/SKILLS.md`](./knowledge/SKILLS.md) §6.b). If so, it skips steps 2–3 there: it fetches, creates the branch in its own worktree (skill `parallel-sessions`), and never checks out, switches or pulls in the shared folder. This overrides the checkouts and pulls in Laws 9 and 25 and in FULLSTACK_WORKFLOW. Claude never shares one checkout with another session.
+
     **Assigned branch (cloud sessions).** When the environment assigns Claude one branch and allows pushing nowhere else (a Claude Code cloud session), Claude uses that branch instead of creating `feat/…`. Before new work, and after each merge, Claude starts it again from the latest default branch: `git fetch origin <default-branch> && git checkout -B <assigned-branch> origin/<default-branch>`. It never adds commits on top of already-merged history. If the branch still holds unmerged commits, Claude keeps them and rebases them onto the new base; it resets only a branch that holds nothing but merged history. This applies only when pushing elsewhere is not allowed. Everywhere else, the steps above stand.
 
 5a. **Check for existing open or merged PRs before starting new work.** Before opening a new issue or branching, Claude must check if there's already an open or recently merged PR for the same work:
@@ -102,7 +104,7 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
     - **Assigned branch (Law 5).** Step 2 (deleting the remote branch) is skipped for a branch the environment assigned. GitHub usually deletes it on merge, and the next push recreates it from the latest default branch.
     - **Never delete an unmerged branch.** If the ancestor check fails and the PR is not `MERGED`, leave the branch and report it.
     - At session start (Law 25), Claude also sweeps for orphaned merged branches and clears them without being asked.
-    - **Pull the default branch immediately after, unprompted.** The moment a PR merges, Claude runs `git checkout <default-branch> && git pull origin <default-branch>` right away as part of the same cleanup — not just at the next branch-creation moment (Law 5). This keeps local `main` continuously current as work lands instead of going stale between sessions.
+    - **Pull the default branch immediately after, unprompted.** The moment a PR merges, Claude runs `git checkout <default-branch> && git pull origin <default-branch>` right away as part of the same cleanup — not just at the next branch-creation moment (Law 5). This keeps local `main` continuously current as work lands instead of going stale between sessions. In a folder another session may use, Claude only fetches (Law 5, parallel sessions).
 
 10. **Every new project Claude builds ships with CI and tests.** Before any scaffold step, Claude runs `gh auth status` to verify authentication. Non-negotiable per project:
     - CI on every push + every PR: ESLint, `tsc --noEmit`, Vitest unit + component, `vitest-axe` accessibility, Playwright + `@axe-core/playwright` E2E smoke + full-page axe, and `vite build`.
@@ -167,6 +169,7 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
     - At session start, Claude reads `~/.design-forge/projects.yaml`, finds the current project by repo name, and reads its `port`.
     - If the project is not yet registered, Claude registers it first (see Law 20) before starting the preview.
     - `vite.config.ts` must have `server: { port: <locked-port>, strictPort: true }` so Vite never silently falls back to another port.
+    - **A second worktree** (Law 5, parallel sessions): the main folder keeps the locked port. A session in a worktree runs `npm run dev -- --port <locked + 100>` (up to +109 if taken; ports +1 … +9 belong to other projects) and writes `(worktree)` after the URL in its footer. It finds the project by the main folder's name, the parent of `git rev-parse --git-common-dir`, not the worktree's.
 
 19. **Design fidelity — only add elements explicitly present in the design.** When implementing from a Figma link or any design, never invent icons, color accents, borders, or other visual elements not present in the design. Source `iconId` from Figma before writing any icon reference. When in doubt, implement less.
 
@@ -213,7 +216,7 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
 ---
 
 25. **Session start — pull main, check open PRs, sweep stale branches.** At the start of every session, before any code work:
-    1. `git checkout main && git pull origin main` — never work on stale local state.
+    1. `git checkout main && git pull origin main` — never work on stale local state. In a folder another session may use, fetch only (Law 5, parallel sessions).
     2. `gh pr list --repo <owner/repo>` — surface any open PRs and report them in the confirmation line.
     3. `git fetch --prune origin` and delete any local/remote branch already merged into `main` (Law 9 cleanup duty).
 

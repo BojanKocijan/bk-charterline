@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.33.0-blue?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/version-2.34.0-blue?style=flat-square" alt="Version" />
   <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License: GPL-3.0" />
   <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/design-forge/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
@@ -135,7 +135,7 @@ Design Forge has three layers:
 │  knowledge/ — 12 binding guides                  │
 │  (loaded on demand per task scope)              │
 ├─────────────────────────────────────────────────┤
-│  skills/ — 17 reusable skill definitions        │
+│  skills/ — 18 reusable skill definitions        │
 │  (auto-discovered by Claude Code)               │
 └─────────────────────────────────────────────────┘
 ```
@@ -181,7 +181,7 @@ Nine specialized agents compose into a single pipeline. `install.sh` links each 
 | `FULLSTACK_WORKFLOW.md` | Production PR flow (10 phases) |
 | `TEAM_WORKFLOW.md` | Multi-agent team pipeline |
 | `FEATURE_WORKFLOW.md` | Feature lifecycle (start/pause/resume/finish) |
-| `SKILLS.md` | Layout, a11y, testing, handoff, git craft |
+| `SKILLS.md` | Layout, a11y, testing, handoff, git craft, parallel sessions |
 | `UX_RESEARCH_GUIDE.md` | Transcript analysis, research decks |
 | `ANALYTICS_GUIDE.md` | Product analytics workflows |
 | `INCIDENT_GUIDE.md` | Read-only production investigation, the health check, and the leaked-secret runbook |
@@ -358,7 +358,7 @@ design-forge/
 │   ├── HUMAN_IN_THE_LOOP.md
 │   ├── PATTERNS.example.md
 │   └── PATTERNS.md              # gitignored — your copy of the example above
-├── skills/                      # 17 reusable skill definitions
+├── skills/                      # 18 reusable skill definitions
 ├── docs/                        # Additional documentation
 └── .github/
     └── workflows/

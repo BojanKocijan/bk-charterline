@@ -84,6 +84,18 @@ A branch checked out in a worktree can't be deleted. After the merge, from anoth
   3. **Each worktree costs** a dependency install and disk space. It's created only when the folder is shared.
   4. **No hook:** the hook can't see which sessions share a folder, so this is a rule plus a skill, not an enforced check.
 
+## Amendment 1 — after the independent review (2026-10-07)
+
+Approved-by: BojanKocijan, 2026-10-07, chat
+
+A fresh-context review of the built change found gaps this spec missed:
+
+1. **No checkout or pull in a shared folder.** Law 5 steps 2–3, Law 9's "pull the default branch" and Law 25's session-start `git checkout main && git pull` all run in the folder, and a checkout there moves the other session's branch: that's how the collision happened. Law 5's paragraph becomes: before step 2, check whether another session may use the folder; if so, skip steps 2–3 there, fetch, create the branch in your own worktree, and never check out, switch or pull in the shared folder. This overrides the checkouts and pulls in Laws 9 and 25 and in FULLSTACK_WORKFLOW. Laws 9 and 25 each get a short pointer to it.
+2. **Preview ports +100 … +109, not +1 … +9.** Law 20 gives projects consecutive ports (5173, 5174 and 5175 on this machine), so +1 is another project's locked port.
+3. **The project is named from the main folder.** In a worktree, `git rev-parse --show-toplevel` ends in the worktree's name (`issue-182`), so session start and Law 20 would register it as a new project. Use the main folder's name: the parent of `git rev-parse --git-common-dir`.
+4. **Recovery covers staged and new files.** The patch holds only your files (`git diff HEAD --binary -- <your files>`). New untracked files are moved to your worktree, not left behind. `git restore --staged -- <your files>` runs before `git apply -R`, so nothing of yours stays in the shared index for the other session's next commit.
+5. **Wording fixes:** dropping a foreign commit is `git rebase --onto <commit>^ <commit> <branch>` with `--force-with-lease`; the PR that merges second takes the next number (`gh pr ready --undo` turns an open PR back into a draft); a squash-merged branch counts as merged when its PR shows `MERGED` (Law 9); `git worktree add --no-track` replaces the separate unset-upstream step; a session the app started inside a worktree asks the owner to run `update rules` from another session or a terminal, because `ExitWorktree` does nothing there; recovery announces what it found and waits after step 2 (Law 2); removing a clean worktree is Law 9 cleanup, not a Law 8 deletion; if your branch is still checked out in the shared folder, the owner decides which session moves.
+
 ## Out of scope
 
 - A hook or script that detects other sessions.

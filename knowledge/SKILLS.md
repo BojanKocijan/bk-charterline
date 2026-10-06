@@ -1,7 +1,7 @@
 # Skills Matrix — Design Forge
 
-**Version:** 1.0.0
-**Last Updated:** 2026-06-06
+**Version:** 1.1.0
+**Last Updated:** 2026-10-06
 **Binding:** Yes — this file lists the competencies Claude must apply to every Design Forge task. When a task touches one of these skills, Claude follows the rules in this file.
 
 This file is the "how Claude thinks" companion to the other knowledge files. Where `FRONTEND_GUIDE.md` dictates what components to use, this file dictates how to reason about layout, design, state, a11y, and engineering craft.
@@ -193,6 +193,48 @@ Tools: `vitest-axe` in unit tests, `@axe-core/playwright` in E2E.
 - **Images in a new message.** Images sent while Claude is still working may not be saved in a cloud session; only images in a fresh message are. When an image Claude needs isn't on disk, Claude asks for it to be sent again in a new message. It never guesses what the image showed.
 - **CI that can't run.** If GitHub Actions don't run, the PR summary says `not run ⚠` and lists the local checks instead (Law 7).
 
+## 6.b Parallel sessions: one worktree each
+
+Two sessions in one folder share one checked-out branch: a `git checkout -b` in one moves the other, and a commit lands on the wrong branch. Each session that does branch work while another may use the folder works in its own git worktree (Law 5). The commands are in the [`parallel-sessions`](../skills/parallel-sessions/SKILL.md) skill.
+
+**When the folder counts as shared.** Check before creating a branch, and again when a sign below appears. Any doubt counts as shared.
+
+- `ListAgents` lists another session on this machine for the same project, or you can't tell which project it's on. It doesn't show a peer's folder.
+- The owner says sessions run in parallel.
+- Signs of a collision: the branch changed between two of your own commands, commits you didn't make, or changes in files you didn't touch.
+
+Already isolated: a cloud session with one assigned branch (§6.a), and a session whose folder is already under `.claude/worktrees/`.
+
+**In a shared folder, never check out, switch or pull.** Any of them moves the branch the other session is on. Fetch only; this overrides the checkouts and pulls in Laws 5, 9 and 25 and in FULLSTACK_WORKFLOW (Law 5, "Parallel sessions").
+
+**Setup.**
+
+- One worktree per branch, at `.claude/worktrees/<issue-or-branch>`. Confirm git ignores the path; if it doesn't, add `/.claude/worktrees/` to the local `info/exclude`, never to a tracked file.
+- Branch from the freshly fetched default branch with `--no-track`, so a plain `git push` can't target the default branch.
+- Work from inside the worktree: in Claude Code, `EnterWorktree` with its `path`.
+- Install dependencies in each worktree; `node_modules` isn't shared. Untracked local files such as `.env.local` aren't there either: ask the owner before copying one, since it may hold secrets (Law 14).
+- **The project is the main folder's.** In a worktree, the repo's top level ends in the worktree's name. For Laws 18 and 20, use the main folder's name: the parent of `git rev-parse --git-common-dir`.
+
+**Working rules.**
+
+- **Never bare `git stash` or `git stash pop`:** every worktree of a repo shares one stash. Prefer a WIP commit; if a stash is unavoidable, name it and apply it by SHA.
+- **Plain git commands, one at a time.** A Claude Code session isolated in a worktree may refuse a compound git command it can't verify, `git -C` into another worktree, and any nested shell.
+- **`update rules` runs outside the worktree:** `dforge-update` is a shell function, which an isolated session may refuse to start. Ask the owner, step out of the worktree (keeping it), run `update rules`, step back in, and run no git command in the shared folder meanwhile. A session the app started inside a worktree can't step out: it asks the owner to run `update rules` from another session, or `dforge-update` in a terminal.
+- **Previews (Law 18):** the main folder keeps the locked port. A worktree previews on the locked port + 100 (up to +109), since +1 … +9 belong to other projects, and says `(worktree)` in its footer.
+
+**Recovery after a collision.**
+
+1. Stop: no commit, reset, checkout or push until you know what happened.
+2. Find out from the branch, the recent log, which branches contain your commits, the worktree list and `ListAgents`. Tell the owner what you found and wait for a go-ahead before changing anything (Law 2).
+3. Save your work, which changes nothing: a binary patch of only the files you edited, and a note of the new files you created. If a file has changes you didn't make, leave it out and tell the owner.
+4. Move to your own worktree for your branch, cherry-pick your stray commits there, apply the patch, and move your new files there.
+5. Take only your edits out of the shared folder: unstage your files, then reverse the patch, so nothing of yours is left for the other session's next commit. **Never** `git reset --hard`, `git checkout -- .`, `git clean` or a stash there: they would wipe the other session's work.
+6. A foreign commit on another session's branch or PR: tell the owner and message that session to drop it (`git rebase --onto <commit>^ <commit> <branch>`, then a `--force-with-lease` push of its own branch). **Never** rewrite another session's branch yourself.
+7. Two PRs claiming one version: the PR that merges second takes the next number and stays a draft until the first merges (`gh pr ready --undo` turns an open PR back into a draft). If the higher version merged first, the lower one would be tagged after it, and `dforge-update`, which installs the newest tag, would never install it.
+8. Give the owner the merge order for every PR involved, with any rebase between them (Law 35).
+
+**Cleanup after the merge (Law 9).** Count the branch as merged when its PR shows `MERGED`: after a squash merge it isn't an ancestor of the default branch. A branch checked out in a worktree can't be deleted, so first, from another worktree, run `git worktree remove <path>` without `--force`: it refuses a worktree with changes, so it doubles as the check. Removing a clean worktree is Law 9 cleanup, not a Law 8 deletion. Then clean up the branch as usual. If it refuses, stop and ask.
+
 ---
 
 ## 7. Motion
@@ -296,4 +338,5 @@ Any architectural notes, edge cases, or gotchas the dev should know.
 
 ## Changelog
 
+- **1.1.0 (2026-10-06)** — §6.b Parallel sessions: one worktree each, with the `parallel-sessions` skill (#182).
 - **1.0.0 (2026-06-06)** — Initial release. All layout/design/React/a11y/form/git/motion/error/performance skills, UX writing 10 rules, design critique 8-step checklist, and the 13-section developer-handoff template (analytics telemetry section optional).

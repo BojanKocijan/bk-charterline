@@ -45,6 +45,14 @@ Spec, plan and implementation in one PR: 10 files and about 330 lines, inside La
 - **`--port` and `strictPort`:** the CLI's `--port` overrides `server.port` in `vite.config.ts`, and `strictPort` still stops it from drifting to a random port. → Stated in §6.b.
 - **Detection misses a peer** that `ListAgents` doesn't show (a session on another tool). → The collision signs in step 3 of "when it applies" catch it after the fact, and recovery is documented.
 
+## Amendment 1 (2026-10-07) — see the spec's Amendment 1
+
+Approved-by: BojanKocijan, 2026-10-07, chat
+
+- **Same 10 files.** `CLAUDE_LAWS.md` also gains one pointer each in Laws 9 and 25 ("in a shared folder, fetch only: Law 5"), and the Law 5 paragraph names what it overrides. `README.md`'s knowledge row for `SKILLS.md` mentions parallel sessions.
+- **`FULLSTACK_WORKFLOW.md` stays unchanged:** its two `git checkout main && git pull` examples are covered by Law 5's override. Editing it would make 11 files, over Law 31's ceiling.
+- **Proof adds:** the ports table check (no +1 … +9), and the risky-command search now also allows `--force-with-lease` on your own branch only.
+
 ## Ruled out
 
 - **A hook:** it can't see which sessions share a folder.
