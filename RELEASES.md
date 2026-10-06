@@ -2,6 +2,15 @@
 
 ---
 
+## v2.28.2 — October 6, 2026
+
+### Release Tag no longer misses a fixed-up release ([#171](https://github.com/BojanKocijan/design-forge/issues/171))
+- **Any of the four version files starts the workflow**, not only `CLAUDE_LAWS.md`. If a bump merge fails the version check, the follow-up fix to `plugin.json`, `marketplace.json` or `RELEASES.md` now tags the release.
+- **Re-run by hand** from the Actions tab (`workflow_dispatch`). A version that's already tagged is left as it is.
+- The Laws, `plugin.json` and `marketplace.json` are at 2.28.2.
+
+---
+
 ## v2.28.1 — October 6, 2026
 
 ### One update run is enough ([#168](https://github.com/BojanKocijan/design-forge/issues/168))

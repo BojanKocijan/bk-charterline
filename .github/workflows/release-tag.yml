@@ -2,12 +2,19 @@ name: Release Tag
 
 # Tags main as vX.Y.Z when a merge changes the version (Law 27, #116).
 # dforge-update installs the newest tag, so only a version whose four
-# files agree is tagged, and an existing tag is never moved.
+# files agree is tagged, and an existing tag is never moved. Any of the
+# four files starts it, so a release fixed after its bump merge is still
+# tagged; workflow_dispatch re-runs it by hand (#171).
 
 on:
   push:
     branches: [main]
-    paths: [CLAUDE_LAWS.md]
+    paths:
+      - CLAUDE_LAWS.md
+      - .claude-plugin/plugin.json
+      - .claude-plugin/marketplace.json
+      - RELEASES.md
+  workflow_dispatch:
 
 permissions:
   contents: read
