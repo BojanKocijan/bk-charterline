@@ -29,12 +29,11 @@
 
 ### 1.2 Reading Supabase logs
 
-Field names differ per project. Before filtering on a field:
+Field names differ per project. Never assume a field exists:
 
 1. `select distinct source from logs` over the window.
-2. One sample row per source you need, to see the timestamp, level and `log_attributes` keys.
-
-Then filter on the fields you saw. Never assume a field exists.
+2. The `log_attributes` keys of one row per source you need (`mapKeys(log_attributes)`, `limit 1 by source`), then filter on the fields you saw. Seen in one project, confirm in yours: `edge_logs` → `response.status_code` (errors are ≥ 500), `auth_logs` → `level`, `postgres_logs` → `parsed.error_severity`.
+3. **An empty result proves nothing until you've seen what it filters.** Before reporting "no errors", run the same window grouped by the level field, to show the values that do occur.
 
 ---
 
@@ -89,6 +88,7 @@ Logs hold personal data. These rules apply to the note, to chat replies and to t
 - **Summarize, don't paste:** "37 × 500 on `/rest/v1/orders`, 14:02–14:09 UTC, all from one function version".
 - **When an exact line matters,** quote only that line, with these replaced: emails → `<email>`, IP addresses → `<ip>`, user and session IDs → `<user-id>`, tokens, keys, JWTs and cookies → `<token>`, names and phone numbers → `<name>`, `<phone>`.
 - Request IDs and deploy IDs may stay: they identify requests, not people.
+- **API key prefixes and hashes** in logs (for example `request.sb.apikey.*`) count as `<token>`. Report the key *type* instead ("the server's secret key", "the anon key").
 - Never write a secret anywhere, even redacted in part.
 
 ---
@@ -109,7 +109,7 @@ When a hypothesis is confirmed:
 Runs once, read-only, then stops. Works from any persona and doesn't switch it.
 
 1. `get_advisors` for `security` and `performance`.
-2. One `query_logs` over the last hour (explicit window): error-level rows counted per `source`, top messages summarized and redacted. Use §1.2 to find the level field first.
+2. One `query_logs` over the last hour (explicit window): error-level rows counted per `source`, top messages summarized and redacted. Use §1.2 to find the level field first, and its step 3 before reporting zero.
 3. The latest deploy: `netlify api listSiteDeploys` (newest first) or the checked Vercel equivalent.
 
 Output in chat only, no file:
@@ -126,8 +126,8 @@ Not checked: <source and why, e.g. "Vercel CLI not logged in">
 | Severity | When |
 |---|---|
 | critical | A security advisor at ERROR level, or the latest deploy failed |
-| high | Errors in the last hour on any source, or a performance advisor at WARN |
-| medium | Other WARN advisors, or warn-level log bursts |
+| high | Errors in the last hour on any source, or a security advisor at WARN |
+| medium | A performance advisor at WARN, or warn-level log bursts |
 | low | INFO advisors |
 | info | Context worth knowing, such as an old deploy still live |
 
