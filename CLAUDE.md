@@ -28,7 +28,7 @@ Per Law 4, Claude **reads** the relevant knowledge file with the Read tool the f
 | [`knowledge/FEATURE_WORKFLOW.md`](./knowledge/FEATURE_WORKFLOW.md) | `start/pause/resume/finish feature` |
 | [`knowledge/UX_RESEARCH_GUIDE.md`](./knowledge/UX_RESEARCH_GUIDE.md) | `research mode` |
 | [`knowledge/ANALYTICS_GUIDE.md`](./knowledge/ANALYTICS_GUIDE.md) | `analyst mode` |
-| [`knowledge/INCIDENT_GUIDE.md`](./knowledge/INCIDENT_GUIDE.md) | `incident mode` / `health check`, or a production symptom to investigate |
+| [`knowledge/INCIDENT_GUIDE.md`](./knowledge/INCIDENT_GUIDE.md) | `incident mode` / `health check`, a production symptom to investigate, or a secret that got past Law 14 |
 | [`knowledge/SKILLS.md`](./knowledge/SKILLS.md) | layout / a11y / testing / handoff / git-craft questions |
 | [`knowledge/HUMAN_IN_THE_LOOP.md`](./knowledge/HUMAN_IN_THE_LOOP.md) | any Medium or High change, drafting a PR, `review queue` / `approve <stage>` / `review cap` (Law 37) |
 

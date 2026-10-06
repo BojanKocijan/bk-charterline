@@ -2,6 +2,17 @@
 
 ---
 
+## v2.32.0 — October 6, 2026
+
+### A runbook for a secret that got through ([#122](https://github.com/BojanKocijan/design-forge/issues/122))
+- **New `INCIDENT_GUIDE.md` §9.** When Claude finds a secret that got past the Law 14 check (pushed, in a PR or issue, in a log, or sent to a connector), it stops and tells you the type and where it is, never the value. You revoke and rotate it first; Claude then removes it from the current tree in a normal commit and checks, read-only, where else it went.
+- **Not pushed yet** means nothing leaked: with your yes, Claude drops it from the local commits.
+- **Rewriting pushed history stays yours.** Claude prints the commands and never runs them or force-pushes, even when asked.
+- Law 14 points to the runbook, and the on-demand table loads the guide when a secret gets through.
+- The Laws, `plugin.json` and `marketplace.json` are at 2.32.0.
+
+---
+
 ## v2.31.0 — October 6, 2026
 
 ### Approve a hook update in the app, no terminal needed ([#170](https://github.com/BojanKocijan/design-forge/issues/170))

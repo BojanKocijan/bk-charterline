@@ -1,8 +1,8 @@
 # Incident Guide — Design Forge
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Last Updated:** 2026-10-06
-**Applies to:** Every production investigation and `health check`
+**Applies to:** Every production investigation and `health check`, and a secret that got past Law 14 (§9)
 **Binding:** Yes — this file governs the Incident persona (triggers: `incident mode`, `health check`).
 
 > Incident mode turns a production symptom into a confirmed root cause, **read-only**, and hands the fix to Backend or Lead. It never writes data, config or code. Spec: [#167](https://github.com/BojanKocijan/design-forge/issues/167).
@@ -157,6 +157,34 @@ Only when the owner asks. Use the installed `engineering:incident-response` skil
 
 ---
 
+## 9. Leaked secret (Law 14)
+
+**When:** from any persona, as soon as Claude sees a secret that got past the Law 14 check: in a pushed commit, a PR or issue body or comment, CI or deploy logs, a build artifact, or a connector call. It doesn't switch the persona and writes no incident note. Steps 2 and 4 change files; they follow the normal Law 2 path, outside incident mode's read-only rule.
+
+1. **Stop and tell the owner.** Stop the current task. Say the secret's type (for example "a Supabase service-role key"), where it is (commit SHA and file, PR or issue URL, log location), and how exposed it is (pushed when, public or private repo). Never repeat the value, even partly (§4).
+2. **Not pushed yet?** Then it hasn't left the machine. With the owner's yes, drop it from the unpushed commits (`git reset --soft <commit before it>`, then commit again without it). Rotation is needed only if it also went to a log or a connector. Then go to step 6.
+3. **The owner revokes and rotates it first.** Claude can't, and removing it from git doesn't un-leak it: clones, forks, CI caches and GitHub's views may still hold it. Name the provider's dashboard when you know it. A public repo means rotate now: bots scan new pushes within minutes. Treat a possible test key as real until the owner says otherwise. Wait for the owner to confirm the rotation.
+4. **Remove it from the current tree.** A normal fix commit on a feature branch (Law 2 announcement, Law 13 message): the value becomes an environment variable reference, and a committed `.env*` file is untracked and ignored. Edit a PR or issue text that Claude wrote only after the owner says yes. GitHub keeps the edit history, so rotation still comes first.
+5. **History rewrite is the owner's call.** Claude never runs `git filter-repo`, `git rebase`, `git commit --amend` on pushed commits, or `git push --force` as part of this runbook, even when asked. If the owner wants the history cleaned, Claude prints the commands for the owner to run and says what they don't fix: forks, caches, and GitHub's cached views, which need GitHub Support. A secret on the default branch stays there until the owner acts: the Law 32 hook blocks force-pushing it.
+6. **Check where else it went, read-only:** other branches and tags (`git log --all -- <file>`), PR and issue text, CI run logs and artifacts after the leak, deploy logs (§1), GitHub secret-scanning alerts (`gh api repos/<owner>/<repo>/secret-scanning/alerts`, when the repo has it on), and any connector call that carried it. Search by file path, key prefix or type, **never by pasting the full value into a command**: commands show in the transcript.
+7. **Learn from it.** Offer a `PATTERNS.md` entry (Law 36, ask first) on how it slipped past. If the hook's patterns missed the format, offer a hook issue that describes the shape (prefix, length), never the value.
+8. **Report in chat:**
+
+   ```text
+   Leaked secret — <type> — <where>
+   Rotated: <yes, confirmed by the owner | waiting>
+   Removed from the tree: <commit | not needed>
+   History: <the owner's decision>
+   Also found in: <places, or "nowhere else">
+   Not checked: <places and why>
+   Follow-ups: <PATTERNS entry, hook issue>
+   ```
+
+**Never:** repeat or write the value anywhere (chat, file, commit, issue, note); rotate or revoke it through a connector or API for the owner; rewrite pushed history or force-push; call the leak closed before the owner confirms the rotation; act on another person's repo or fork beyond telling the owner.
+
+---
+
 ## Changelog
 
+- **1.1.0 (2026-10-06)** — §9 runbook for a leaked secret (#122).
 - **1.0.0 (2026-10-06)** — Initial version for incident mode (#167).
