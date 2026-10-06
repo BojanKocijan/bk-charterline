@@ -2,6 +2,18 @@
 
 ---
 
+## v2.33.0 — October 6, 2026
+
+### The hook asks before Netlify or Vercel commands that change a site ([#173](https://github.com/BojanKocijan/design-forge/issues/173))
+- **Every call asks** when Claude runs a `netlify` (`ntl`) or `vercel` (`vc`) command that isn't a verified read or local command: deploys, rollbacks, promotes, env changes, `netlify database migrations apply` and `reset`, `netlify api` write methods, and any command the hook doesn't know (Law 38 `hosting-write`). Bare `vercel` deploys, so it asks too.
+- **Secrets ask as well:** the `env` group on both CLIs and `vercel pull` print or download the site's secrets.
+- **Still free:** reads (`logs`, `status`, `ls`, `inspect`, `whoami`, list and get commands, `netlify api` get/list/show/search methods) and local work (`dev`, `build`, `functions`, `link`).
+- **Hard to route around:** it sees through `npx`, `pnpm`, `yarn`, `bunx`, `npm exec`, version suffixes, `NETLIFY_AUTH_TOKEN=…` prefixes, nested shells and `$(…)`.
+- Sources: each CLI's own help (netlify-cli 27.11.2), Netlify's bundled API spec and Vercel's CLI docs.
+- The Laws, `plugin.json` and `marketplace.json` are at 2.33.0.
+
+---
+
 ## v2.32.0 — October 6, 2026
 
 ### A runbook for a secret that got through ([#122](https://github.com/BojanKocijan/design-forge/issues/122))

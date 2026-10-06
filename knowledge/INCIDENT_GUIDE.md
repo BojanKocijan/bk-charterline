@@ -25,7 +25,7 @@
 
 ### 1.1 Hosting CLIs run outside Law 38
 
-`netlify` and `vercel` use the owner's logged-in token. `netlify api` can run **any** API method, including `rollbackSiteDeploy`, `restoreSiteDeploy` and `deleteDeploy`. Only the read methods named above are allowed; the hook doesn't check this yet ([#173](https://github.com/BojanKocijan/design-forge/issues/173)). A CLI that isn't installed or logged in is reported under "Not checked", never worked around.
+`netlify` and `vercel` use the owner's logged-in token. `netlify api` can run **any** API method, including `rollbackSiteDeploy`, `restoreSiteDeploy` and `deleteDeploy`. Only the read methods named above are allowed. The Law 32 hook asks before any hosting CLI command that isn't a verified read or local command ([#173](https://github.com/BojanKocijan/design-forge/issues/173)), so a write that slips through still needs the owner's click. A CLI that isn't installed or logged in is reported under "Not checked", never worked around.
 
 ### 1.2 Reading Supabase logs
 
