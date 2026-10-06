@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.30.0-blue?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/version-2.31.0-blue?style=flat-square" alt="Version" />
   <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License: GPL-3.0" />
   <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/design-forge/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
@@ -315,7 +315,7 @@ For professional work we recommend one language, so code, commits, PRs and docs 
 | Manual (Path B) | `git -C ~/.design-forge fetch --tags`, then `git -C ~/.design-forge checkout --detach <newest vX.Y.Z>` |
 | In any session | `update rules` |
 
-- **A hook change asks first.** When `dforge-update` would change anything the Law 32 hook runs (`.claude/hooks/`, `scripts/ai_tools.py`, `install.sh`, `.claude/settings.json`), `dforge-update` shows the diff and asks `Apply this hook change? [y/N]`. Without a terminal (for example when Claude runs it), it applies nothing and tells you to run it yourself. It checks out exactly the commit whose diff you saw. Git commands run by hand in `~/.design-forge` skip this check, so the Law 32 hook asks you before any that would change the clone (`checkout`, `pull`, `reset` and the like).
+- **A hook change asks first.** When `dforge-update` would change anything the Law 32 hook runs (`.claude/hooks/`, `scripts/ai_tools.py`, `install.sh`, `.claude/settings.json`), `dforge-update` shows the diff (no pager) and asks `Apply this hook change? [y/N]`. In a Claude session, `update rules` shows you the diff in chat and runs `dforge-update --approve <commit>` instead: the app's permission prompt asks, and your click is the approval, so no terminal is needed. Either way, it checks out exactly the commit whose diff you saw; if a newer one appears in between, nothing changes. `--approve` works only when the Law 32 hook is registered. Git commands run by hand in `~/.design-forge` skip this check, so the Law 32 hook asks you before any that would change the clone (`checkout`, `pull`, `reset` and the like).
 - **The clone sits on a release tag** (a detached HEAD), so a plain `git pull` in `~/.design-forge` doesn't work. Use `dforge-update`, or `dforge-update --main` to go back to following `main`.
 - **It never downgrades** a clone that's ahead of the latest release, and it refuses to run over local edits to tracked files.
 - **One run is enough**, even from v2.27.0 or older: the old function pulls `main`, and the installer then moves the clone onto the release tag when `main` is at it. If the tag isn't published yet, the next run moves it. In a Claude session, `update rules` always runs the current function from your rc file.
