@@ -2,7 +2,7 @@
 
 Spec: [#122](https://github.com/BojanKocijan/design-forge/issues/122) (the issue) · Gate tier: Standard · Branch: `docs/secret-leak-runbook` · Issue: #122
 Work pile: judgment-heavy (policy wording, done interactively; small)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-06, chat
 
 ## Files to change
 
