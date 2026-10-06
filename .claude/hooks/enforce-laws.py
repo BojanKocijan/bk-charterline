@@ -447,6 +447,91 @@ def writes_registry(segment: str) -> bool:
     return bool(args) and args[0] == "set"
 
 
+# git subcommands that change the installed clone's files: dforge-update's
+# reviewed-diff gate is skipped when Claude runs them by hand (#170).
+CLONE_GIT_MOVES = {
+    "checkout", "switch", "pull", "reset", "merge", "rebase", "restore",
+    "cherry-pick", "am", "apply", "clean", "revert", "stash",
+}
+# Exceptions that stay free, each with its reason. Add a command that asks
+# wrongly here, with a test, instead of loosening the check.
+CLONE_GIT_ALLOWED = {
+    ("stash", "list"): "only lists stashes",
+    ("stash", "show"): "only shows a stash",
+}
+SHELLS = ("bash", "sh", "zsh", "$SHELL", "${SHELL}")
+
+
+def in_installed_clone(path: str) -> bool:
+    try:
+        real = _fold(os.path.realpath(path))
+        forge = _fold(os.path.realpath(os.path.join(os.path.expanduser("~"), ".design-forge")))
+    except Exception:
+        return False
+    return real == forge or real.startswith(forge + os.sep)
+
+
+def moves_installed_clone(segment: str, cwd: str) -> str | None:
+    """The git subcommand when `segment` would change the files of the
+    installed ~/.design-forge, else None. Follows `-C` (chained),
+    `--git-dir`, `--work-tree`, `GIT_DIR=`/`GIT_WORK_TREE=` and a nested
+    `bash|sh|zsh -c`. Untokenisable input is None (fail open)."""
+    try:
+        tokens = shlex.split(segment)
+    except ValueError:
+        return None
+    if tokens and os.path.basename(tokens[0]) in SHELLS:
+        flag = next((i for i, t in enumerate(tokens[1:-1], 1) if re.fullmatch(r"-[a-z]*c[a-z]*", t)), None)
+        if flag is not None:
+            parts = split_segments(tokens[flag + 1]) or []
+            for index, part in enumerate(parts):
+                found = moves_installed_clone(part, resolve_cwd("\n".join(parts[:index]), cwd))
+                if found:
+                    return found
+            return None
+
+    def expand(path: str, base: str) -> str:
+        return os.path.normpath(os.path.join(base, os.path.expandvars(os.path.expanduser(path))))
+
+    git_dir = work_tree = None
+    for token in tokens:
+        m = re.fullmatch(r"(GIT_DIR|GIT_WORK_TREE)=(.*)", token)
+        if m:
+            if m.group(1) == "GIT_DIR":
+                git_dir = expand(m.group(2), cwd)
+            else:
+                work_tree = expand(m.group(2), cwd)
+    tokens = strip_command_prefix(tokens)
+    if not tokens or os.path.basename(tokens[0]) != "git":
+        return None
+    repo = cwd
+    i = 1
+    while i < len(tokens) and tokens[i].startswith("-"):
+        opt = tokens[i]
+        if opt == "-C" and i + 1 < len(tokens):
+            repo = expand(tokens[i + 1], repo)
+            i += 2
+        elif opt in ("--git-dir", "--work-tree") and i + 1 < len(tokens):
+            value = expand(tokens[i + 1], repo)
+            git_dir, work_tree = (value, work_tree) if opt == "--git-dir" else (git_dir, value)
+            i += 2
+        elif opt.startswith(("--git-dir=", "--work-tree=")):
+            name, value = opt.split("=", 1)
+            value = expand(value, repo)
+            git_dir, work_tree = (value, work_tree) if name == "--git-dir" else (git_dir, value)
+            i += 1
+        else:
+            i += 2 if opt == "-c" else 1  # -c takes a value
+    if i >= len(tokens) or tokens[i] not in CLONE_GIT_MOVES:
+        return None
+    sub = tokens[i]
+    args = tokens[i + 1:]
+    if args and (sub, args[0]) in CLONE_GIT_ALLOWED:
+        return None
+    target = work_tree or git_dir or repo  # a git dir inside the clone counts
+    return sub if in_installed_clone(target) else None
+
+
 def tracked_by_git(path: str, cwd: str) -> bool:
     """True if `path` (a file, folder or glob, relative or absolute, with ~
     and $VARS expanded) matches files git tracks. git runs in the folder the
@@ -754,6 +839,16 @@ def check_bash(command: str, base: str) -> None:
                     "which git tracks. Approve only if you want it removed.",
                     "tracked-delete",
                 )
+        # Law 32 — git that changes the installed clone skips dforge-update's
+        # reviewed-diff gate (Law 28), so the user approves it here (#170).
+        moved = moves_installed_clone(segment, write_cwd) if pending_ask is None else None
+        if moved:
+            pending_ask = (
+                f"Law 32 (guardrail): `git {moved}` would change the installed Design Forge "
+                "(~/.design-forge) without dforge-update's reviewed diff. Approve only if you "
+                "asked for it; to update, use dforge-update.",
+                "guardrail-git",
+            )
         # Law 38 — a tier is only written after the user approves it (#138).
         if pending_ask is None and writes_registry(segment):
             pending_ask = (
