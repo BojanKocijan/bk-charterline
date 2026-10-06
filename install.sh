@@ -265,25 +265,29 @@ FN_BLOCK=$(cat <<'EOF'
 # A shell function, not a script in the clone, so `git checkout` never
 # rewrites the code that's running. Runs in zsh and bash.
 dforge-update() {
-  local rules_dir="$HOME/.design-forge" mode=release
-  local usage="usage: dforge-update [--main]
-  (no flag)  install the newest release tag (vX.Y.Z)
-  --main     follow the main branch instead
-  A change to the hook asks first, in your own terminal."
+  local rules_dir="$HOME/.design-forge" mode=release approve=""
+  local usage="usage: dforge-update [--main] [--approve <commit>]
+  (no flag)           install the newest release tag (vX.Y.Z)
+  --main              follow the main branch instead
+  --approve <commit>  apply a hook change you approved in Claude's app
+                      prompt; only that exact commit is installed
+  A change to the hook asks first: in your own terminal, or through --approve."
   # if, not case: bash 3.2 misreads a case pattern's ")" inside this heredoc.
-  if [ "${1:-}" = --main ]; then
-    mode=main
-  elif [ "${1:-}" = -h ] || [ "${1:-}" = --help ]; then
-    printf '%s\n' "$usage"
-    return 0
-  elif [ -n "${1:-}" ]; then
-    printf '%s\n' "$usage" >&2
-    return 2
-  fi
-  if [ "$#" -gt 1 ]; then
-    printf '%s\n' "$usage" >&2
-    return 2
-  fi
+  while [ "$#" -gt 0 ]; do
+    if [ "$1" = --main ]; then
+      mode=main
+    elif [ "$1" = --approve ] && [ -n "${2:-}" ]; then
+      approve="$2"
+      shift
+    elif [ "$1" = -h ] || [ "$1" = --help ]; then
+      printf '%s\n' "$usage"
+      return 0
+    else
+      printf '%s\n' "$usage" >&2
+      return 2
+    fi
+    shift
+  done
 
   if [ ! -d "$rules_dir/.git" ]; then
     echo "dforge: $rules_dir is not a git clone. Re-run install.sh first." >&2
@@ -352,12 +356,25 @@ dforge-update() {
     return 1
   fi
 
-  # A change to anything the hook runs needs a yes in a real terminal.
+  # A change to anything the hook runs needs the user's yes: typed in a real
+  # terminal, or clicked in the app's prompt for --approve (#170).
   if [ -n "$(command git -C "$rules_dir" diff --stat "$head" "$new" -- .claude/hooks scripts/ai_tools.py install.sh .claude/settings.json)" ]; then
     echo "dforge: this update changes the Law 32 hook:"
     command git -C "$rules_dir" --no-pager diff --stat "$head" "$new" -- .claude/hooks scripts/ai_tools.py install.sh .claude/settings.json
-    if [ -t 0 ] && [ -t 1 ]; then
-      command git -C "$rules_dir" diff "$head" "$new" -- .claude/hooks scripts/ai_tools.py install.sh .claude/settings.json
+    command git -C "$rules_dir" --no-pager diff "$head" "$new" -- .claude/hooks scripts/ai_tools.py install.sh .claude/settings.json
+    if [ -n "$approve" ]; then
+      # The app only asks when the hook is registered; without it, --approve
+      # would be nobody's approval.
+      if ! command grep -q 'enforce-laws.py' "$HOME/.claude/settings.json" 2>/dev/null; then
+        echo "dforge: --approve needs the Law 32 hook in ~/.claude/settings.json, so the app asks you. Nothing changed. Run dforge-update in your own terminal." >&2
+        return 1
+      fi
+      if [ "${#approve}" -lt 7 ] || [ "${new#"$approve"}" = "$new" ]; then
+        echo "dforge: $approve isn't the update on offer (now $new). Nothing changed. Review the diff above, then approve that commit." >&2
+        return 1
+      fi
+      echo "dforge: applying the hook change you approved ($new)."
+    elif [ -t 0 ] && [ -t 1 ]; then
       local reply
       printf 'Apply this hook change? [y/N] '
       read -r reply
@@ -366,8 +383,7 @@ dforge-update() {
         return 1
       fi
     else
-      command git -C "$rules_dir" --no-pager diff "$head" "$new" -- .claude/hooks scripts/ai_tools.py install.sh .claude/settings.json
-      echo "dforge: the hook changed. Nothing was applied. Run dforge-update in your own terminal to review and approve it." >&2
+      echo "dforge: the hook changed. Nothing was applied. Run dforge-update in your own terminal to review and approve it, or approve it in Claude's app prompt: dforge-update --approve $new" >&2
       return 1
     fi
   fi

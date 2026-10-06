@@ -532,6 +532,10 @@ def moves_installed_clone(segment: str, cwd: str) -> str | None:
     return sub if in_installed_clone(target) else None
 
 
+# `dforge-update … --approve`, also inside `"$SHELL" -ic '…'` or `bash -c`.
+APPROVE_RE = re.compile(r"\bdforge-update\b[^\n;&|]*?\s--approve\b")
+
+
 def tracked_by_git(path: str, cwd: str) -> bool:
     """True if `path` (a file, folder or glob, relative or absolute, with ~
     and $VARS expanded) matches files git tracks. git runs in the folder the
@@ -856,6 +860,16 @@ def check_bash(command: str, base: str) -> None:
                 "(ai_tools.py set). Approve only if you approved this classification.",
                 "registry-write",
             )
+
+    # Law 28 — `dforge-update --approve` applies a hook change without the
+    # terminal y; the user's click in this prompt is that approval (#170).
+    if pending_ask is None and APPROVE_RE.search(scan):
+        pending_ask = (
+            "Law 28: this applies a Design Forge update that changes the Law 32 hook "
+            "(dforge-update --approve). Approve only if you reviewed its diff and want "
+            "exactly that commit installed.",
+            "update-approve",
+        )
 
     is_commit = bool(re.search(r"\bgit\s+commit\b", scan))
     push_matches = list(PUSH_RE.finditer(scan))

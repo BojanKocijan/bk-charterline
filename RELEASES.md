@@ -2,6 +2,17 @@
 
 ---
 
+## v2.31.0 — October 6, 2026
+
+### Approve a hook update in the app, no terminal needed ([#170](https://github.com/BojanKocijan/design-forge/issues/170))
+- **`update rules` no longer sends you to a terminal.** When an update changes the hook, Claude shows you the diff in chat and runs `dforge-update --approve <commit>`. The Law 32 hook raises the app's permission prompt (`update-approve`, Law 28), and your click is the approval.
+- **Exactly what you saw:** `--approve` installs only that commit. If a newer release appears in between, nothing changes and you review the new diff. It works only when the hook is registered in `~/.claude/settings.json`, so there is always a prompt.
+- **No more pager:** in the terminal, the diff prints straight out and the `y/N` question follows. No `q` needed.
+- **Installing this release** still needs your terminal `y` once, since it changes the hook. After that, approvals happen in the app.
+- The Laws, `plugin.json` and `marketplace.json` are at 2.31.0.
+
+---
+
 ## v2.30.0 — October 6, 2026
 
 ### The hook asks before git changes the installed rules ([#170](https://github.com/BojanKocijan/design-forge/issues/170))

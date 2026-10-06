@@ -263,6 +263,80 @@ class DforgeUpdateTests(unittest.TestCase):
             self.assertEqual(fx.head(), newest)
             self.assertTrue(fx.installed())
 
+    def register_hook(self, fx: Fixture) -> None:
+        os.makedirs(os.path.join(fx.home, ".claude"), exist_ok=True)
+        with open(os.path.join(fx.home, ".claude", "settings.json"), "w") as f:
+            f.write('{"hooks": {"PreToolUse": [{"hooks": [{"command": "python3 ~/.design-forge/.claude/hooks/enforce-laws.py"}]}]}}')
+
+    def test_without_a_terminal_names_the_commit_to_approve(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            newest = fx.release("2.1.0", hook="# hook v2\n")
+            result = fx.run(shell)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(f"dforge-update --approve {newest}", result.stderr)
+
+    def test_approve_applies_exactly_that_commit(self) -> None:
+        for shell, fx in self.each_shell():
+            self.register_hook(fx)
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            newest = fx.release("2.1.0", hook="# hook v2\n")
+            result = fx.run(shell, "--approve", newest[:12])
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("+# hook v2", result.stdout)
+            self.assertIn("applying the hook change you approved", result.stdout)
+            self.assertEqual(fx.head(), newest)
+            self.assertTrue(fx.installed())
+
+    def test_approve_refuses_a_stale_or_short_commit(self) -> None:
+        for shell, fx in self.each_shell():
+            self.register_hook(fx)
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            before = fx.head()
+            reviewed = fx.release("2.1.0", hook="# hook v2\n")
+            newest = fx.release("2.2.0", hook="# hook v3 unreviewed\n")
+            for commit in (reviewed, newest[:6], "0000000000"):
+                result = fx.run(shell, "--approve", commit)
+                self.assertEqual(result.returncode, 1, commit)
+                self.assertIn("isn't the update on offer", result.stderr)
+                self.assertEqual(fx.head(), before)
+                self.assertFalse(fx.installed())
+
+    def test_approve_needs_the_hook_registered(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            before = fx.head()
+            newest = fx.release("2.1.0", hook="# hook v2\n")
+            result = fx.run(shell, "--approve", newest)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("--approve needs the Law 32 hook", result.stderr)
+            self.assertEqual(fx.head(), before)
+            self.assertFalse(fx.installed())
+
+    def test_approve_without_a_commit_is_a_usage_error(self) -> None:
+        for shell, fx in self.each_shell():
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            result = fx.run(shell, "--approve")
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("usage: dforge-update", result.stderr)
+
+    def test_the_terminal_prompt_shows_the_diff_without_a_pager(self) -> None:
+        for shell, fx in self.each_shell():
+            marker = os.path.join(fx.home, "pager-ran")
+            fx.env["GIT_PAGER"] = f'touch "{marker}"; cat'
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            fx.release("2.1.0", hook="# hook v2\n")
+            code, out = fx.run_tty(shell, "n")
+            self.assertEqual(code, 1, out)
+            self.assertIn("+# hook v2", out)
+            self.assertFalse(os.path.exists(marker), "the diff went through a pager")
+
     def test_other_hook_paths_count(self) -> None:
         for path in ("scripts/ai_tools.py", "install.sh", ".claude/settings.json"):
             for shell, fx in self.each_shell():

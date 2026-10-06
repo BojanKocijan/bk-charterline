@@ -795,6 +795,42 @@ class InstalledCloneGitTests(HookRunner, unittest.TestCase):
         self.assertEqual(self.bash("git -C ~/.design-forge checkout 'x"), "allow")
 
 
+class UpdateApproveTests(HookRunner, unittest.TestCase):
+    """`dforge-update --approve` applies a hook change; the app's prompt
+    is the user's approval (#170)."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.home = os.path.realpath(os.path.join(self.tmp.name, "home"))
+        os.makedirs(os.path.join(self.home, ".design-forge"))
+        self.project = os.path.realpath(os.path.join(self.tmp.name, "project"))
+        make_repo(self.project, "feat/x")
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def test_approve_asks_in_every_form(self) -> None:
+        for command in (
+            "dforge-update --approve 3021c61aa",
+            "dforge-update --main --approve 3021c61aa",
+            "\"$SHELL\" -ic 'dforge-update --approve 3021c61aa'",
+            'bash -c "dforge-update --approve 3021c61aa"',
+            "cd ~ && dforge-update --approve 3021c61aa",
+        ):
+            self.assertEqual(self.bash(command), "ask", command)
+
+    def test_the_ask_is_logged_under_law_28(self) -> None:
+        self.bash("dforge-update --approve 3021c61aa")
+        with open(os.path.join(self.home, ".design-forge", "hook-log.jsonl")) as f:
+            [record] = [json.loads(line) for line in f]
+        self.assertEqual((record["type"], record["law"], record["check"]), ("ask", 28, "update-approve"))
+
+    def test_plain_updates_stay_free(self) -> None:
+        for command in ("dforge-update", "dforge-update --main", "\"$SHELL\" -ic dforge-update",
+                        "dforge-update --help", "echo use --approve later"):
+            self.assertEqual(self.bash(command), "allow", command)
+
+
 class TrackedDeleteTests(unittest.TestCase):
     """Deleting a file git tracks asks the user (Law 8, #117)."""
 
