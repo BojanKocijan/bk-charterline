@@ -831,6 +831,134 @@ class UpdateApproveTests(HookRunner, unittest.TestCase):
             self.assertEqual(self.bash(command), "allow", command)
 
 
+class HostingCliTests(HookRunner, unittest.TestCase):
+    """Netlify and Vercel CLI commands act with the user's account: anything
+    but a verified read or local command asks, on every call (#173)."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.home = os.path.realpath(os.path.join(self.tmp.name, "home"))
+        os.makedirs(os.path.join(self.home, ".design-forge"))
+        self.project = os.path.realpath(os.path.join(self.tmp.name, "project"))
+        make_repo(self.project, "feat/x")
+        os.makedirs(os.path.join(self.project, "site"))
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def test_writes_secrets_and_unknown_commands_ask(self) -> None:
+        for command in (
+            "netlify deploy --prod",
+            "ntl deploy",
+            "netlify env:set KEY value",
+            "netlify env:list",
+            "netlify api rollbackSiteDeploy --data '{}'",
+            "netlify database migrations apply",
+            "netlify db reset",
+            "netlify sites:delete",
+            "netlify blobs:set store key value",
+            "netlify login",
+            "netlify frobnicate",
+            "vercel",
+            "vercel --prod",
+            "vc ./site",
+            "vercel deploy",
+            "vercel promote dpl_1",
+            "vercel rollback",
+            "vercel env pull",
+            "vercel env ls",
+            "vercel pull",
+            "vercel dns rm rec_1",
+            "vercel --scope ls deploy",
+            "vercel --name ls",
+            "vercel -S team",
+            "vercel api /v2/user",
+            "vercel frobnicate",
+        ):
+            self.assertEqual(self.bash(command), "ask", command)
+
+    def test_runners_wrappers_and_nesting_ask(self) -> None:
+        for command in (
+            "npx netlify-cli deploy",
+            "npx -y vercel@latest --prod",
+            "npx -p netlify-cli netlify deploy",
+            "pnpm dlx vercel deploy",
+            "pnpm vercel deploy",
+            "yarn netlify deploy",
+            "bunx vercel",
+            "bun x vercel",
+            "npm exec -- netlify deploy",
+            "npm exec netlify-cli -- deploy",
+            "./node_modules/.bin/vercel --prod",
+            "NETLIFY_AUTH_TOKEN=x netlify deploy",
+            'bash -c "netlify deploy"',
+            "\"$SHELL\" -ic 'vercel --prod'",
+            "cd site && vercel --prod",
+            "npm run build && netlify deploy --dir dist",
+            "URL=$(vercel deploy --prod)",
+            "echo y | vercel env add NAME production",
+        ):
+            self.assertEqual(self.bash(command), "ask", command)
+
+    def test_reads_local_work_and_mentions_are_free(self) -> None:
+        for command in (
+            "netlify",
+            "netlify --help",
+            "netlify deploy --help",
+            "netlify -v",
+            "netlify logs --since 1h --json",
+            "netlify logs:deploy",
+            "netlify status --json",
+            "netlify watch",
+            "netlify sites:list",
+            "netlify blobs:get store key",
+            "netlify api listSiteDeploys",
+            "netlify api getSite --data '{}'",
+            "netlify api --list",
+            "netlify db status",
+            "netlify dev",
+            "netlify build",
+            "netlify functions:invoke hello",
+            "netlify link",
+            "vercel --version",
+            "vercel whoami",
+            "vercel ls",
+            "vercel inspect dpl_1",
+            "vercel logs dpl_1",
+            "vercel dns ls",
+            "vercel promote status",
+            "vercel dev",
+            "vercel build",
+            "vercel --scope team ls",
+            "vercel --token=x whoami",
+            "npx vercel whoami",
+            'echo "$(vercel whoami)"',
+            "echo netlify deploy",
+            "echo '$(vercel deploy)'",
+            'git commit -m "docs: vercel deploy"',
+            "grep -n vercel package.json",
+            "npm i -g netlify-cli",
+            "command -v vercel",
+        ):
+            self.assertEqual(self.bash(command), "allow", command)
+
+    def test_the_ask_names_the_command_and_is_logged(self) -> None:
+        result = self.run_payload({"tool_name": "Bash", "tool_input": {"command": "netlify api deleteSite"}})
+        reason = json.loads(result.stdout)["hookSpecificOutput"]["permissionDecisionReason"]
+        self.assertIn("`netlify api deleteSite`", reason)
+        with open(os.path.join(self.home, ".design-forge", "hook-log.jsonl")) as f:
+            [record] = [json.loads(line) for line in f]
+        self.assertEqual((record["type"], record["law"], record["check"]), ("ask", 38, "hosting-write"))
+
+    def test_a_block_still_wins(self) -> None:
+        main_repo = os.path.join(self.tmp.name, "main-repo")
+        make_repo(main_repo, "main")
+        self.assertEqual(self.bash("netlify deploy && git push", main_repo), "block")
+
+    def test_unbalanced_quotes_fail_open(self) -> None:
+        self.assertEqual(self.bash("netlify deploy --message 'x"), "allow")
+
+
 class TrackedDeleteTests(unittest.TestCase):
     """Deleting a file git tracks asks the user (Law 8, #117)."""
 

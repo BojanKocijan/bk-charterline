@@ -532,6 +532,120 @@ def moves_installed_clone(segment: str, cwd: str) -> str | None:
     return sub if in_installed_clone(target) else None
 
 
+# Hosting CLIs act with the user's logged-in account (#173). Only commands
+# verified as reads or local-only are free; anything else asks, unknown
+# commands included. Sources: each CLI's --help (netlify-cli 27.11.2), the
+# bundled Netlify OpenAPI spec, and vercel.com/docs/cli (2026-10-06).
+HOSTING_CLIS = {"netlify": "netlify", "ntl": "netlify", "netlify-cli": "netlify",
+                "vercel": "vercel", "vc": "vercel"}
+HELP_FLAGS = {"--help", "-h", "--version", "-v"}
+NETLIFY_FREE = {"help", "logs", "log", "status", "status:hooks", "watch", "dev", "serve", "build",
+                "link", "unlink", "open", "open:site", "open:admin", "completion", "recipes",
+                "recipes:list"}
+NETLIFY_FREE_GROUPS = {"logs", "log", "functions", "function"}  # every subcommand
+NETLIFY_READ_SUBS = {"list", "get", "show", "search"}
+NETLIFY_API_READ = re.compile(r"(get|list|show|search)[A-Z]")  # all GETs in the spec
+NETLIFY_VALUE_OPTS = {"--auth", "--filter"}
+VERCEL_FREE = {"help", "whoami", "ls", "list", "inspect", "logs", "activity", "alerts", "metrics",
+               "usage", "contract", "security", "bisect", "dev", "build", "open", "init"}
+VERCEL_READ_SUBS = {"ls", "list", "inspect", "get", "status"}
+# Global options, and deploy's, that take a value: `vercel --scope ls deploy`
+# deploys, `vercel --name ls` too.
+VERCEL_VALUE_OPTS = {"--cwd", "--scope", "-S", "--team", "-T", "--token", "-t", "--project",
+                     "--local-config", "-A", "--global-config", "-Q", "--env", "-e",
+                     "--build-env", "-b", "--meta", "-m", "--name", "-n", "--regions",
+                     "--target", "--archive"}
+SUBSTITUTION_RE = re.compile(r"\$\(([^()]*)\)|`([^`]*)`")
+
+
+def _positionals(args: list[str], value_opts: set[str]) -> list[str]:
+    found, i = [], 0
+    while i < len(args):
+        if args[i] in value_opts:
+            i += 2
+            continue
+        if not args[i].startswith("-"):
+            found.append(args[i])
+        i += 1
+    return found
+
+
+def _unwrap_runner(tokens: list[str]) -> list[str]:
+    """`npx`, `bunx`, `bun x`, `pnpm dlx|exec`, `pnpm <bin>`, `yarn dlx|exec`,
+    `yarn <bin>` and `npm exec|x`, down to `<package or bin> args…`."""
+    head, rest = os.path.basename(tokens[0]), tokens[1:]
+    if head in ("pnpm", "yarn"):
+        rest = rest[1:] if rest and rest[0] in ("dlx", "exec") else rest
+    elif head in ("bun", "npm"):
+        if not rest or rest[0] not in (("x",) if head == "bun" else ("exec", "x")):
+            return tokens
+        rest = rest[1:]
+    elif head not in ("npx", "bunx"):
+        return tokens
+    i = 0
+    while i < len(rest) and rest[i].startswith("-"):
+        if rest[i] == "--":
+            i += 1
+            break
+        i += 2 if rest[i] in ("-p", "--package") else 1
+    return rest[i:]
+
+
+def hosting_cli_write(segment: str) -> str | None:
+    """The Netlify or Vercel command, as shown in the prompt, when `segment`
+    runs one that isn't a verified read or local-only command; else None.
+    Looks through runners, `VAR=` prefixes, nested shells and `$(…)`.
+    Untokenisable input is None (fail open)."""
+    # $(…) and backticks run, except escaped or inside single quotes.
+    live = re.sub(r"'[^']*'", "''", re.sub(r"\\.", "", segment))
+    for m in SUBSTITUTION_RE.finditer(live):
+        for part in split_segments(m.group(1) or m.group(2) or "") or []:
+            found = hosting_cli_write(part)
+            if found:
+                return found
+    try:
+        tokens = strip_command_prefix(shlex.split(segment))
+    except ValueError:
+        return None
+    if not tokens:
+        return None
+    if os.path.basename(tokens[0]) in SHELLS:
+        flag = next((i for i, t in enumerate(tokens[1:-1], 1) if re.fullmatch(r"-[a-z]*c[a-z]*", t)), None)
+        if flag is not None:
+            for part in split_segments(tokens[flag + 1]) or []:
+                found = hosting_cli_write(part)
+                if found:
+                    return found
+        return None
+    tokens = _unwrap_runner(tokens)
+    if not tokens:
+        return None
+    cli = HOSTING_CLIS.get(os.path.basename(tokens[0]).split("@")[0])
+    args = tokens[1:]
+    if args[:1] == ["--"]:
+        args = args[1:]
+    if cli is None or any(a in HELP_FLAGS for a in args):
+        return None
+    if cli == "netlify":
+        words = _positionals(args, NETLIFY_VALUE_OPTS)
+        if not words or words[0] in NETLIFY_FREE:
+            return None  # bare `netlify` prints its help
+        group, _, sub = words[0].partition(":")
+        sub = sub or (words[1] if len(words) > 1 else "")
+        if (group in NETLIFY_FREE_GROUPS
+                or (group == "api" and (not sub or NETLIFY_API_READ.match(sub)))
+                or (group in ("database", "db") and sub == "status")
+                or (group != "env" and sub in NETLIFY_READ_SUBS)):
+            return None
+    else:
+        words = _positionals(args, VERCEL_VALUE_OPTS)
+        # Bare `vercel` and `vercel <path>` deploy.
+        if words and (words[0] in VERCEL_FREE
+                      or (words[0] != "env" and len(words) > 1 and words[1] in VERCEL_READ_SUBS)):
+            return None
+    return " ".join([cli, *words[:2]])
+
+
 # `dforge-update … --approve`, also inside `"$SHELL" -ic '…'` or `bash -c`.
 APPROVE_RE = re.compile(r"\bdforge-update\b[^\n;&|]*?\s--approve\b")
 
@@ -852,6 +966,16 @@ def check_bash(command: str, base: str) -> None:
                 "(~/.design-forge) without dforge-update's reviewed diff. Approve only if you "
                 "asked for it; to update, use dforge-update.",
                 "guardrail-git",
+            )
+        # Law 38 — a hosting CLI acts with the user's account: anything but a
+        # verified read or local command asks, on every call (#173).
+        hosted = hosting_cli_write(segment) if pending_ask is None else None
+        if hosted:
+            pending_ask = (
+                f"Law 38: `{hosted}` isn't on the hosting CLI read list, so it may change a "
+                "live site, its settings or data, or copy its secrets, using your logged-in "
+                "account. Approve only if you asked for exactly this.",
+                "hosting-write",
             )
         # Law 38 — a tier is only written after the user approves it (#138).
         if pending_ask is None and writes_registry(segment):

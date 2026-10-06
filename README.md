@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.31.0-blue?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/version-2.33.0-blue?style=flat-square" alt="Version" />
   <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License: GPL-3.0" />
   <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/design-forge/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
@@ -49,7 +49,7 @@ Out of the box, an AI coding assistant will happily push to `main`, invent APIs,
 | Inconsistent components | 4-file component folders, no inline styles, TypeScript, accessibility baked in |
 | No audit trail | Pre-execution announcements, Conventional Commits, living `PROJECT_KNOWLEDGE.md` |
 | Stale repos | Auto branch cleanup, orphaned issue detection, README kept current with every PR |
-| "Claude might forget and merge/push to `main` anyway" | **Law 32** — a `PreToolUse` hook mechanically blocks merge, push or force-push to `main`, skipped git hooks, malformed commits and secret commits, and asks you in the app before Claude changes its own guardrails (including git in the installed `~/.design-forge`), deletes tracked files or calls a tier 3 or 4 MCP tool |
+| "Claude might forget and merge/push to `main` anyway" | **Law 32** — a `PreToolUse` hook mechanically blocks merge, push or force-push to `main`, skipped git hooks, malformed commits and secret commits, and asks you in the app before Claude changes its own guardrails (including git in the installed `~/.design-forge`), deletes tracked files, runs a Netlify or Vercel command that changes a site, or calls a tier 3 or 4 MCP tool |
 
 ---
 
