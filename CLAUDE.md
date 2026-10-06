@@ -85,7 +85,7 @@ The binding set is in [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) (loaded above) — do
 
 | Phrase | Action |
 |---|---|
-| **`update rules`** | Run `dforge-update` via the Bash tool, then re-import every `@./...` above, then reprint the confirmation with the new version. If it stops because the hook changed, report its stat lines and ask the user to run `dforge-update` in their own terminal; never retry with `--main` unless asked. |
+| **`update rules`** | Run `"$SHELL" -ic dforge-update` via the Bash tool (a fresh shell, so the function comes from the rc file and not this session's cached copy, #168), then re-import every `@./...` above, then reprint the confirmation with the new version. If it stops because the hook changed, report its stat lines and ask the user to run `dforge-update` in their own terminal; never retry with `--main` unless asked. |
 | **`load rules`** | Re-import every `@./...` above without pulling. Then reprint the confirmation. |
 | **`check rules`** | Print the loaded `DESIGN_FORGE` version + result of `git -C ~/.design-forge log -1 --format='%ci %h %s'` + whether a newer release tag (`vX.Y.Z`) exists on the remote. No file re-import. |
 | **`new project`** | Ask the user to choose a UI library (shadcn/ui, MUI, Ant Design, Chakra UI, No library, or Other). Then follow [`knowledge/PROJECT_SCAFFOLD.md`](./knowledge/PROJECT_SCAFFOLD.md) end-to-end. No registration in any external registry. |

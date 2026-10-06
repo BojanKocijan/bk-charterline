@@ -2,6 +2,16 @@
 
 ---
 
+## v2.28.1 — October 6, 2026
+
+### One update run is enough ([#168](https://github.com/BojanKocijan/design-forge/issues/168))
+- **The installer moves the clone onto the release tag** when the clone is on a branch, has no local edits, and sits exactly on the newest release. So one run of any `dforge-update`, including the old one that pulls `main`, ends on the release. In every other case it leaves the clone alone.
+- **Fixed: `update rules` could run a stale function.** Claude's Bash tool keeps the shell functions from when the session started, so after an update it kept running the old `dforge-update`, which pulls `main` without the hook-change gate. `update rules` now runs `"$SHELL" -ic dforge-update`, which loads the current function from your rc file.
+- The README no longer says to run `dforge-update` twice.
+- The Laws, `plugin.json` and `marketplace.json` are at 2.28.1.
+
+---
+
 ## v2.28.0 — October 5, 2026
 
 ### `dforge-update` installs tagged releases and asks before a hook change ([#116](https://github.com/BojanKocijan/design-forge/issues/116))
