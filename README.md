@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.28.2-blue?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/version-2.29.0-blue?style=flat-square" alt="Version" />
   <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License: GPL-3.0" />
   <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/design-forge/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
@@ -127,11 +127,12 @@ Design Forge has three layers:
 │  CLAUDE_LAWS.md — 38 binding rules              │
 │  (loaded every session)                         │
 ├─────────────────────────────────────────────────┤
-│  agents/ — 8 specialized personas               │
+│  agents/ — 9 specialized personas               │
 │  Frontend · Backend · Lead · Tester             │
 │  Fullstack · Design · Research · Analyst        │
+│  Incident                                       │
 ├─────────────────────────────────────────────────┤
-│  knowledge/ — 11 binding guides                  │
+│  knowledge/ — 12 binding guides                  │
 │  (loaded on demand per task scope)              │
 ├─────────────────────────────────────────────────┤
 │  skills/ — 17 reusable skill definitions        │
@@ -167,6 +168,7 @@ Eight specialized agents compose into a single pipeline. `install.sh` links each
 | **Design** | Figma, design critique, UX writing, handoff | *(implied by design tasks)* | Sonnet |
 | **Research** | Transcripts, JTBD, RICE/MoSCoW, deck generation | `research mode` | Sonnet |
 | **Analyst** | Product analytics (Pendo, Amplitude, Mixpanel, ...) | `analyst mode` | Sonnet |
+| **Incident** | Read-only production investigation, `health check` | `incident mode` | Opus |
 
 ### Knowledge — [`knowledge/`](./knowledge/)
 
@@ -182,6 +184,7 @@ Eight specialized agents compose into a single pipeline. `install.sh` links each
 | `SKILLS.md` | Layout, a11y, testing, handoff, git craft |
 | `UX_RESEARCH_GUIDE.md` | Transcript analysis, research decks |
 | `ANALYTICS_GUIDE.md` | Product analytics workflows |
+| `INCIDENT_GUIDE.md` | Read-only production investigation and the health check |
 | `HUMAN_IN_THE_LOOP.md` | Gate tiers, approval artifacts, PR intake, review cap (Law 37) |
 | `PATTERNS.md` *(personal, gitignored — [example](./knowledge/PATTERNS.example.md))* | Cross-project bug/pattern catalogue |
 
@@ -212,6 +215,8 @@ Eight specialized agents compose into a single pipeline. `install.sh` links each
 | `research mode` | UX research — produces 6-slide outcome deck |
 | `research mode full` | Full 12-18 slide research deck |
 | `analyst mode` | Product analytics persona |
+| `incident mode` | Read-only production investigation persona |
+| `health check` | One read-only pass over advisors, error logs and the latest deploy |
 
 ### Safety and governance
 
@@ -259,6 +264,7 @@ The **Lead** runs it end-to-end — scope, build, test, document, review, PR —
 | Design critique, Figma work | *(design task)* |
 | Transcript analysis | `research mode` |
 | Product analytics | `analyst mode` |
+| Something broke in production | `incident mode` / `health check` |
 
 Every agent obeys [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md). If an agent thinks it should break a rule, it stops and asks (Law 29).
 
@@ -327,7 +333,7 @@ design-forge/
 ├── install.sh                   # One-line installer
 ├── projects.example.yaml        # Project registry template
 ├── .claude-plugin/              # Claude Code plugin manifest
-├── agents/                      # 8 persona definitions
+├── agents/                      # 9 persona definitions
 │   ├── frontend.md
 │   ├── backend.md
 │   ├── lead.md
@@ -335,8 +341,9 @@ design-forge/
 │   ├── design.md
 │   ├── research.md
 │   ├── analyst.md
+│   ├── incident.md
 │   └── fullstack.md
-├── knowledge/                   # 11 binding guides (loaded on demand)
+├── knowledge/                   # 12 binding guides (loaded on demand)
 │   ├── FRONTEND_GUIDE.md
 │   ├── COMPONENT_PATTERNS.md
 │   ├── ANIMATION_GUIDE.md
@@ -347,6 +354,7 @@ design-forge/
 │   ├── SKILLS.md
 │   ├── UX_RESEARCH_GUIDE.md
 │   ├── ANALYTICS_GUIDE.md
+│   ├── INCIDENT_GUIDE.md
 │   ├── HUMAN_IN_THE_LOOP.md
 │   ├── PATTERNS.example.md
 │   └── PATTERNS.md              # gitignored — your copy of the example above

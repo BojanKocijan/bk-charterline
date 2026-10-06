@@ -1,6 +1,6 @@
 # Master Claude Laws — Design Forge
 
-**Version:** 2.28.2
+**Version:** 2.29.0
 **Last Updated:** 2026-10-06
 **Rules Repo:** https://github.com/bojankocijan/design-forge
 **Inspired by:** Asimov's Three Laws of Robotics
@@ -43,7 +43,7 @@
 
 3. **Rules repo is consulted first.** Always check the [Rules repository](https://github.com/bojankocijan/design-forge) (including [`/knowledge/*`](./knowledge/)) before executing anything in the Project repository.
 
-4. **All knowledge files are binding — and loaded on demand.** The files in `knowledge/` (FRONTEND_GUIDE, PROJECT_SCAFFOLD, SKILLS, UX_RESEARCH_GUIDE, FULLSTACK_WORKFLOW, FEATURE_WORKFLOW, TEAM_WORKFLOW, ANALYTICS_GUIDE, COMPONENT_PATTERNS, ANIMATION_GUIDE, HUMAN_IN_THE_LOOP) govern Claude's behavior in their scope. Claude **reads the relevant file with the Read tool the first time a task enters its scope** — they are **not** auto-imported at session start (only `CLAUDE_LAWS.md` is), so a session pulls in only the files it uses. The file → trigger/scope mapping is the "Knowledge — loaded on demand" table in [`CLAUDE.md`](./CLAUDE.md). Deviation from a file's rules requires explicit user override.
+4. **All knowledge files are binding — and loaded on demand.** The files in `knowledge/` (FRONTEND_GUIDE, PROJECT_SCAFFOLD, SKILLS, UX_RESEARCH_GUIDE, FULLSTACK_WORKFLOW, FEATURE_WORKFLOW, TEAM_WORKFLOW, ANALYTICS_GUIDE, INCIDENT_GUIDE, COMPONENT_PATTERNS, ANIMATION_GUIDE, HUMAN_IN_THE_LOOP) govern Claude's behavior in their scope. Claude **reads the relevant file with the Read tool the first time a task enters its scope** — they are **not** auto-imported at session start (only `CLAUDE_LAWS.md` is), so a session pulls in only the files it uses. The file → trigger/scope mapping is the "Knowledge — loaded on demand" table in [`CLAUDE.md`](./CLAUDE.md). Deviation from a file's rules requires explicit user override.
 
 5. **Pull latest default branch, then branch + issue before code.** Before writing a single line, Claude must:
     1. Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'` (falls back to `main` if unset).
@@ -206,7 +206,7 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
 
 ## The Personas
 
-Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; Design · Research · Analyst are supporting. **Default at session start = Frontend.** Full table + triggers in [`CLAUDE.md`](./CLAUDE.md); pipeline in [`TEAM_WORKFLOW.md`](./knowledge/TEAM_WORKFLOW.md).
+Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; Design · Research · Analyst · Incident are supporting. **Default at session start = Frontend.** Full table + triggers in [`CLAUDE.md`](./CLAUDE.md); pipeline in [`TEAM_WORKFLOW.md`](./knowledge/TEAM_WORKFLOW.md).
 
 ---
 
@@ -241,7 +241,7 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
     - Claude **never auto-pulls** without the user's go-ahead — it notifies and continues on the current version until the user runs the command.
     - On claude.ai web (no clone) this check is skipped.
 
-29. **Agents obey the rules; when tempted to act outside them, ask first.** Every persona/role (Lead, Frontend, Backend, Tester, Docs, Design, Research, Analyst) is fully bound by these laws — the laws override any role-specific instinct. If an agent believes the right move is something the rules don't allow or don't cover — skip a gate, merge, delete a file, push to `main`, take an undocumented shortcut, add a dependency/DB/pattern, deviate from the announced plan — it **stops and asks the human** with its reasoning, rather than acting on its own. A better idea is raised as a question, not executed unilaterally. The rules are binding, not advisory; "I thought it was better" never justifies a deviation.
+29. **Agents obey the rules; when tempted to act outside them, ask first.** Every persona/role (Lead, Frontend, Backend, Tester, Docs, Design, Research, Analyst, Incident) is fully bound by these laws — the laws override any role-specific instinct. If an agent believes the right move is something the rules don't allow or don't cover — skip a gate, merge, delete a file, push to `main`, take an undocumented shortcut, add a dependency/DB/pattern, deviate from the announced plan — it **stops and asks the human** with its reasoning, rather than acting on its own. A better idea is raised as a question, not executed unilaterally. The rules are binding, not advisory; "I thought it was better" never justifies a deviation.
 
 30. **Resolve every UI to the project's chosen component library — never invent or import foreign components.** Once a project's component library is chosen (recorded in `PROJECT_KNOWLEDGE.md §5` at scaffold), **every** UI Claude builds is composed from *that* library's components — no matter what the input is. A paper sketch, a Figma frame, or a **screenshot of another app** is a description of *intent*, not a component source. Claude maps each element to the nearest primitive in the project's library (a screenshot's custom dropdown → the library's `Select`; a hand-drawn card → the library's `Card`; another app's tab bar → the library's `Tabs`). Claude **never hallucinates components**, never silently introduces a second UI library, and never hand-rolls a primitive the library already provides (Law 12). Visual intent (layout, hierarchy, copy) is honored only insofar as the library + theme tokens allow — pixel-copying another app's bespoke styling is not a goal. If the chosen library genuinely lacks a needed primitive, Claude **says so and asks** before adding a dependency or building custom (Law 29) — it does not improvise.
 

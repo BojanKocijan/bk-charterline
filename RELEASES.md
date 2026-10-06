@@ -2,6 +2,19 @@
 
 ---
 
+## v2.29.0 — October 6, 2026
+
+### Incident mode: read-only production investigation ([#167](https://github.com/BojanKocijan/design-forge/issues/167))
+- **`incident mode`** (new Incident persona, Opus) turns a production symptom into a confirmed root cause. It reads Supabase logs and advisors, Netlify or Vercel logs and deploy status, the browser console and the code, and correlates them by time window and request ID. It never writes data, config or code, and hands the fix to Backend or Lead as an issue you approve.
+- **A live hypothesis tree** in `docs/incidents/<date>-<slug>.md`. It stays local: the folder is ignored through `.git/info/exclude`, checked with `git check-ignore` before the first write. Evidence is summarized and redacted, in the note, in chat and in the handoff issue.
+- **`health check`** runs once, read-only: Supabase advisors, the last hour of error logs per source, the latest deploy. Ranked findings in chat. It never schedules itself.
+- **New `knowledge/INCIDENT_GUIDE.md`**, loaded on demand. FULLSTACK_WORKFLOW §6.3 points to it.
+- **`ai classify`** proposes tiers for observability connectors: reads 2; creating dashboards, alerts or incidents 3; silencing, deleting or changing retention 4.
+- Hook enforcement for the Netlify and Vercel CLIs follows in [#173](https://github.com/BojanKocijan/design-forge/issues/173).
+- The Laws, `plugin.json` and `marketplace.json` are at 2.29.0.
+
+---
+
 ## v2.28.2 — October 6, 2026
 
 ### Release Tag no longer misses a fixed-up release ([#171](https://github.com/BojanKocijan/design-forge/issues/171))

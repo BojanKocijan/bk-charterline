@@ -274,6 +274,8 @@ When shipping backend code, instrument it — an endpoint with no signals is a b
 - **Structured logs:** JSON logs with a correlation/request ID — never `console.log` of raw objects (and never log secrets or PII, Laws 14–15).
 - **Errors:** unexpected errors surface to an error tracker with context; expected errors are typed and handled.
 
+The request ID is what an incident investigation correlates on across Supabase and hosting logs ([`INCIDENT_GUIDE.md`](./INCIDENT_GUIDE.md) §2).
+
 ### 6.4 What "done" means for backend work
 
 Contract updated + tested · migration reversible + tested · the path has unit + integration coverage · traces/logs/errors are wired · no secrets or PII in code, logs, or fixtures · any new serverless function passes the §6.5 security checklist · any offline-first localStorage/sync-queue layer passes the §6.6 checklist.
