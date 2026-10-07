@@ -20,7 +20,7 @@ Approved-by: <pending>
 | Today | After | Where |
 |---|---|---|
 | Design Forge | BK Charterline | README, laws, `CLAUDE.md`, knowledge, skills, agents, scripts, the hook's messages, the page |
-| `BojanKocijan/design-forge` | `BojanKocijan/bk-charterline` | The GitHub repo (you rename it in Settings); every URL in the repo |
+| `BojanKocijan/design-forge` | `BojanKocijan/bk-charterline` | The GitHub repo (renamed by the owner on 2026-10-07); every URL in the repo |
 | `~/.design-forge` | `~/.bk-charterline` | The installed clone and its data files |
 | `dforge-update` | `charterline-update` | The shell function; `dforge-update` remains for v3.0.0 as a pointer |
 | `Rules loaded: DESIGN_FORGE v…` | `Rules loaded: BK CHARTERLINE v…` | The session-start confirmation |
@@ -74,7 +74,7 @@ The Law 32 guardrails treat `~/.bk-charterline` as the installed clone, and the 
 - **Accessibility:** not affected.
 - **Copy:** every message says what happened and what to do next, in the house style.
 - **Conflicts flagged for the owner:**
-  1. **Two steps only you can take,** in this order (Law 35): rename the repo in GitHub Settings, then merge the release PR. GitHub redirects the old web and git URLs after a rename. The plan will check whether it also redirects `raw.githubusercontent.com`, which the old install command uses.
+  1. **The repo is renamed** (owner, 2026-10-07): `BojanKocijan/bk-charterline`. Checked the same day: the old git URL still fetches, the old web URL redirects (301), the old `raw.githubusercontent.com/…/design-forge/main/install.sh` still serves the installer (200), and Pages moved to `bojankocijan.github.io/bk-charterline/`. So existing installs keep updating before v3.0.0 ships, and the old install command keeps working.
   2. **Plugin users** must remove the `design-forge` plugin and add `bk-charterline`. A plugin can't rename itself, and the release note will say so.
   3. **Claude's per-project memory** is keyed by your local folder name (`~/Documents/GitHub/design-forge`). Renaming that folder is optional and yours to do; if you do, the memory files need moving too.
   4. **The name isn't cleared yet.** A trademark search (USPTO, EUIPO, BOIP) should confirm "BK Charterline" before the page goes public; a tool called Charter already exists in this niche.
