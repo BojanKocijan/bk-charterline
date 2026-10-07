@@ -1,18 +1,18 @@
 /* BK Charterline page (#177). A sticky header over one centered column: the
    promise beside a real hook block, the tiles, the numbers, the install. */
 :root {
-  --bg: #fbfaff;
+  --bg: #f6f7f2;
   --surface: #ffffff;
-  --sunken: #f4f1fb;
-  --ink: #1d1a2e;
-  --muted: #5b566f;
-  --line: #e4e0ef;
-  --accent: #6d28d9;
+  --sunken: #eef0e6;
+  --ink: #12161c;
+  --muted: #4f5763;
+  --line: #dde1d3;
+  --accent: #4a7012;
   --accent-ink: #ffffff;
-  --accent-soft: #efe8fd;
-  --term-bg: #1d1a2e;
-  --term-ink: #ece9f6;
-  --term-muted: #a7a1bd;
+  --accent-soft: #ecf5d6;
+  --term-bg: #11151b;
+  --term-ink: #e9edf2;
+  --term-muted: #8f98a5;
   --term-alert: #ff9b8f;
 
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -41,31 +41,31 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #121019;
-    --surface: #1a1724;
-    --sunken: #16131f;
-    --ink: #ece9f6;
-    --muted: #a7a1bd;
-    --line: #2d2940;
-    --accent: #b39dfb;
-    --accent-ink: #160f2b;
-    --accent-soft: #2a2242;
-    --term-bg: #0b0a10;
+    --bg: #0d1117;
+    --surface: #141920;
+    --sunken: #0a0d12;
+    --ink: #f2f4f7;
+    --muted: #9aa3af;
+    --line: #262d37;
+    --accent: #c8f04b;
+    --accent-ink: #0d1117;
+    --accent-soft: #1c2412;
+    --term-bg: #080a0e;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #121019;
-  --surface: #1a1724;
-  --sunken: #16131f;
-  --ink: #ece9f6;
-  --muted: #a7a1bd;
-  --line: #2d2940;
-  --accent: #b39dfb;
-  --accent-ink: #160f2b;
-  --accent-soft: #2a2242;
-  --term-bg: #0b0a10;
+  --bg: #0d1117;
+  --surface: #141920;
+  --sunken: #0a0d12;
+  --ink: #f2f4f7;
+  --muted: #9aa3af;
+  --line: #262d37;
+  --accent: #c8f04b;
+  --accent-ink: #0d1117;
+  --accent-soft: #1c2412;
+  --term-bg: #080a0e;
   color-scheme: dark;
 }
 
