@@ -1,6 +1,6 @@
-# AGENTS.md — Design Forge
+# AGENTS.md — BK Charterline
 
-This repository is governed by **Design Forge**. Any AI coding agent that reads `AGENTS.md` (Claude Code, Cursor, Codex CLI, Copilot, Aider, Gemini CLI, Windsurf, …) must follow the binding laws in [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) — that file is the source of truth; this is a short pointer.
+This repository is governed by **BK Charterline**. Any AI coding agent that reads `AGENTS.md` (Claude Code, Cursor, Codex CLI, Copilot, Aider, Gemini CLI, Windsurf, …) must follow the binding laws in [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) — that file is the source of truth; this is a short pointer.
 
 ## Non-negotiables (full set in CLAUDE_LAWS.md)
 
