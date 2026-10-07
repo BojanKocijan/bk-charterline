@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.35.0-blue?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/version-2.36.0-blue?style=flat-square" alt="Version" />
   <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License: GPL-3.0" />
   <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/design-forge/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
@@ -142,7 +142,7 @@ Design Forge has three layers:
 
 ### Laws — [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md)
 
-38 binding rules. Key highlights:
+38 binding rules, about 30,000 tokens that every session loads ([measured in #188](./docs/features/issue-188/report.md)). Key highlights:
 
 - **Transparency** — pre-execution announcement before any change; Claude waits for explicit approval
 - **Git discipline** — pull default branch, branch + issue before code, PRs only, never push to default branch, never merge
@@ -362,7 +362,7 @@ design-forge/
 ├── docs/                        # Additional documentation
 └── .github/
     └── workflows/
-        └── markdown-lint.yml    # CI — lint on every push and PR
+        └── markdown-lint.yml    # CI — lint and the rules token budget on every push and PR
 ```
 
 ---
@@ -375,7 +375,7 @@ Issues and PRs are welcome. Read [`CONTRIBUTING.md`](./CONTRIBUTING.md) first. A
 2. Conventional Commits (Law 13)
 3. PRs only — no direct pushes to `main` (Law 7)
 4. Small, atomic PRs under 400 lines (Law 31)
-5. CI (markdownlint and the hook tests) must pass. Run the hook tests locally with `python3 -m unittest discover -s tests -v`
+5. CI (markdownlint and the hook tests) must pass. A rules token budget step only warns: `python3 scripts/laws_cost.py --budget 33000`. Run the hook tests locally with `python3 -m unittest discover -s tests -v`
 
 See [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) for the full governance framework.
 
