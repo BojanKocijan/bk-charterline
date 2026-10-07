@@ -1,10 +1,10 @@
-# Design Forge for companies
+# BK Charterline for companies
 
-Design Forge is free software under the [GNU General Public License v3.0](./LICENSE), and your team can use it today at no cost. If you want it working for your team quickly, or GPL doesn't fit your company, here's what I offer.
+BK Charterline is free software under the [GNU General Public License v3.0](./LICENSE), and your team can use it today at no cost. If you want it working for your team quickly, or GPL doesn't fit your company, here's what I offer.
 
 ## Setup for your team
 
-Most teams don't need a different license. They need Design Forge tuned to how they work.
+Most teams don't need a different license. They need BK Charterline tuned to how they work.
 
 | Package | What you get | Price |
 |---|---|---|
@@ -19,19 +19,19 @@ Delivered remotely. The final price depends on team size and how many repositori
 
 **You don't need a commercial license** if you:
 
-- use Design Forge in your own projects, personal or commercial, including the code Claude writes with it;
+- use BK Charterline in your own projects, personal or commercial, including the code Claude writes with it;
 - change it for yourself or your team and don't distribute your changed version;
 - share a changed version and publish your changes under GPL-3.0.
 
 **A commercial license is for you** if your company:
 
-- wants to change Design Forge and ship it to customers or partners without publishing the changes;
+- wants to change BK Charterline and ship it to customers or partners without publishing the changes;
 - wants to build its laws, skills or hooks into a product it sells under its own terms;
 - has a policy that rules out GPL-licensed software.
 
 ### What it gives you
 
-- Use, change and distribute Design Forge under the terms of your agreement, without GPL's obligation to publish your changes.
+- Use, change and distribute BK Charterline under the terms of your agreement, without GPL's obligation to publish your changes.
 - Terms that fit your company: team size, products covered, duration.
 - An agreement with a named person to talk to, instead of an open-source license with no counterpart.
 
@@ -39,7 +39,7 @@ The agreement itself is a separate signed document. This page explains the optio
 
 ## How to ask
 
-Open a [company inquiry](https://github.com/BojanKocijan/design-forge/issues/new?template=company-inquiry.yml) and choose what you need: Setup, Setup + workshop, a commercial license, or something else. **Don't put confidential details in the issue**, because issues are public. Once I reply, we can continue privately.
+Open a [company inquiry](https://github.com/BojanKocijan/bk-charterline/issues/new?template=company-inquiry.yml) and choose what you need: Setup, Setup + workshop, a commercial license, or something else. **Don't put confidential details in the issue**, because issues are public. Once I reply, we can continue privately.
 
 ## Contributions
 

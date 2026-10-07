@@ -1,14 +1,14 @@
 ---
 name: arm-disarm
-description: Toggle Design Forge governance on or off for this session. "disarm" suspends all binding laws so Claude operates without governance constraints — useful for quick explorations or unconstrained pair-programming. "arm" restores the full ruleset. Hard-safety rails (never merge, no secrets, no PII) survive disarm and cannot be toggled off.
+description: Toggle BK Charterline governance on or off for this session. "disarm" suspends all binding laws so Claude operates without governance constraints — useful for quick explorations or unconstrained pair-programming. "arm" restores the full ruleset. Hard-safety rails (never merge, no secrets, no PII) survive disarm and cannot be toggled off.
 license: GPL-3.0-only
 ---
 
-# Arm / Disarm — Design Forge governance toggle
+# Arm / Disarm — BK Charterline governance toggle
 
 ## What this skill does
 
-`disarm` suspends all Design Forge laws for the current session.
+`disarm` suspends all BK Charterline laws for the current session.
 `arm` restores them (also the default at every session start).
 
 This exists for moments where governance overhead is unwanted:
@@ -33,7 +33,7 @@ When disarmed, Claude:
 Claude **always** prints this banner at the top of every response while disarmed:
 
 ```
-⚠ DISARMED — Design Forge governance suspended. Type `arm` to restore.
+⚠ DISARMED — BK Charterline governance suspended. Type `arm` to restore.
 ```
 
 ---
@@ -55,6 +55,6 @@ These three survive `disarm` under any circumstance:
 | Phrase | Action |
 |---|---|
 | `disarm` | Suspend all laws (except hard-safety rails above). Print disarmed banner on every response. |
-| `arm` | Restore full Design Forge governance. Print `✓ ARMED — full Design Forge governance restored.` once, then continue normally. |
+| `arm` | Restore full BK Charterline governance. Print `✓ ARMED — full BK Charterline governance restored.` once, then continue normally. |
 
 State resets to **armed** at every new session start — disarm never persists across sessions.

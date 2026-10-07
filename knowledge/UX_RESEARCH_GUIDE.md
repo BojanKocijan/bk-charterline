@@ -1,4 +1,4 @@
-# UX Research Guide — Design Forge
+# UX Research Guide — BK Charterline
 
 **Version:** 1.0.0
 **Last Updated:** 2026-06-06
@@ -136,7 +136,7 @@ For compliance reviews, executive deep-dives, multi-product synthesis.
 
 ### 5.3 Bring your own template — Claude never ships a built-in deck theme
 
-Design Forge has **no bundled PowerPoint template**. When the user asks for a real `.pptx`, Claude must:
+BK Charterline has **no bundled PowerPoint template**. When the user asks for a real `.pptx`, Claude must:
 
 1. **Ask the user for their template first:** *"Share the PowerPoint template you'd like me to use — drop in one or more `.pptx` or `.potx` files (a deck with your master slides / brand layouts). I'll build the slides on top of it."*
 2. **Build on the provided file** — open it with the `pptx` skill, reuse its slide masters, layouts, fonts, and colors, and populate the outline (§5.1 or §5.2) into those layouts. Match the template's existing styling; don't invent brand colors.

@@ -1,4 +1,4 @@
-# Analytics Guide — Design Forge
+# Analytics Guide — BK Charterline
 
 **Version:** 1.0.0
 **Last Updated:** 2026-06-09

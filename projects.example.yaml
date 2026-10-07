@@ -1,4 +1,4 @@
-# Design Forge — Project Registry (EXAMPLE)
+# BK Charterline — Project Registry (EXAMPLE)
 #
 # Copy this file to `projects.yaml` (gitignored) and let Claude register your
 # projects here. Each project gets a locked localhost port so multiple projects

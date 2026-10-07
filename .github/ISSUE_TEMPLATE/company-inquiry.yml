@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for your interest. [FOR_COMPANIES.md](https://github.com/BojanKocijan/design-forge/blob/main/FOR_COMPANIES.md) explains the options; many companies don't need a commercial license at all.
+        Thanks for your interest. [FOR_COMPANIES.md](https://github.com/BojanKocijan/bk-charterline/blob/main/FOR_COMPANIES.md) explains the options; many companies don't need a commercial license at all.
 
         **This issue is public. Don't include confidential details.** Once I reply, we can continue privately.
 
@@ -34,7 +34,7 @@ body:
     id: use-case
     attributes:
       label: Tell me about your team and what you want to achieve
-      description: Your stack, how many repositories, and, for a commercial license, what you want to do with Design Forge and why GPL-3.0 doesn't fit.
+      description: Your stack, how many repositories, and, for a commercial license, what you want to do with BK Charterline and why GPL-3.0 doesn't fit.
     validations:
       required: true
 

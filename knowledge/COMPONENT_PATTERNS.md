@@ -1,4 +1,4 @@
-# Component Patterns — Design Forge
+# Component Patterns — BK Charterline
 
 **Version:** 1.6.1
 **Last Updated:** 2026-10-05

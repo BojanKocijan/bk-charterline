@@ -1,4 +1,4 @@
-# Feature Workflow — Design Forge
+# Feature Workflow — BK Charterline
 
 **Version:** 1.0.0
 **Last Updated:** 2026-06-06
@@ -141,7 +141,7 @@ The chosen one returns to `§11 Active`. If something was active, Claude pauses 
 
 ## 8. Rules-staleness check at feature transitions
 
-At `finish feature` and `handoff <id>`, Claude checks if the loaded rules version is older than what's in `~/.design-forge`. If stale, Claude surfaces one recommendation — *"Design Forge rules may be updated. Run `dforge-update` before handing off?"* — and waits for an explicit yes before running it.
+At `finish feature` and `handoff <id>`, Claude checks if the loaded rules version is older than what's in `~/.bk-charterline`. If stale, Claude surfaces one recommendation — *"BK Charterline rules may be updated. Run `charterline-update` before handing off?"* — and waits for an explicit yes before running it.
 
 ---
 

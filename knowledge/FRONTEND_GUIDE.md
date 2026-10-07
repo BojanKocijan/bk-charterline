@@ -2,7 +2,7 @@
 
 **Version:** 1.0.0
 **Last Updated:** 2026-06-06
-**Applies to:** All React projects under Design Forge governance
+**Applies to:** All React projects under BK Charterline governance
 **Binding:** Yes — this file is a law (see [`CLAUDE_LAWS.md`](../CLAUDE_LAWS.md) Laws 4, 12, 15). Claude must follow it on every frontend task.
 
 ---

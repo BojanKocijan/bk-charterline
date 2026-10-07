@@ -1,4 +1,4 @@
-# Fullstack Developer Workflow — Design Forge
+# Fullstack Developer Workflow — BK Charterline
 
 **Version:** 1.6.0
 **Last Updated:** 2026-07-20
@@ -187,7 +187,7 @@ GitHub's `delete_branch_on_merge: true` usually removes the remote branch first;
 
 - Update `PROJECT_KNOWLEDGE.md §5` if the PR introduced a new architectural decision.
 - Update `PROJECT_KNOWLEDGE.md §3` if a new project-specific component was added.
-- If the session is long-running, check rules staleness: compare loaded version against `~/.design-forge` HEAD.
+- If the session is long-running, check rules staleness: compare loaded version against `~/.bk-charterline` HEAD.
 
 ---
 
