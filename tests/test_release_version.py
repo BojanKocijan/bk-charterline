@@ -23,10 +23,10 @@ class ReleaseVersionTests(unittest.TestCase):
         self.root = self.tmp.name
         os.makedirs(os.path.join(self.root, ".claude-plugin"))
         self.write("CLAUDE_LAWS.md", "# Laws\n\n**Version:** 2.28.0\n**Last Updated:** 2026-10-05\n")
-        self.write_json(".claude-plugin/plugin.json", {"name": "design-forge", "version": "2.28.0"})
+        self.write_json(".claude-plugin/plugin.json", {"name": "bk-charterline", "version": "2.28.0"})
         self.write_json(".claude-plugin/marketplace.json", {
             "metadata": {"version": "2.28.0"},
-            "plugins": [{"name": "design-forge", "version": "2.28.0"}],
+            "plugins": [{"name": "bk-charterline", "version": "2.28.0"}],
         })
         self.write("RELEASES.md", "# Releases\n\n---\n\n## v2.28.0 — October 5, 2026\n\n- x\n\n## v2.27.0 — x\n")
 

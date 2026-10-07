@@ -1,8 +1,16 @@
-# Design Forge Releases
+# BK Charterline Releases
 
 ---
 
-## Unreleased
+## v3.0.0 — October 7, 2026
+
+**Design Forge is now BK Charterline.** To update, type `update rules` in Claude Code as always. The first update shows you the hook diff to approve, then moves your install from `~/.design-forge` to `~/.bk-charterline` with all your data (projects, hook log, AI tool registry and approvals, patterns). Your next session starts with `Rules loaded: BK CHARTERLINE v3.0.0`.
+
+- **Plugin users:** remove the `design-forge` plugin, then add `bk-charterline` from `BojanKocijan/bk-charterline`. A plugin can't rename itself.
+- **For this release only,** `~/.design-forge` stays as a link to the new folder and `dforge-update` runs `charterline-update`. Both go in the next major version.
+- **The repo moved** to `BojanKocijan/bk-charterline`. Old links and the old install command still redirect.
+- **Rules: 30,418 tokens** (estimate).
+- The Laws, `plugin.json` and `marketplace.json` are at 3.0.0.
 
 ### Renamed to BK Charterline ([#199](https://github.com/BojanKocijan/bk-charterline/issues/199))
 - **The hook and the scripts find the install under either name:** `~/.bk-charterline`, or `~/.design-forge` until an install has moved. A new `.claude/hooks/rules_home.py` decides, and a fresh install uses the new name.
@@ -10,8 +18,9 @@
 - **`install.sh` installs the new name and moves an old install:** `~/.design-forge` becomes `~/.bk-charterline` with every data file in it, and the old name links to it for v3.0.0. It re-points the `~/.claude/CLAUDE.md` block, the hook in `~/.claude/settings.json` (backed up first), the shell function and the agent and skill links. `charterline-update` replaces `dforge-update`, which points to it for v3.0.0. Nothing moves if both folders exist or the clone has local edits.
 - **The rules files use the new name:** `CLAUDE.md`, `CLAUDE_LAWS.md` and `AGENTS.md` say BK Charterline, `~/.bk-charterline` and `charterline-update`, and the session starts with `Rules loaded: BK CHARTERLINE v…`. `update rules` runs `charterline-update`, or on an install from before v3.0.0 `dforge-update`, which moves it.
 - **The docs use the new name:** the README (with a rename note at the top), knowledge, skills, agents and the issue templates. Release notes before v3.0.0 and `docs/features/` keep the old name as history.
+- **The plugin is `bk-charterline`,** this repo's own hook entries point to `~/.bk-charterline`, and a test keeps the old name out of everything but history, the move code and its fallbacks.
 
-### A page for Design Forge, with an analytics demo ([#177](https://github.com/BojanKocijan/design-forge/issues/177))
+### A page for BK Charterline, with an analytics demo ([#177](https://github.com/BojanKocijan/bk-charterline/issues/177))
 - **New `scripts/site_metrics.py`** collects the page's real numbers from git and `gh` into `site/data.js`: releases, laws, skills, agents, knowledge guides, tests, merged PRs, the median PR size, the share of PRs within 400 lines, and the rules' tokens per session. Each number keeps the date it last changed.
 - **It only asks `gh` for PRs merged since its last run** (`site/metrics-state.json`), and a run with nothing new changes no file. It reads public data only.
 

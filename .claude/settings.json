@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.design-forge/.claude/hooks/enforce-laws.py\""
+            "command": "python3 \"$HOME/.bk-charterline/.claude/hooks/enforce-laws.py\""
           }
         ]
       },
@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.design-forge/.claude/hooks/enforce-laws.py\""
+            "command": "python3 \"$HOME/.bk-charterline/.claude/hooks/enforce-laws.py\""
           }
         ]
       },
@@ -24,7 +24,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.design-forge/.claude/hooks/enforce-laws.py\""
+            "command": "python3 \"$HOME/.bk-charterline/.claude/hooks/enforce-laws.py\""
           }
         ]
       }
@@ -35,7 +35,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.design-forge/.claude/hooks/enforce-laws.py\""
+            "command": "python3 \"$HOME/.bk-charterline/.claude/hooks/enforce-laws.py\""
           }
         ]
       }
