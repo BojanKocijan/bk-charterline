@@ -1,8 +1,8 @@
-# Project Scaffold — Design Forge
+# Project Scaffold — BK Charterline
 
 **Version:** 1.1.0
 **Last Updated:** 2026-06-06
-**Applies to:** Every new project under Design Forge governance
+**Applies to:** Every new project under BK Charterline governance
 **Binding:** Yes — this file is a law (see [`CLAUDE_LAWS.md`](../CLAUDE_LAWS.md) Laws 7, 10, 11, 12, 13, 14, 15, 18). Claude must follow it whenever the user says **"new project"** (or equivalent).
 
 ---
@@ -55,15 +55,15 @@ AskUserQuestion({
       options: [
         {
           label: "Web app — React (Recommended)",
-          description: "Vite + React + TypeScript. Targets browsers only. styled-components, shadcn/ui, MUI, Chakra, or Ant Design. Full Design Forge 4-file component pattern."
+          description: "Vite + React + TypeScript. Targets browsers only. styled-components, shadcn/ui, MUI, Chakra, or Ant Design. Full BK Charterline 4-file component pattern."
         },
         {
           label: "Hybrid app — React Native / Expo",
-          description: "Expo Router + React Native. Runs on iOS, Android, and web from one codebase. StyleSheet-based styling, Expo CI. Adapted Design Forge rules."
+          description: "Expo Router + React Native. Runs on iOS, Android, and web from one codebase. StyleSheet-based styling, Expo CI. Adapted BK Charterline rules."
         },
         {
           label: "Web app — Angular",
-          description: "Angular CLI + TypeScript. Component-per-folder pattern, Angular Material or custom. Adapted Design Forge rules."
+          description: "Angular CLI + TypeScript. Component-per-folder pattern, Angular Material or custom. Adapted BK Charterline rules."
         },
         {
           label: "Other — I'll describe it",
@@ -201,7 +201,7 @@ AskUserQuestion({
       header: "UI library",
       question: "Which React Native UI library would you like to use?",
       options: [
-        { label: "No library — local components only (Recommended)", description: "Pure React Native + StyleSheet with a constants/theme.ts token file. Maximum control, matches the Design Forge pattern for RN." },
+        { label: "No library — local components only (Recommended)", description: "Pure React Native + StyleSheet with a constants/theme.ts token file. Maximum control, matches the BK Charterline pattern for RN." },
         { label: "React Native Paper", description: "Material Design 3 for React Native. Good for data-heavy apps." },
         { label: "NativeWind", description: "Tailwind CSS for React Native. Utility-class-driven styling via className." },
         { label: "Gluestack UI", description: "Universal components that work across React Native and web. Headless + styled." },
@@ -562,7 +562,7 @@ Setup: app.netlify.com → Add new site → Import from GitHub → Deploy.
 
 1. Spawn `npm run dev` in the background (Law 18). Every reply ends with `Preview: <url> · status: up`.
 2. Create `PROJECT_KNOWLEDGE.md` from the template (§7).
-3. Create local `CLAUDE.md` with `@./PROJECT_KNOWLEDGE.md` only — never import `@~/.design-forge/CLAUDE.md` (laws load globally via `~/.claude/CLAUDE.md`).
+3. Create local `CLAUDE.md` with `@./PROJECT_KNOWLEDGE.md` only — never import `@~/.bk-charterline/CLAUDE.md` (laws load globally via `~/.claude/CLAUDE.md`).
 4. Commit: `chore: scaffold <name> project`.
 5. Push and open the first PR.
 6. User triggers `start feature` — scaffolding does NOT auto-start a feature.
@@ -801,7 +801,7 @@ Mobile: expo start → scan QR
 
 1. Spawn `npx expo start --web` in the background. Report web URL.
 2. Create `PROJECT_KNOWLEDGE.md` from the template (§7) — note Platform: React Native / Expo hybrid.
-3. Create local `CLAUDE.md` with `@./PROJECT_KNOWLEDGE.md` only — never import `@~/.design-forge/CLAUDE.md` (laws load globally via `~/.claude/CLAUDE.md`).
+3. Create local `CLAUDE.md` with `@./PROJECT_KNOWLEDGE.md` only — never import `@~/.bk-charterline/CLAUDE.md` (laws load globally via `~/.claude/CLAUDE.md`).
 4. Commit: `chore: scaffold <name> expo project`.
 5. Push and open the first PR.
 6. User triggers `start feature`.
@@ -877,7 +877,7 @@ Law 18 preview URL: `http://localhost:4200/`
 ```markdown
 # PROJECT_KNOWLEDGE — <project-name>
 
-**This project is governed by [Design Forge](https://github.com/bojankocijan/design-forge) — see [`CLAUDE.md`](./CLAUDE.md) for rules and [`~/.design-forge`](https://github.com/bojankocijan/design-forge/tree/main) for the knowledge base.**
+**This project is governed by [BK Charterline](https://github.com/BojanKocijan/bk-charterline) — see [`CLAUDE.md`](./CLAUDE.md) for rules and [`~/.bk-charterline`](https://github.com/BojanKocijan/bk-charterline/tree/main) for the knowledge base.**
 
 ---
 
@@ -939,4 +939,4 @@ none yet
 ## Changelog
 
 - **1.1.0 (2026-06-06)** — Added platform-target question (Step 0.5) before UI library selection. Scaffold now branches into three tracks: Web React (existing flow, now §2-React), Hybrid React Native / Expo (new §1-RN + §2-RN), and Angular (new §1-Angular + §2-Angular). Added Law 12-RN adaptation for React Native: StyleSheet.create() in .styles.ts files, makeStyles() pattern for dynamic values, banned raw inline style objects in .tsx. Added Expo-specific CI (expo-github-action), Netlify web build config for Expo, and Law 18 dual-surface preview (web URL + mobile QR). Updated PROJECT_KNOWLEDGE.md template to record Platform in §5.
-- **1.0.0 (2026-06-06)** — Initial Design Forge release. Vite + React web scaffold only.
+- **1.0.0 (2026-06-06)** — Initial BK Charterline release. Vite + React web scaffold only.

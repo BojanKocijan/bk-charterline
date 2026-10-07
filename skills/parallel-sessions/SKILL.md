@@ -26,7 +26,7 @@ From the repo's main folder, before creating the branch:
 6. Name the project from the main folder (Laws 18 and 20): the parent of `git rev-parse --git-common-dir`, not the worktree's folder name.
 7. Preview (Law 18): `npm run dev -- --port <locked + 100>` (up to +109 if taken), and write `(worktree)` after the URL in your `Preview:` footer.
 
-To run `update rules` later: ask the owner, call `ExitWorktree` with `action: "keep"`, run it, then `EnterWorktree` with the same `path` again. Run no git command in the shared folder meanwhile. If the app started this session inside the worktree, `ExitWorktree` does nothing: ask the owner to run `update rules` from another session, or `dforge-update` in a terminal.
+To run `update rules` later: ask the owner, call `ExitWorktree` with `action: "keep"`, run it, then `EnterWorktree` with the same `path` again. Run no git command in the shared folder meanwhile. If the app started this session inside the worktree, `ExitWorktree` does nothing: ask the owner to run `update rules` from another session, or `charterline-update` in a terminal.
 
 ## B. Recover from a collision
 

@@ -1,7 +1,7 @@
 name: Release Tag
 
 # Tags main as vX.Y.Z when a merge changes the version (Law 27, #116).
-# dforge-update installs the newest tag, so only a version whose four
+# charterline-update installs the newest tag, so only a version whose four
 # files agree is tagged, and an existing tag is never moved. Any of the
 # four files starts it, so a release fixed after its bump merge is still
 # tagged; workflow_dispatch re-runs it by hand (#171).
@@ -48,6 +48,6 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "$TAG" -m "Design Forge $TAG" "$GITHUB_SHA"
+          git tag -a "$TAG" -m "BK Charterline $TAG" "$GITHUB_SHA"
           git push origin "$TAG"
           echo "Tagged $TAG on $GITHUB_SHA."

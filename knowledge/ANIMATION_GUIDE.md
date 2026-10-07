@@ -1,4 +1,4 @@
-# Animation Guide — Design Forge
+# Animation Guide — BK Charterline
 
 **Version:** 1.1.0
 **Last Updated:** 2026-10-03

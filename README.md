@@ -1,19 +1,21 @@
 <p align="center">
   <img src="https://img.shields.io/badge/version-2.36.0-blue?style=flat-square" alt="Version" />
   <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License: GPL-3.0" />
-  <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/design-forge/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
+  <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/bk-charterline/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
   <img src="https://img.shields.io/badge/laws-38-orange?style=flat-square" alt="38 Laws" />
   <a href="https://ko-fi.com/bojaforjelena"><img src="https://img.shields.io/badge/buy_her_a_coffee-Ko--fi-6f4e37?style=flat-square&logo=kofi" alt="Buy her a coffee on Ko-fi" /></a>
 </p>
 
-# Design Forge
+# BK Charterline
+
+> **Renamed from Design Forge** in v3.0.0. If you installed it under the old name, type `update rules` in Claude Code: it moves your install to `~/.bk-charterline` and keeps your data. Plugin users: remove the `design-forge` plugin and add `bk-charterline`.
 
 **The working knowledge of a UX manager, a full-stack designer and a senior developer, packaged as binding rules, skills and agents for Claude Code.**
 
-Design Forge is a set of binding *laws*, reusable *skills*, and shared *knowledge files* that govern every Claude Code session. It controls how Claude scaffolds projects, names branches, opens PRs, writes components, runs UX research, and hands work off to developers. Library-agnostic. Framework-agnostic. No corporate toolchain required.
+BK Charterline is a set of binding *laws*, reusable *skills*, and shared *knowledge files* that govern every Claude Code session. It controls how Claude scaffolds projects, names branches, opens PRs, writes components, runs UX research, and hands work off to developers. Library-agnostic. Framework-agnostic. No corporate toolchain required.
 
-It's not only for developers. Design Forge carries the full product craft, from UX research, design critique, UX writing and Figma handoff to frontend, backend, testing and shipping, so Claude works like a senior teammate across the whole team, not just the codebase.
+It's not only for developers. BK Charterline carries the full product craft, from UX research, design critique, UX writing and Figma handoff to frontend, backend, testing and shipping, so Claude works like a senior teammate across the whole team, not just the codebase.
 
 > Think of it as a constitution for your AI pair-programmer: announce before acting, branch + issue before code, never push to `main`, never merge for you, small atomic PRs, no inline styles, WCAG 2.2 AA, no bloated code, no hallucination.
 
@@ -21,7 +23,7 @@ It's not only for developers. Design Forge carries the full product craft, from 
 
 ## Table of contents
 
-- [Why Design Forge](#why-design-forge)
+- [Why BK Charterline](#why-bk-charterline)
 - [Quick start](#quick-start)
 - [Installation](#installation)
 - [Architecture](#architecture)
@@ -36,11 +38,11 @@ It's not only for developers. Design Forge carries the full product craft, from 
 
 ---
 
-## Why Design Forge
+## Why BK Charterline
 
-Out of the box, an AI coding assistant will happily push to `main`, invent APIs, ship 1000-line PRs, over-engineer, and forget your conventions between sessions. Design Forge fixes that with **38 binding laws** and knowledge files that travel with you to every project.
+Out of the box, an AI coding assistant will happily push to `main`, invent APIs, ship 1000-line PRs, over-engineer, and forget your conventions between sessions. BK Charterline fixes that with **38 binding laws** and knowledge files that travel with you to every project.
 
-| Problem | Design Forge solution |
+| Problem | BK Charterline solution |
 |---|---|
 | Pushes directly to `main` | Branch + issue before code; PRs only; Claude never merges |
 | Giant, unreviewable PRs | **Law 31** — every PR under 400 lines, one concern per PR, stacked sequences for large features |
@@ -49,27 +51,27 @@ Out of the box, an AI coding assistant will happily push to `main`, invent APIs,
 | Inconsistent components | 4-file component folders, no inline styles, TypeScript, accessibility baked in |
 | No audit trail | Pre-execution announcements, Conventional Commits, living `PROJECT_KNOWLEDGE.md` |
 | Stale repos | Auto branch cleanup, orphaned issue detection, README kept current with every PR |
-| "Claude might forget and merge/push to `main` anyway" | **Law 32** — a `PreToolUse` hook mechanically blocks merge, push or force-push to `main`, skipped git hooks, malformed commits and secret commits, and asks you in the app before Claude changes its own guardrails (including git in the installed `~/.design-forge`), deletes tracked files, runs a Netlify or Vercel command that changes a site, or calls a tier 3 or 4 MCP tool |
+| "Claude might forget and merge/push to `main` anyway" | **Law 32** — a `PreToolUse` hook mechanically blocks merge, push or force-push to `main`, skipped git hooks, malformed commits and secret commits, and asks you in the app before Claude changes its own guardrails (including git in the installed `~/.bk-charterline`), deletes tracked files, runs a Netlify or Vercel command that changes a site, or calls a tier 3 or 4 MCP tool |
 
 ---
 
 ## Quick start
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/BojanKocijan/design-forge/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/BojanKocijan/bk-charterline/main/install.sh | bash
 ```
 
 Open any Claude Code session. You should see:
 
 ```
-Rules loaded: DESIGN_FORGE v2.19.1
+Rules loaded: BK CHARTERLINE v3.0.0
 Project: <your-repo>
 Persona: Frontend
 GitHub: <your-username>
 Ready.
 ```
 
-That's it. Every session on your machine now follows the laws and has the Design Forge agents and skills. Check the agents with `claude agents`.
+That's it. Every session on your machine now follows the laws and has the BK Charterline agents and skills. Check the agents with `claude agents`.
 
 ---
 
@@ -77,20 +79,20 @@ That's it. Every session on your machine now follows the laws and has the Design
 
 ### Path A — Claude Code / CLI (recommended)
 
-The install script clones the repo to `~/.design-forge`, injects the rules into Claude's global memory (`~/.claude/CLAUDE.md`), registers the Law 32 hook, links the agents and skills into `~/.claude`, and installs the `dforge-update` shell function.
+The install script clones the repo to `~/.bk-charterline`, injects the rules into Claude's global memory (`~/.claude/CLAUDE.md`), registers the Law 32 hook, links the agents and skills into `~/.claude`, and installs the `charterline-update` shell function.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/BojanKocijan/design-forge/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/BojanKocijan/bk-charterline/main/install.sh | bash
 ```
 
 <details>
 <summary>What the script does</summary>
 
-1. Clones this repo to `~/.design-forge`
-2. Adds `@~/.design-forge/CLAUDE.md` to `~/.claude/CLAUDE.md` (Claude's global memory)
+1. Clones this repo to `~/.bk-charterline`
+2. Adds `@~/.bk-charterline/CLAUDE.md` to `~/.claude/CLAUDE.md` (Claude's global memory)
 3. Registers the Law 32 guardrail hook in `~/.claude/settings.json`
 4. Links each agent into `~/.claude/agents/` and each skill into `~/.claude/skills/`. Your own agents and skills with the same name are never overwritten.
-5. Installs the `dforge-update` shell function, which moves the clone to the newest release and re-runs the installer
+5. Installs the `charterline-update` shell function, which moves the clone to the newest release and re-runs the installer
 
 Re-running the script is safe. Use one install method only: installing the plugin as well would list every agent and skill twice.
 
@@ -99,13 +101,13 @@ Re-running the script is safe. Use one install method only: installing the plugi
 ### Path B — Manual clone
 
 ```bash
-git clone https://github.com/BojanKocijan/design-forge.git ~/.design-forge
+git clone https://github.com/BojanKocijan/bk-charterline.git ~/.bk-charterline
 ```
 
 Then add this line to `~/.claude/CLAUDE.md`:
 
 ```
-@~/.design-forge/CLAUDE.md
+@~/.bk-charterline/CLAUDE.md
 ```
 
 ### Path C — GitHub Copilot
@@ -120,7 +122,7 @@ The repo ships a valid plugin manifest (`.claude-plugin/plugin.json`), so a one-
 
 ## Architecture
 
-Design Forge has three layers:
+BK Charterline has three layers:
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -280,13 +282,13 @@ Laws load globally — you never wire them per project. A project only needs its
 
 `new project` creates this automatically. For existing projects, Claude creates it the first time you do code work.
 
-> **Note:** Never add `@~/.design-forge/CLAUDE.md` to a project-level file — it's redundant (laws are global) and breaks the repo on machines without Design Forge installed.
+> **Note:** Never add `@~/.bk-charterline/CLAUDE.md` to a project-level file — it's redundant (laws are global) and breaks the repo on machines without BK Charterline installed.
 
 ---
 
 ## Project registry
 
-Design Forge assigns each project a **locked localhost port** so running multiple `npm run dev` servers never clashes. The registry lives in `projects.yaml` (gitignored, local to your machine):
+BK Charterline assigns each project a **locked localhost port** so running multiple `npm run dev` servers never clashes. The registry lives in `projects.yaml` (gitignored, local to your machine):
 
 ```bash
 cp projects.example.yaml projects.yaml
@@ -311,12 +313,12 @@ For professional work we recommend one language, so code, commits, PRs and docs 
 
 | Method | Command |
 |---|---|
-| Shell (Path A) | `dforge-update` installs the newest release tag, then re-links agents and skills. `dforge-update --main` follows `main` instead |
-| Manual (Path B) | `git -C ~/.design-forge fetch --tags`, then `git -C ~/.design-forge checkout --detach <newest vX.Y.Z>` |
+| Shell (Path A) | `charterline-update` installs the newest release tag, then re-links agents and skills. `charterline-update --main` follows `main` instead |
+| Manual (Path B) | `git -C ~/.bk-charterline fetch --tags`, then `git -C ~/.bk-charterline checkout --detach <newest vX.Y.Z>` |
 | In any session | `update rules` |
 
-- **A hook change asks first.** When `dforge-update` would change anything the Law 32 hook runs (`.claude/hooks/`, `scripts/ai_tools.py`, `install.sh`, `.claude/settings.json`), `dforge-update` shows the diff (no pager) and asks `Apply this hook change? [y/N]`. In a Claude session, `update rules` shows you the diff in chat and runs `dforge-update --approve <commit>` instead: the app's permission prompt asks, and your click is the approval, so no terminal is needed. Either way, it checks out exactly the commit whose diff you saw; if a newer one appears in between, nothing changes. `--approve` works only when the Law 32 hook is registered. Git commands run by hand in `~/.design-forge` skip this check, so the Law 32 hook asks you before any that would change the clone (`checkout`, `pull`, `reset` and the like).
-- **The clone sits on a release tag** (a detached HEAD), so a plain `git pull` in `~/.design-forge` doesn't work. Use `dforge-update`, or `dforge-update --main` to go back to following `main`.
+- **A hook change asks first.** When `charterline-update` would change anything the Law 32 hook runs (`.claude/hooks/`, `scripts/ai_tools.py`, `install.sh`, `.claude/settings.json`), `charterline-update` shows the diff (no pager) and asks `Apply this hook change? [y/N]`. In a Claude session, `update rules` shows you the diff in chat and runs `charterline-update --approve <commit>` instead: the app's permission prompt asks, and your click is the approval, so no terminal is needed. Either way, it checks out exactly the commit whose diff you saw; if a newer one appears in between, nothing changes. `--approve` works only when the Law 32 hook is registered. Git commands run by hand in `~/.bk-charterline` skip this check, so the Law 32 hook asks you before any that would change the clone (`checkout`, `pull`, `reset` and the like).
+- **The clone sits on a release tag** (a detached HEAD), so a plain `git pull` in `~/.bk-charterline` doesn't work. Use `charterline-update`, or `charterline-update --main` to go back to following `main`.
 - **It never downgrades** a clone that's ahead of the latest release, and it refuses to run over local edits to tracked files.
 - **One run is enough**, even from v2.27.0 or older: the old function pulls `main`, and the installer then moves the clone onto the release tag when `main` is at it. If the tag isn't published yet, the next run moves it. In a Claude session, `update rules` always runs the current function from your rc file.
 
@@ -325,7 +327,7 @@ For professional work we recommend one language, so code, commits, PRs and docs 
 ## Repository structure
 
 ```
-design-forge/
+bk-charterline/
 ├── CLAUDE.md                    # Entry point — imports laws, maps knowledge triggers
 ├── CLAUDE_LAWS.md               # 38 binding rules (loaded every session)
 ├── AGENTS.md                    # Agent architecture overview
@@ -385,16 +387,16 @@ See [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) for the full governance framework.
 
 [GPL-3.0](./LICENSE) &copy; Bojan Kocijan. Free to use for personal and commercial projects. If you modify it and share your version, you must publish your changes under the same license. See [CONTRIBUTING.md](./CONTRIBUTING.md) to send your improvements back.
 
-**Commercial license.** If your company wants to ship a changed version without publishing the changes, or can't use GPL software, a commercial license is available. See [Design Forge for companies](./FOR_COMPANIES.md), which also covers paid team setup.
+**Commercial license.** If your company wants to ship a changed version without publishing the changes, or can't use GPL software, a commercial license is available. See [BK Charterline for companies](./FOR_COMPANIES.md), which also covers paid team setup.
 
 Version 2.18.0 and earlier were published under the MIT License, and version 2.18.1 under an all-rights-reserved license. Copies obtained under those licenses keep their terms.
 
 ## Support
 
-### If you like Design Forge, help a fellow husband and buy my wife a coffee
+### If you like BK Charterline, help a fellow husband and buy my wife a coffee
 
-Design Forge is free and always will be. If you're married, you already know how this works: a happy wife means a happy life, and in my house a happy wife means a full cup of coffee. We've been happily married for years, mostly thanks to a reliable coffee supply.
+BK Charterline is free and always will be. If you're married, you already know how this works: a happy wife means a happy life, and in my house a happy wife means a full cup of coffee. We've been happily married for years, mostly thanks to a reliable coffee supply.
 
 <a href="https://ko-fi.com/bojaforjelena"><img src="https://img.shields.io/badge/%E2%98%95_Buy_her_a_coffee-Ko--fi-6f4e37?style=for-the-badge&logo=kofi&logoColor=white" alt="Buy her a coffee on Ko-fi" /></a>
 
-Using Design Forge at a company? See [Design Forge for companies](./FOR_COMPANIES.md): team setup and workshops, or a commercial license if GPL doesn't fit.
+Using BK Charterline at a company? See [BK Charterline for companies](./FOR_COMPANIES.md): team setup and workshops, or a commercial license if GPL doesn't fit.

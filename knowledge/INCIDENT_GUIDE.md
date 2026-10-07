@@ -1,11 +1,11 @@
-# Incident Guide — Design Forge
+# Incident Guide — BK Charterline
 
 **Version:** 1.1.0
 **Last Updated:** 2026-10-06
 **Applies to:** Every production investigation and `health check`, and a secret that got past Law 14 (§9)
 **Binding:** Yes — this file governs the Incident persona (triggers: `incident mode`, `health check`).
 
-> Incident mode turns a production symptom into a confirmed root cause, **read-only**, and hands the fix to Backend or Lead. It never writes data, config or code. Spec: [#167](https://github.com/BojanKocijan/design-forge/issues/167).
+> Incident mode turns a production symptom into a confirmed root cause, **read-only**, and hands the fix to Backend or Lead. It never writes data, config or code. Spec: [#167](https://github.com/BojanKocijan/bk-charterline/issues/167).
 
 ---
 
@@ -25,7 +25,7 @@
 
 ### 1.1 Hosting CLIs run outside Law 38
 
-`netlify` and `vercel` use the owner's logged-in token. `netlify api` can run **any** API method, including `rollbackSiteDeploy`, `restoreSiteDeploy` and `deleteDeploy`. Only the read methods named above are allowed. The Law 32 hook asks before any hosting CLI command that isn't a verified read or local command ([#173](https://github.com/BojanKocijan/design-forge/issues/173)), so a write that slips through still needs the owner's click. A CLI that isn't installed or logged in is reported under "Not checked", never worked around.
+`netlify` and `vercel` use the owner's logged-in token. `netlify api` can run **any** API method, including `rollbackSiteDeploy`, `restoreSiteDeploy` and `deleteDeploy`. Only the read methods named above are allowed. The Law 32 hook asks before any hosting CLI command that isn't a verified read or local command ([#173](https://github.com/BojanKocijan/bk-charterline/issues/173)), so a write that slips through still needs the owner's click. A CLI that isn't installed or logged in is reported under "Not checked", never worked around.
 
 ### 1.2 Reading Supabase logs
 

@@ -1,6 +1,6 @@
-# Contributing to Design Forge
+# Contributing to BK Charterline
 
-Contributions are welcome. Design Forge is free software under the [GNU General Public License v3.0](./LICENSE).
+Contributions are welcome. BK Charterline is free software under the [GNU General Public License v3.0](./LICENSE).
 
 ## Contribution terms
 
@@ -13,7 +13,7 @@ By opening a pull request you agree that:
 
 If you do not agree, please do not submit a contribution.
 
-## Using Design Forge in your own work
+## Using BK Charterline in your own work
 
 You may use it for personal and commercial projects. If you modify it and share your version, you must publish your changes under GPL-3.0 as well and keep the copyright notices. Sending your improvements back as a pull request is the easiest way to do that, and very welcome.
 

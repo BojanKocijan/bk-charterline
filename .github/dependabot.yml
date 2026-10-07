@@ -1,6 +1,6 @@
 version: 2
 updates:
-  # Design Forge ships no npm dependencies (markdownlint runs via npx in CI),
+  # BK Charterline ships no npm dependencies (markdownlint runs via npx in CI),
   # so only the GitHub Actions used by the workflows are tracked here.
   - package-ecosystem: "github-actions"
     directory: "/"

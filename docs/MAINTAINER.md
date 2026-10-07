@@ -1,4 +1,4 @@
-# Maintainer Guide — Design Forge
+# Maintainer Guide — BK Charterline
 
 ## What this repo is
 
@@ -11,7 +11,7 @@ Maintainers and required reviewers are configured in **GitHub repository setting
 ## Repository structure
 
 ```
-design-forge/
+bk-charterline/
 ├── .claude-plugin/plugin.json   ← plugin manifest
 ├── .github/                     ← workflows + PR/issue templates
 ├── agents/                      ← subagent definitions (Frontend, Fullstack, Design, Research, Analyst)
@@ -76,20 +76,20 @@ This repo uses Conventional Commits. Version bumps in `CLAUDE_LAWS.md` header:
 
 The installer does five things:
 
-- clones the repo to `~/.design-forge`
+- clones the repo to `~/.bk-charterline`
 - injects the import into `~/.claude/CLAUDE.md`
 - registers the Law 32 hook in `~/.claude/settings.json`
 - links `agents/*.md` and `skills/*/` into `~/.claude/agents` and `~/.claude/skills`
-- writes the `dforge-update` function
+- writes the `charterline-update` function
 
-`dforge-update` runs the installer on every update, so every step must stay safe to re-run. If the clone path or markers change, update both `install.sh` and `README.md`.
+`charterline-update` runs the installer on every update, so every step must stay safe to re-run. If the clone path or markers change, update both `install.sh` and `README.md`.
 
-## Running `dforge-update`
+## Running `charterline-update`
 
 End users run this shell function (installed by `install.sh`) to pull the latest rules and re-run the installer:
 
 ```bash
-dforge-update
+charterline-update
 ```
 
-This pulls `~/.design-forge`, then re-runs `install.sh`, so new agents, skills and hook entries get registered. The rules themselves are picked up on the next Claude Code session.
+This pulls `~/.bk-charterline`, then re-runs `install.sh`, so new agents, skills and hook entries get registered. The rules themselves are picked up on the next Claude Code session.

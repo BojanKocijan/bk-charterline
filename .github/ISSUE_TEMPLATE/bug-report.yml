@@ -44,8 +44,8 @@ body:
   - type: input
     id: rules-version
     attributes:
-      label: Design Forge version
-      description: From the session-start confirmation line ("Rules loaded: DESIGN_FORGE v...")
+      label: BK Charterline version
+      description: From the session-start confirmation line ("Rules loaded: BK CHARTERLINE v...")
       placeholder: e.g., 1.0.0
     validations:
       required: false
