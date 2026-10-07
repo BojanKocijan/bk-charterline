@@ -97,6 +97,31 @@ Each runs in its own worktree if another session may share the folder (Law 5).
 - **Scanning only added lines changes today's behavior.** → It only allows removals and context; every added secret is still caught. Named in PR 2's Decision log.
 - **JWT decoding** on malformed padding or JSON. → Treated as a secret, never as an error.
 
+## Amendment 1 (2026-10-07) — after the independent review of PR 2
+
+Approved-by: BojanKocijan, 2026-10-07, chat
+
+The fresh-context review of PR 2 (#185) found gaps. Fixes that restore what this plan promised:
+
+- **A key body added under an already-committed header is caught.** Key headers in context lines count, so "every added secret is still caught" holds.
+- **The staged diff is read with `--no-color --no-ext-diff`** (and `errors="replace"`). `color.ui=always` or `diff.external` hid every `+` line.
+- **The diff reader** takes headers only before a file's first hunk, and splits on `\n` only.
+- **Crafted inputs stay fast.** A bare value allows `=` only as base64 padding, and the JWT pattern starts with a lookbehind instead of `\b`. Crafted 1 MB inputs take about 0.15 s.
+- **A token inside an assignment reports its own kind.**
+
+Changes to this plan's rules, approved by the owner:
+
+1. **Quoted values may hold symbols** (`"S3cure!Pass#2024xyz"`). Bare values keep the narrow character set.
+2. **Dotted lowercase names pass** under a token or secret name: `color.primary.500`, `tls-secret-prod-2024`, `credentials/token_v2.json`. That's lowercase words or digits joined by 2 or more of `.`, `/`, `-`, `_`, no part longer than 15 characters. Never under a password name, since a passphrase looks just like this.
+3. **Placeholders** also cover separators and short leading parts (`xoxb-xxxx-xxxx`, `api03-xxxx`), and a body with no digit and no capital letter (`your-api-key-goes-here`).
+4. **`rk_test_` passes,** as a Stripe test key.
+5. **Removing a committed `.env` isn't blocked:** the `.env` check ignores staged deletions (`--diff-filter=d`).
+
+Follow-ups, outside #119:
+
+- `scripts/ai_tools.py` keeps its own older pattern copy.
+- A single `git add X && git commit` call checks the staging area as it was before the add.
+
 ## Ruled out
 
 - An entropy check (decision 5).
