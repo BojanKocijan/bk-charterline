@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>BK Charterline</title>
+  <meta name="description" content="Binding rules, skills and agents that make Claude Code work like a senior teammate, with analytics running alongside.">
+  <script>
+    // Apply a saved theme before the page draws, so it never flashes; site.js owns the switcher.
+    try { var t = localStorage.getItem("df-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="styles.css">
+  <script src="data.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <div class="page top-inner">
+      <a class="brand" href="#top">BK Charterline</a>
+      <nav aria-label="Sections">
+        <a href="#what">What it does</a>
+        <a href="#numbers">Numbers</a>
+        <a href="#install">Install</a>
+        <a href="https://github.com/BojanKocijan/bk-charterline">GitHub</a>
+      </nav>
+      <fieldset class="theme" hidden>
+        <legend class="visually-hidden">Theme</legend>
+        <label><input type="radio" name="theme" id="theme-system" value="system" checked><span>System</span></label>
+        <label><input type="radio" name="theme" id="theme-light" value="light"><span>Light</span></label>
+        <label><input type="radio" name="theme" id="theme-dark" value="dark"><span>Dark</span></label>
+      </fieldset>
+    </div>
+  </header>
+
+  <div class="page">
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">For Claude Code</p>
+          <h1 id="hero-title">Claude Code that works like a senior teammate</h1>
+          <p class="lede">BK Charterline packages the working knowledge of a UX manager, a full-stack designer and a senior developer as binding rules, skills and agents. Every session follows them, in every project.</p>
+          <div class="install">
+            <code id="install-hero">curl -fsSL https://raw.githubusercontent.com/BojanKocijan/bk-charterline/main/install.sh | bash</code>
+            <button type="button" data-copy="install-hero" aria-describedby="copy-hero">Copy</button>
+          </div>
+          <p class="copy-status" id="copy-hero" role="status"></p>
+        </div>
+        <figure class="terminal">
+          <figcaption>What the hook says when Claude tries to skip a rule</figcaption>
+          <pre><span class="prompt">$</span> gh pr merge 196
+<span class="blocked">Blocked (Law 7):</span> `gh pr merge` is never run by Claude, with or without flags. Merging the default branch is exclusively the human's action in the GitHub UI.
+
+<span class="prompt">$</span> git commit -m "update stuff"
+<span class="blocked">Blocked (Law 13):</span> commit message doesn't follow Conventional Commits (`type(scope): description`). Got: 'update stuff'</pre>
+        </figure>
+      </section>
+
+      <section class="section" id="what" aria-labelledby="what-title">
+        <div class="section-head">
+          <p class="eyebrow">What it does</p>
+          <h2 id="what-title">One set of rules, a team of agents, and the craft behind them</h2>
+        </div>
+        <div class="bento">
+          <article class="tile tile-laws">
+            <div class="tile-head">
+              <span class="count" data-metric="laws">38</span>
+              <h3>Laws every session follows</h3>
+            </div>
+            <ol class="laws">
+              <li><span class="law-no">2</span> <span>Announce the plan, then wait for your yes</span></li>
+              <li><span class="law-no">5</span> <span>A branch and an issue before any code</span></li>
+              <li><span class="law-no">7</span> <span>Never push to <code>main</code>, never merge</span></li>
+              <li><span class="law-no">14</span> <span>No secrets in a commit</span></li>
+              <li><span class="law-no">31</span> <span>Pull requests under 400 lines</span></li>
+              <li><span class="law-no">32</span> <span>A hook blocks the ones that matter most</span></li>
+            </ol>
+            <time data-metric-date="laws" datetime="2026-10-07">Oct 7, 2026</time>
+          </article>
+
+          <article class="tile tile-agents">
+            <div class="tile-head">
+              <span class="count" data-metric="agents">9</span>
+              <h3>Agents that work as one team</h3>
+            </div>
+            <ol class="flow" aria-label="How a feature moves through the team">
+              <li>Lead plans</li>
+              <li>Frontend and Backend build</li>
+              <li>Tester checks</li>
+              <li>A fresh agent reviews</li>
+              <li class="you">You merge</li>
+            </ol>
+            <p class="tile-note">With Design, Research, Analyst and Incident when the work needs them.</p>
+            <time data-metric-date="agents" datetime="2026-10-07">Oct 7, 2026</time>
+          </article>
+
+          <article class="tile tile-skills">
+            <div class="tile-head">
+              <span class="count" data-metric="skills">18</span>
+              <h3>Skills, loaded when a task needs them</h3>
+            </div>
+            <ul class="tags">
+              <li>design-critique</li>
+              <li>ux-writing</li>
+              <li>developer-handoff</li>
+              <li>figma-craft</li>
+              <li>ux-research-deck</li>
+              <li>analyst</li>
+              <li>parallel-sessions</li>
+              <li class="more">and 11 more</li>
+            </ul>
+            <time data-metric-date="skills" datetime="2026-10-07">Oct 7, 2026</time>
+          </article>
+
+          <article class="tile tile-guides">
+            <div class="tile-head">
+              <span class="count" data-metric="guides">12</span>
+              <h3>Knowledge guides, read on demand</h3>
+            </div>
+            <ul class="files">
+              <li>FRONTEND_GUIDE.md</li>
+              <li>ANIMATION_GUIDE.md</li>
+              <li>FULLSTACK_WORKFLOW.md</li>
+              <li>INCIDENT_GUIDE.md</li>
+              <li>HUMAN_IN_THE_LOOP.md</li>
+              <li class="more">and 7 more</li>
+            </ul>
+            <time data-metric-date="guides" datetime="2026-10-07">Oct 7, 2026</time>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="numbers" aria-labelledby="numbers-title">
+        <div class="section-head">
+          <p class="eyebrow">In numbers</p>
+          <h2 id="numbers-title">BK Charterline is built under its own rules</h2>
+          <p class="lede">Every pull request in this repository went through the laws it ships.</p>
+        </div>
+        <dl class="stats">
+          <div class="stat">
+            <dt>Releases shipped</dt>
+            <dd><span data-metric="releases">24</span></dd>
+            <time data-metric-date="releases" datetime="2026-10-07">Oct 7, 2026</time>
+          </div>
+          <div class="stat">
+            <dt>Pull requests merged</dt>
+            <dd><span data-metric="prs_merged">128</span></dd>
+            <time data-metric-date="prs_merged" datetime="2026-10-07">Oct 7, 2026</time>
+          </div>
+          <div class="stat">
+            <dt>Tests</dt>
+            <dd><span data-metric="tests">218</span></dd>
+            <time data-metric-date="tests" datetime="2026-10-07">Oct 7, 2026</time>
+          </div>
+        </dl>
+        <div class="gauges">
+          <div class="gauge" data-gauge="prs_within_400" data-max="100">
+            <p class="gauge-value"><span data-metric="prs_within_400">84%</span></p>
+            <p class="gauge-label">of pull requests stay within the 400-line ceiling of Law 31</p>
+            <div class="track" aria-hidden="true"><div class="fill"></div></div>
+            <time data-metric-date="prs_within_400" datetime="2026-10-07">Oct 7, 2026</time>
+          </div>
+          <div class="gauge" data-gauge="median_pr_lines" data-max="400">
+            <p class="gauge-value"><span data-metric="median_pr_lines">163</span> <span class="unit">lines</span></p>
+            <p class="gauge-label">changed in the median pull request, against the 400-line ceiling</p>
+            <div class="track" aria-hidden="true"><div class="fill"></div></div>
+            <time data-metric-date="median_pr_lines" datetime="2026-10-07">Oct 7, 2026</time>
+          </div>
+          <div class="gauge" data-gauge="rules_tokens" data-max="33000">
+            <p class="gauge-value"><span data-metric="rules_tokens">30,418</span> <span class="unit">tokens</span></p>
+            <p class="gauge-label">the rules add to each session, against the 33,000-token budget CI checks</p>
+            <div class="track" aria-hidden="true"><div class="fill"></div></div>
+            <time data-metric-date="rules_tokens" datetime="2026-10-07">Oct 7, 2026</time>
+          </div>
+        </div>
+        <p class="footnote">Counted from the repository and GitHub by <code>scripts/site_metrics.py</code>. Each date is when that number last changed.</p>
+      </section>
+
+      <section class="section" id="install" aria-labelledby="install-title">
+        <div class="section-head">
+          <p class="eyebrow">Install</p>
+          <h2 id="install-title">One command, then every session follows the rules</h2>
+          <p class="lede">The script clones BK Charterline to <code>~/.bk-charterline</code>, adds it to Claude's global memory, registers the hook and links the agents and skills. Open any Claude Code session and it starts with <code>Rules loaded</code>.</p>
+        </div>
+        <div class="install">
+          <code id="install-bottom">curl -fsSL https://raw.githubusercontent.com/BojanKocijan/bk-charterline/main/install.sh | bash</code>
+          <button type="button" data-copy="install-bottom" aria-describedby="copy-bottom">Copy</button>
+        </div>
+        <p class="copy-status" id="copy-bottom" role="status"></p>
+      </section>
+    </main>
+
+    <footer class="bottom">
+      <p>BK Charterline is open source under GPL-3.0.</p>
+      <p><a href="https://github.com/BojanKocijan/bk-charterline#readme">README</a> · <a href="https://github.com/BojanKocijan/bk-charterline/blob/main/RELEASES.md">Releases</a> · <a href="https://github.com/BojanKocijan/bk-charterline">GitHub</a></p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -2,6 +2,13 @@
 
 ---
 
+## Unreleased
+
+### The BK Charterline page ([#177](https://github.com/BojanKocijan/bk-charterline/issues/177))
+- **New `site/`:** the BK Charterline page in plain HTML and CSS. It opens straight from the file, makes no requests to other sites, and follows the system's light or dark setting.
+
+---
+
 ## v3.1.0 — October 7, 2026
 
 ### Every reply with open PRs ends with the merge order ([#206](https://github.com/BojanKocijan/bk-charterline/issues/206))

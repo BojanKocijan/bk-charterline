@@ -1,0 +1,177 @@
+/* BK Charterline page (#177). A sticky header over one centered column: the
+   promise beside a real hook block, the tiles, the numbers, the install. */
+:root {
+  --bg: #fbfaff;
+  --surface: #ffffff;
+  --sunken: #f4f1fb;
+  --ink: #1d1a2e;
+  --muted: #5b566f;
+  --line: #e4e0ef;
+  --accent: #6d28d9;
+  --accent-ink: #ffffff;
+  --accent-soft: #efe8fd;
+  --term-bg: #1d1a2e;
+  --term-ink: #ece9f6;
+  --term-muted: #a7a1bd;
+  --term-alert: #ff9b8f;
+
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --step-0: 1rem;
+  --step-1: 1.2rem;
+  --step-2: 1.75rem;
+  --step-3: clamp(2.1rem, 1.4rem + 3vw, 3.25rem);
+  --step-4: clamp(2.6rem, 1.8rem + 3.5vw, 4rem);
+  --small: 0.875rem;
+  --tiny: 0.75rem;
+  --radius: 10px;
+  --radius-lg: 18px;
+  --gap: clamp(1rem, 0.6rem + 1.6vw, 1.75rem);
+  --section: clamp(3rem, 2rem + 4vw, 5.5rem);
+
+  /* Motion tokens (Animation Guide): site.js reads these too. */
+  --motion-enter: 420ms;
+  --motion-fill: 900ms;
+  --motion-stagger: 60ms;
+  --motion-count: 700ms;
+  --motion-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121019;
+    --surface: #1a1724;
+    --sunken: #16131f;
+    --ink: #ece9f6;
+    --muted: #a7a1bd;
+    --line: #2d2940;
+    --accent: #b39dfb;
+    --accent-ink: #160f2b;
+    --accent-soft: #2a2242;
+    --term-bg: #0b0a10;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #121019;
+  --surface: #1a1724;
+  --sunken: #16131f;
+  --ink: #ece9f6;
+  --muted: #a7a1bd;
+  --line: #2d2940;
+  --accent: #b39dfb;
+  --accent-ink: #160f2b;
+  --accent-soft: #2a2242;
+  --term-bg: #0b0a10;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important; /* a component's own display must never show a hidden element */
+}
+
+html {
+  scroll-padding-top: 5rem; /* section links stop below the sticky header */
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: var(--step-0) / 1.6 var(--font-body);
+  -webkit-text-size-adjust: 100%;
+}
+
+.page {
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: max(16px, 4vw);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--step-3);
+  font-weight: 700;
+}
+
+h2 {
+  font-size: var(--step-2);
+  font-weight: 650;
+}
+
+h3 {
+  font-size: var(--step-1);
+  font-weight: 600;
+}
+
+p {
+  margin: 0;
+  max-width: 65ch;
+}
+
+a {
+  color: var(--accent);
+  text-underline-offset: 0.2em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--small);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.lede {
+  color: var(--muted);
+  font-size: var(--step-1);
+  line-height: 1.5;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+time[data-metric-date] {
+  color: var(--muted);
+  font: var(--tiny) / 1.4 var(--font-mono);
+}
