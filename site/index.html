@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="numbers.css">
   <script src="data.js" defer></script>
   <script src="site.js" defer></script>
+  <script src="charts.js" defer></script>
 </head>
 <body>
   <header class="top">
@@ -21,6 +22,7 @@
       <a class="brand" href="#top">BK Charterline</a>
       <nav aria-label="Sections">
         <a href="#what">What it does</a>
+        <a href="#analytics">Analytics</a>
         <a href="#numbers">Numbers</a>
         <a href="#install">Install</a>
         <a href="https://github.com/BojanKocijan/bk-charterline">GitHub</a>
@@ -128,6 +130,199 @@
             </ul>
             <time data-metric-date="guides" datetime="2026-10-07">Oct 7, 2026</time>
           </article>
+        </div>
+      </section>
+
+      <section class="section" id="analytics" aria-labelledby="analytics-title">
+        <div class="section-head">
+          <p class="eyebrow">Analytics</p>
+          <h2 id="analytics-title">See what your rules, your product and your team are doing</h2>
+          <p class="lede">BK Charterline brings three kinds of analytics alongside the skills. Here they are for a fictional team, Acme Corp.</p>
+        </div>
+        <div class="dash">
+          <div class="dash-bar">
+            <div class="tabs" role="tablist" aria-label="Kinds of analytics" hidden>
+              <button type="button" role="tab" id="tab-governance" aria-controls="panel-governance" aria-selected="true">Governance</button>
+              <button type="button" role="tab" id="tab-product" aria-controls="panel-product" aria-selected="false" tabindex="-1">Product analytics</button>
+              <button type="button" role="tab" id="tab-usage" aria-controls="panel-usage" aria-selected="false" tabindex="-1">Usage</button>
+            </div>
+            <span class="badge">Example data · Acme Corp · last 30 days</span>
+          </div>
+
+          <div class="panel" role="tabpanel" id="panel-governance" aria-labelledby="tab-governance" tabindex="0">
+            <div class="panel-head">
+              <h3>Governance</h3>
+              <p class="source">In your project: <code>hook log</code> and <code>ai inventory</code> <span class="chip now">Available now</span></p>
+            </div>
+            <dl class="kpis">
+              <div><dt>Hook blocks</dt><dd>47</dd></div>
+              <div><dt>Blocks marked wrong</dt><dd>2 <span>(4%)</span></dd></div>
+              <div><dt>AI tools classified</dt><dd>18 <span>of 21</span></dd></div>
+            </dl>
+            <div class="cards">
+          <figure class="card" data-chart="bars">
+            <figcaption>Hook blocks per law</figcaption>
+            <details open>
+              <summary>Show data</summary>
+              <table>
+                <thead><tr><th scope="col">Law</th><th scope="col">Blocks</th></tr></thead>
+                <tbody>
+                <tr><th scope="row">13 · Commit message</th><td>19</td></tr>
+                <tr><th scope="row">5 · Commit on main</th><td>11</td></tr>
+                <tr><th scope="row">34 · Screenshots line</th><td>7</td></tr>
+                <tr><th scope="row">14 · Secret</th><td>5</td></tr>
+                <tr><th scope="row">7 · Merge</th><td>3</td></tr>
+                <tr><th scope="row">32 · Skipped hooks</th><td>2</td></tr>
+                </tbody>
+              </table>
+            </details>
+          </figure>
+          <figure class="card" data-chart="bars">
+            <figcaption>AI tools per Law 38 tier</figcaption>
+            <details open>
+              <summary>Show data</summary>
+              <table>
+                <thead><tr><th scope="col">Tier</th><th scope="col">Tools</th></tr></thead>
+                <tbody>
+                <tr><th scope="row">1 · Local</th><td>4</td></tr>
+                <tr><th scope="row">2 · Reads</th><td>8</td></tr>
+                <tr><th scope="row">3 · Writes</th><td>3</td></tr>
+                <tr><th scope="row">4 · Production</th><td>3</td></tr>
+                <tr><th scope="row">Unclassified</th><td>3</td></tr>
+                </tbody>
+              </table>
+            </details>
+          </figure>
+          <figure class="card card-wide" data-chart="columns" data-over="Over 400">
+            <figcaption>Pull request size, in lines changed <a class="chip planned" href="https://github.com/BojanKocijan/bk-charterline/issues/120">Planned · #120</a></figcaption>
+            <details open>
+              <summary>Show data</summary>
+              <table>
+                <thead><tr><th scope="col">Lines changed</th><th scope="col">Pull requests</th></tr></thead>
+                <tbody>
+                <tr><th scope="row">0–100</th><td>21</td></tr>
+                <tr><th scope="row">101–200</th><td>14</td></tr>
+                <tr><th scope="row">201–300</th><td>8</td></tr>
+                <tr><th scope="row">301–400</th><td>5</td></tr>
+                <tr><th scope="row">Over 400</th><td>2</td></tr>
+                </tbody>
+              </table>
+            </details>
+          </figure>
+            </div>
+          </div>
+
+          <div class="panel" role="tabpanel" id="panel-product" aria-labelledby="tab-product" tabindex="0">
+            <div class="panel-head">
+              <h3>Product analytics</h3>
+              <p class="source">In your project: <code>analyst mode</code> with Amplitude, PostHog, GA4 or Pendo <span class="chip now">Available now</span></p>
+            </div>
+            <div class="cards">
+          <figure class="card" data-chart="funnel">
+            <figcaption>Checkout funnel</figcaption>
+            <details open>
+              <summary>Show data</summary>
+              <table>
+                <thead><tr><th scope="col">Step</th><th scope="col">People</th></tr></thead>
+                <tbody>
+                <tr><th scope="row">Viewed cart</th><td>12,400</td></tr>
+                <tr><th scope="row">Started checkout</th><td>7,936</td></tr>
+                <tr><th scope="row">Entered payment</th><td>5,317</td></tr>
+                <tr><th scope="row">Placed order</th><td>4,253</td></tr>
+                </tbody>
+              </table>
+            </details>
+          </figure>
+          <figure class="card" data-chart="line" data-unit="%">
+            <figcaption>Weekly retention, in percent</figcaption>
+            <details open>
+              <summary>Show data</summary>
+              <table>
+                <thead><tr><th scope="col">Week</th><th scope="col">Still active (%)</th></tr></thead>
+                <tbody>
+                <tr><th scope="row">Week 0</th><td>100</td></tr>
+                <tr><th scope="row">Week 1</th><td>46</td></tr>
+                <tr><th scope="row">Week 2</th><td>38</td></tr>
+                <tr><th scope="row">Week 3</th><td>34</td></tr>
+                <tr><th scope="row">Week 4</th><td>31</td></tr>
+                <tr><th scope="row">Week 5</th><td>30</td></tr>
+                <tr><th scope="row">Week 6</th><td>29</td></tr>
+                <tr><th scope="row">Week 7</th><td>28</td></tr>
+                </tbody>
+              </table>
+            </details>
+          </figure>
+              <div class="card card-wide">
+                <h4>Insight brief: research and data, side by side</h4>
+                <ul class="brief">
+                  <li><span class="verdict verified">Verified</span><div><strong>Shipping costs surprise people at payment</strong><p>9 of 12 interviews named it; 20% of people leave at the payment step.</p></div></li>
+                  <li><span class="verdict partial">Partial</span><div><strong>Guest checkout would lift conversion</strong><p>5 of 12 interviews asked for it; no experiment has tested it yet.</p></div></li>
+                  <li><span class="verdict contradicted">Contradicted</span><div><strong>Mobile visitors abandon more</strong><p>Interviews said so, but mobile completes 35% of checkouts against 33% on desktop.</p></div></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" role="tabpanel" id="panel-usage" aria-labelledby="tab-usage" tabindex="0">
+            <div class="panel-head">
+              <h3>Usage</h3>
+              <p class="source">In your project: <code>scripts/laws_cost.py</code> for the rules' cost <span class="chip now">Available now</span></p>
+            </div>
+            <div class="cards">
+          <figure class="card" data-chart="bars">
+            <figcaption>Sessions per persona <a class="chip planned" href="https://github.com/BojanKocijan/bk-charterline/issues/198">Planned · #198</a></figcaption>
+            <details open>
+              <summary>Show data</summary>
+              <table>
+                <thead><tr><th scope="col">Persona</th><th scope="col">Sessions</th></tr></thead>
+                <tbody>
+                <tr><th scope="row">Frontend</th><td>34</td></tr>
+                <tr><th scope="row">Lead</th><td>12</td></tr>
+                <tr><th scope="row">Tester</th><td>9</td></tr>
+                <tr><th scope="row">Backend</th><td>8</td></tr>
+                <tr><th scope="row">Design</th><td>7</td></tr>
+                <tr><th scope="row">Research</th><td>4</td></tr>
+                <tr><th scope="row">Analyst</th><td>3</td></tr>
+                <tr><th scope="row">Incident</th><td>1</td></tr>
+                </tbody>
+              </table>
+            </details>
+          </figure>
+          <figure class="card" data-chart="bars">
+            <figcaption>Skill runs <a class="chip planned" href="https://github.com/BojanKocijan/bk-charterline/issues/198">Planned · #198</a></figcaption>
+            <details open>
+              <summary>Show data</summary>
+              <table>
+                <thead><tr><th scope="col">Skill</th><th scope="col">Runs</th></tr></thead>
+                <tbody>
+                <tr><th scope="row">design-critique</th><td>14</td></tr>
+                <tr><th scope="row">ux-writing</th><td>11</td></tr>
+                <tr><th scope="row">developer-handoff</th><td>6</td></tr>
+                <tr><th scope="row">figma-craft</th><td>5</td></tr>
+                <tr><th scope="row">ux-research-deck</th><td>3</td></tr>
+                </tbody>
+              </table>
+            </details>
+          </figure>
+          <figure class="card card-wide" data-chart="line">
+            <figcaption>Tokens the rules add to each session, per release</figcaption>
+            <details open>
+              <summary>Show data</summary>
+              <table>
+                <thead><tr><th scope="col">Release</th><th scope="col">Tokens</th></tr></thead>
+                <tbody>
+                <tr><th scope="row">v1.0</th><td>18,200</td></tr>
+                <tr><th scope="row">v1.1</th><td>19,400</td></tr>
+                <tr><th scope="row">v1.2</th><td>21,900</td></tr>
+                <tr><th scope="row">v1.3</th><td>23,100</td></tr>
+                <tr><th scope="row">v1.4</th><td>24,800</td></tr>
+                <tr><th scope="row">v1.5</th><td>25,300</td></tr>
+                </tbody>
+              </table>
+            </details>
+          </figure>
+            </div>
+          </div>
         </div>
       </section>
 
