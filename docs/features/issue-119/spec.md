@@ -2,7 +2,7 @@
 
 Intent: [#119](https://github.com/BojanKocijan/design-forge/issues/119) (the issue and its two scope comments are the intent) · Roadmap: #123 · Builds on: #115 (Law 38), #138 (MCP hook), #122 (leak runbook)
 Design: none (no UI; law text and hook behavior)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-07, chat
 
 ## Decisions already taken (owner, 2026-10-06)
 
@@ -89,6 +89,8 @@ Law 14's list matches the shared list, and "high-entropy strings" goes. There's 
 - **Conflicts flagged for the owner:** none beyond the decisions below.
 
 ## Decisions for the owner at spec approval
+
+Approved 2026-10-07 with all five recommendations ("approve spec for 119", chat).
 
 1. **New Law 39** rather than more text in Law 38 (already long) or Law 15 (about mock data). *Recommended: Law 39.*
 2. **JWTs:** block all except a Supabase anon key. *Recommended.* Blocking every JWT would block normal Supabase frontend commits.
