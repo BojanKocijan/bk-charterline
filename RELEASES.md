@@ -2,6 +2,19 @@
 
 ---
 
+## v2.36.2 — October 7, 2026
+
+### One secret pattern list for the hook, the registry and the inventory ([#186](https://github.com/BojanKocijan/design-forge/issues/186))
+- **Fixed: `ai inventory` and the Law 38 registry missed most secrets.** `scripts/ai_tools.py` kept its own copy of the patterns from before #119, which never matched GitLab `glpat-` or Slack `xoxb-` / `xoxp-` tokens. It now uses the hook's list, so the inventory masks and the registry refuses every kind the hook knows.
+- **New `.claude/hooks/secret_patterns.py`** holds the patterns and `find_secret`; the hook, `ai_tools.py` and `ai_inventory.py` all use it. `dforge-update` already shows that folder's diff before installing.
+- **The same pass rules everywhere:** placeholders such as `ghp_xxxx…`, references such as `${{ secrets.X }}`, and Stripe test and public keys are no longer masked or refused.
+- **Legacy OpenAI keys** (`sk-` + 48 characters) are caught again, now by the commit check too. The old copy's `sk-` catch-all was the only thing that found them.
+- If the shared module can't load, only the secret check stops; never merge, never push to `main` and the other checks still run.
+- **Rules: 30,171 tokens** (estimate).
+- The Laws, `plugin.json` and `marketplace.json` are at 2.36.2.
+
+---
+
 ## v2.36.1 — October 7, 2026
 
 ### The Law 14 check reads what the commit will contain ([#187](https://github.com/BojanKocijan/design-forge/issues/187))
