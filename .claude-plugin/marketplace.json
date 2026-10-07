@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Library-agnostic governance, scaffolding, and skills for UX and frontend work in Claude Code.",
-    "version": "3.1.0"
+    "version": "3.2.0"
   },
   "plugins": [
     {
       "name": "bk-charterline",
       "source": "./",
       "description": "Binding laws, React scaffolding (shadcn/ui, MUI, Ant Design, Chakra UI, or local), React Router architecture, Figma craft, design critique, UX research, developer handoff, and fullstack workflow.",
-      "version": "3.1.0",
+      "version": "3.2.0",
       "license": "GPL-3.0-only",
       "keywords": ["react", "typescript", "figma", "ux", "design-system", "scaffolding", "accessibility", "frontend", "fullstack"]
     }

@@ -1,0 +1,12 @@
+{
+  "name": "bk-charterline-site-checks",
+  "private": true,
+  "description": "Checks for the BK Charterline page (#177). Dev-only: the page itself has no dependencies.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0"
+  }
+}

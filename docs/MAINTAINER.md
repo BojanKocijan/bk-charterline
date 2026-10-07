@@ -93,3 +93,11 @@ charterline-update
 ```
 
 This pulls `~/.bk-charterline`, then re-runs `install.sh`, so new agents, skills and hook entries get registered. The rules themselves are picked up on the next Claude Code session.
+
+## The page (`site/`)
+
+The BK Charterline page is plain HTML, CSS and JavaScript in `site/`, published to <https://bojankocijan.github.io/bk-charterline/> by `.github/workflows/site.yml` when a change to `site/` reaches `main`.
+
+- **See it locally:** open `site/index.html` in a browser. No server is needed.
+- **Refresh the real numbers:** `python3 scripts/site_metrics.py`, then open a `chore(site)` PR with the changed `site/data.js`, `site/metrics-state.json` and `site/index.html`. It only asks GitHub for PRs merged since the last run, and a run with nothing new changes no file.
+- **Run the checks:** `cd site && npm ci && npx playwright install chromium && npx playwright test` (WCAG 2.2 AA with axe at 390 and 1280 px in light and dark, the tabs by keyboard, the numbers against `data.js`, the page without JavaScript).
