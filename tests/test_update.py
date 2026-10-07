@@ -1,8 +1,8 @@
-"""Tests for the `dforge-update` shell function in install.sh (#116).
+"""Tests for the `charterline-update` shell function in install.sh (#116, #199).
 
 Each test builds a throwaway "origin" repo with commits and release tags,
-clones it to <temp HOME>/.design-forge, and runs the function, extracted
-from install.sh between its `design-forge:fn` markers, under bash and
+clones it to <temp HOME>/.bk-charterline, and runs the function, extracted
+from install.sh between its `bk-charterline:fn` markers, under bash and
 (when installed) zsh. The fixture's install.sh is a stub that leaves a
 marker file, so a run that applies an update is visible. The hook gate
 is driven through a real pseudo-terminal, never a test-only flag.
@@ -11,6 +11,7 @@ Run: python3 -m unittest discover -s tests -v
 """
 from __future__ import annotations
 
+import json
 import os
 import pty
 import select
@@ -28,22 +29,22 @@ SHELLS = [s for s in ("bash", "zsh") if shutil.which(s)]
 def function_source() -> str:
     with open(INSTALL) as f:
         text = f.read()
-    start = text.index("# design-forge:fn:begin\n")
-    end = text.index("# design-forge:fn:end\n")
+    start = text.index("# bk-charterline:fn:begin\n")
+    end = text.index("# bk-charterline:fn:end\n")
     return text[start:end]
 
 
 class Fixture:
-    """An origin repo, its bare copy and a clone at HOME/.design-forge."""
+    """An origin repo, its bare copy and a clone at HOME/.bk-charterline."""
 
     def __init__(self, tmp: str) -> None:
         self.tmp = tmp
         self.home = os.path.join(tmp, "home")
         self.work = os.path.join(tmp, "work")
         self.origin = os.path.join(tmp, "origin.git")
-        self.clone = os.path.join(self.home, ".design-forge")
+        self.clone = os.path.join(self.home, ".bk-charterline")
         os.makedirs(self.home)
-        self.fn = os.path.join(tmp, "dforge-update.sh")
+        self.fn = os.path.join(tmp, "charterline-update.sh")
         with open(self.fn, "w") as f:
             f.write(function_source())
         self.env = {
@@ -105,7 +106,7 @@ class Fixture:
         return found
 
     def command(self, shell: str, *args: str) -> list[str]:
-        return [shell, "-c", f'. "{self.fn}"; dforge-update "$@"', "dforge-update", *args]
+        return [shell, "-c", f'. "{self.fn}"; charterline-update "$@"', "charterline-update", *args]
 
     def run(self, shell: str, *args: str) -> subprocess.CompletedProcess:
         return subprocess.run(self.command(shell, *args), env=self.env, cwd=self.home,
@@ -149,7 +150,7 @@ class Fixture:
 
 
 @unittest.skipUnless(SHELLS, "needs bash or zsh")
-class DforgeUpdateTests(unittest.TestCase):
+class UpdateFunctionTests(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
@@ -171,7 +172,7 @@ class DforgeUpdateTests(unittest.TestCase):
             result = fx.run(shell)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual((fx.head(), fx.branch()), (newest, ""))
-            self.assertIn("ready (DESIGN_FORGE v2.1.0, tag v2.1.0)", result.stdout)
+            self.assertIn("ready (BK CHARTERLINE v2.1.0, tag v2.1.0)", result.stdout)
             self.assertTrue(fx.installed())
 
     def test_from_an_older_tag_moves_to_the_newest(self) -> None:
@@ -244,7 +245,7 @@ class DforgeUpdateTests(unittest.TestCase):
             result = fx.run(shell)
             self.assertEqual(result.returncode, 1)
             self.assertIn("+# hook v2", result.stdout)
-            self.assertIn("Nothing was applied. Run dforge-update in your own terminal", result.stderr)
+            self.assertIn("Nothing was applied. Run charterline-update in your own terminal", result.stderr)
             self.assertEqual(fx.head(), before)
             self.assertFalse(fx.installed())
 
@@ -266,7 +267,7 @@ class DforgeUpdateTests(unittest.TestCase):
     def register_hook(self, fx: Fixture) -> None:
         os.makedirs(os.path.join(fx.home, ".claude"), exist_ok=True)
         with open(os.path.join(fx.home, ".claude", "settings.json"), "w") as f:
-            f.write('{"hooks": {"PreToolUse": [{"hooks": [{"command": "python3 ~/.design-forge/.claude/hooks/enforce-laws.py"}]}]}}')
+            f.write('{"hooks": {"PreToolUse": [{"hooks": [{"command": "python3 ~/.bk-charterline/.claude/hooks/enforce-laws.py"}]}]}}')
 
     def test_without_a_terminal_names_the_commit_to_approve(self) -> None:
         for shell, fx in self.each_shell():
@@ -275,7 +276,7 @@ class DforgeUpdateTests(unittest.TestCase):
             newest = fx.release("2.1.0", hook="# hook v2\n")
             result = fx.run(shell)
             self.assertEqual(result.returncode, 1)
-            self.assertIn(f"dforge-update --approve {newest}", result.stderr)
+            self.assertIn(f"charterline-update --approve {newest}", result.stderr)
 
     def test_approve_applies_exactly_that_commit(self) -> None:
         for shell, fx in self.each_shell():
@@ -323,7 +324,7 @@ class DforgeUpdateTests(unittest.TestCase):
             fx.make_clone(at="v2.0.0")
             result = fx.run(shell, "--approve")
             self.assertEqual(result.returncode, 2)
-            self.assertIn("usage: dforge-update", result.stderr)
+            self.assertIn("usage: charterline-update", result.stderr)
 
     def test_the_terminal_prompt_shows_the_diff_without_a_pager(self) -> None:
         for shell, fx in self.each_shell():
@@ -423,7 +424,7 @@ class DforgeUpdateTests(unittest.TestCase):
             setup = "set -e -o pipefail; alias grep='grep --color=always'; alias git='false'"
             if shell == "zsh":
                 setup = "setopt errexit pipefail aliases; alias grep='grep --color=always'; alias git='false'"
-            cmd = [shell, "-c", f'{setup}; . "{fx.fn}"; dforge-update; echo "shell survived"']
+            cmd = [shell, "-c", f'{setup}; . "{fx.fn}"; charterline-update; echo "shell survived"']
             result = subprocess.run(cmd, env=fx.env, cwd=fx.home, capture_output=True, text=True,
                                     stdin=subprocess.DEVNULL, timeout=60)
             self.assertIn("shell survived", result.stdout, result.stderr)
@@ -473,7 +474,7 @@ class DforgeUpdateTests(unittest.TestCase):
         for shell, fx in self.each_shell():
             result = fx.run(shell, "--help")
             self.assertEqual(result.returncode, 0)
-            self.assertIn("usage: dforge-update [--main]", result.stdout)
+            self.assertIn("usage: charterline-update [--main]", result.stdout)
             for args in (("--bogus",), ("--main", "--bogus")):
                 result = fx.run(shell, *args)
                 self.assertEqual(result.returncode, 2, args)
@@ -493,7 +494,7 @@ class InstallScriptTests(unittest.TestCase):
             env = dict(fx.env, SHELL="/bin/bash")
             result = subprocess.run(["bash", INSTALL], env=env, capture_output=True, text=True, timeout=120)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn("On release v2.0.0; run dforge-update to update.", result.stdout)
+            self.assertIn("On release v2.0.0; type 'update rules' in Claude Code to update.", result.stdout)
             with open(os.path.join(fx.home, ".bashrc")) as f:
                 rc = f.read()
             self.assertIn(function_source().strip(), rc)
@@ -533,6 +534,120 @@ class InstallScriptTests(unittest.TestCase):
                 before = fx.head()
                 self.assertNotIn("On release", self.install(fx).stdout)
                 self.assertEqual((fx.head(), fx.branch()), (before, "main"))
+
+
+OLD_FN = """# design-forge:fn:begin
+dforge-update() {
+  echo old
+}
+# design-forge:fn:end"""
+DATA = {"projects.yaml": "projects: []\n", "hook-log.jsonl": '{"law": 7}\n', "ai-tools.json": '{"version": 1}\n',
+        "ai-approvals.jsonl": '{"tool": "x"}\n', "ai-inventory.md": "# inventory\n",
+        os.path.join("knowledge", "PATTERNS.md"): "# patterns\n"}
+
+
+class MoveTests(unittest.TestCase):
+    """The v3.0.0 install.sh moves an install from before the rename (#199)."""
+
+    def old_install(self, tmp: str) -> Fixture:
+        fx = Fixture(os.path.realpath(tmp))
+        fx.write("agents/lead.md", "lead\n")
+        fx.write("skills/critique/SKILL.md", "critique\n")
+        fx.release("2.0.0")
+        fx.clone = os.path.join(fx.home, ".design-forge")
+        fx.make_clone(at="v2.0.0")
+        for rel, text in DATA.items():
+            os.makedirs(os.path.dirname(os.path.join(fx.clone, rel)), exist_ok=True)
+            with open(os.path.join(fx.clone, rel), "w") as f:
+                f.write(text)
+        claude = os.path.join(fx.home, ".claude")
+        os.makedirs(os.path.join(claude, "agents"))
+        os.symlink(os.path.join(fx.clone, "agents", "lead.md"), os.path.join(claude, "agents", "lead.md"))
+        with open(os.path.join(claude, "agents", "mine.md"), "w") as f:
+            f.write("my own agent\n")
+        with open(os.path.join(claude, "CLAUDE.md"), "w") as f:
+            f.write(f"# mine\n<!-- design-forge:begin -->\n@{fx.clone}/CLAUDE.md\n<!-- design-forge:end -->\n# also mine\n")
+        self.other = {"matcher": "Bash", "hooks": [{"type": "command", "command": "other-tool check"}]}
+        old_hook = {"matcher": "Bash", "hooks": [{"type": "command",
+                    "command": f'python3 "{fx.clone}/.claude/hooks/enforce-laws.py"'}]}
+        with open(os.path.join(claude, "settings.json"), "w") as f:
+            json.dump({"permissions": {"allow": ["Bash(ls)"]}, "hooks": {"PreToolUse": [self.other, old_hook]}}, f)
+        with open(os.path.join(fx.home, ".bashrc"), "w") as f:
+            f.write(f"export MINE=1\n{OLD_FN}\nalias ll='ls -l'\n")
+        return fx
+
+    def install(self, fx: Fixture) -> subprocess.CompletedProcess:
+        env = dict(fx.env, SHELL="/bin/bash", DFORGE_UPDATE="1")  # as the old update function runs it
+        return subprocess.run(["bash", INSTALL], env=env, capture_output=True, text=True, timeout=120)
+
+    def snapshot(self, home: str) -> dict:
+        files = {}
+        for root, dirs, names in os.walk(home):
+            dirs[:] = [d for d in dirs if d != ".git"]
+            for name in names + [d for d in dirs if os.path.islink(os.path.join(root, d))]:
+                path = os.path.join(root, name)
+                files[os.path.relpath(path, home)] = os.readlink(path) if os.path.islink(path) else open(path, "rb").read()
+        return files
+
+    def test_an_old_install_moves_with_everything_in_it(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fx = self.old_install(tmp)
+            result = self.install(fx)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            new, old = os.path.join(fx.home, ".bk-charterline"), os.path.join(fx.home, ".design-forge")
+            self.assertTrue(os.path.isdir(new) and not os.path.islink(new))
+            self.assertEqual(os.readlink(old), new)
+            for rel, text in DATA.items():
+                with open(os.path.join(new, rel)) as f:
+                    self.assertEqual(f.read(), text, rel)
+            self.assertEqual(fx.git("remote", "get-url", "origin", cwd=new), "https://github.com/BojanKocijan/bk-charterline.git")
+            with open(os.path.join(fx.home, ".claude", "CLAUDE.md")) as f:
+                memory = f.read()
+            self.assertTrue(memory.startswith("# mine\n<!-- bk-charterline:begin -->") and memory.endswith("# also mine\n"))
+            self.assertIn(f"@{new}/CLAUDE.md", memory)
+            self.assertNotIn("design-forge", memory)
+            with open(os.path.join(fx.home, ".claude", "settings.json")) as f:
+                settings = json.load(f)
+            self.assertEqual(settings["permissions"], {"allow": ["Bash(ls)"]})
+            self.assertEqual(settings["hooks"]["PreToolUse"][0], self.other)
+            commands = [h["command"] for e in settings["hooks"]["PreToolUse"] for h in e["hooks"]]
+            self.assertIn(f'python3 "{new}/.claude/hooks/enforce-laws.py"', commands)
+            self.assertFalse(any(".design-forge" in c for c in commands))
+            self.assertTrue(os.path.exists(os.path.join(fx.home, ".claude", "settings.json.bk-charterline.bak")))
+            with open(os.path.join(fx.home, ".bashrc")) as f:
+                rc = f.read()
+            self.assertTrue(rc.startswith("export MINE=1\n# bk-charterline:fn:begin") and rc.endswith("alias ll='ls -l'\n"))
+            self.assertIn("charterline-update() {", rc)
+            self.assertNotIn("echo old", rc)
+            agents = os.path.join(fx.home, ".claude", "agents")
+            self.assertEqual(os.readlink(os.path.join(agents, "lead.md")), os.path.join(new, "agents", "lead.md"))
+            with open(os.path.join(agents, "mine.md")) as f:
+                self.assertEqual(f.read(), "my own agent\n")
+            self.assertIn("Design Forge is now BK Charterline", result.stdout)
+
+    def test_a_second_run_changes_nothing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fx = self.old_install(tmp)
+            self.assertEqual(self.install(fx).returncode, 0)
+            before = self.snapshot(fx.home)
+            result = self.install(fx)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(self.snapshot(fx.home), before)
+
+    def test_nothing_moves_when_both_folders_exist_or_the_clone_has_edits(self) -> None:
+        for case in ("both", "edits"):
+            with self.subTest(case), tempfile.TemporaryDirectory() as tmp:
+                fx = self.old_install(tmp)
+                if case == "both":
+                    os.makedirs(os.path.join(fx.home, ".bk-charterline"))
+                else:
+                    with open(os.path.join(fx.clone, "CLAUDE_LAWS.md"), "a") as f:
+                        f.write("my edit\n")
+                before = self.snapshot(fx.home)
+                result = self.install(fx)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("nothing moved", result.stderr)
+                self.assertEqual(self.snapshot(fx.home), before)
 
 
 if __name__ == "__main__":
