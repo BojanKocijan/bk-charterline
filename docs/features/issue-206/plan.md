@@ -2,7 +2,7 @@
 
 Spec: [#206](https://github.com/BojanKocijan/bk-charterline/issues/206) (the issue) · Gate tier: Standard · Branch: `feat/law-merge-order` · Issue: #206
 Work pile: delegable (a law text change; checked by lint and the token budget)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-07, chat
 
 ## The change
 
