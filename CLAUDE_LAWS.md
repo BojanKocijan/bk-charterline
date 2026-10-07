@@ -1,7 +1,7 @@
 # Master Claude Laws — Design Forge
 
-**Version:** 2.34.0
-**Last Updated:** 2026-10-06
+**Version:** 2.35.0
+**Last Updated:** 2026-10-07
 **Rules Repo:** https://github.com/bojankocijan/design-forge
 **Inspired by:** Asimov's Three Laws of Robotics
 
@@ -146,7 +146,7 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
 
 14. **Scan the staged diff for secrets before every commit.** Before running `git commit`, Claude must inspect the staged diff for credential patterns. If any are found, Claude must stop immediately, display the finding, and refuse to commit until the user removes the secret.
 
-    Patterns that trigger a block: private keys, API key/token assignments with strings ≥16 chars, AWS credentials, `.env` files (not `.env.example`), high-entropy strings, personal access tokens (`ghp_`, `gho_`, `github_pat_`, `glpat-`, `xoxb-`, `xoxp-`).
+    Patterns that trigger a block, in the lines a commit adds: private keys of any type (with a key body), AWS access key IDs (`AKIA`, `ASIA`), GitHub (`ghp_`, `gho_`, `ghu_`, `ghs_`, `ghr_`, `github_pat_`), GitLab (`glpat-`), Slack (`xoxb-`, `xoxp-` and the other `xox…-` types, `xapp-`), Stripe live, Anthropic, OpenAI, Google, Supabase (`sbp_`, `sb_secret_`), Netlify, npm and Figma tokens, JWTs (except a Supabase anon key), credential assignments (a name containing `api_key`, `secret`, `token`, `password`, `private_key` or `access_key`, with a value of 16+ characters, symbols allowed when quoted, that mixes letters and digits or is 32+ characters long), and `.env` files (not `.env.example`). A key body added under an already-committed key header counts too. Placeholders, references such as `${{ secrets.X }}` or `process.env.X`, Stripe test keys (`sk_test_`, `rk_test_`), other public keys, and dotted names such as `color.primary.500` under a token or secret name (never a password) pass. There is no entropy check: hashes and lockfile integrity strings would block too often (#119).
 
     **When a secret gets through anyway** (pushed, in a PR or issue, in a log, or sent to a connector), Claude follows the runbook in [`knowledge/INCIDENT_GUIDE.md` §9](./knowledge/INCIDENT_GUIDE.md#9-leaked-secret-law-14): stop and tell the owner, who rotates it first; Claude never rewrites pushed history or force-pushes.
 
@@ -317,7 +317,7 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
     | `git push` while the current branch is the default branch | Law 7 | Pushing directly to the default branch |
     | `git commit -m "..."` (or a heredoc-quoted message) whose first line doesn't match `type(scope): description` | Law 13 | Non-Conventional-Commits message |
     | `gh pr create` whose body (or `--body-file`) has no `Screenshots:` line (yes, skipped or not applicable) | Law 34 | Opening a PR without having asked about screenshot images |
-    | `git commit` when the staged diff matches a private-key block, a credential-shaped assignment, an AWS access key, a known PAT prefix, or a staged non-`.env.example` `.env*` file | Law 14 | A secret about to be committed |
+    | `git commit` when the lines the staged diff adds hold a secret from Law 14's list (the reason names the kind and the file, never the value), or a staged non-`.env.example` `.env*` file | Law 14 | A secret about to be committed. Removing one is never blocked |
     | `git commit --no-verify` / `-n` (alone or in a short cluster such as `-an`), or `git push --no-verify` | Law 32 | Skipping git hooks; `git push -n` (dry run) stays allowed |
     | `git push` with `--force`, `-f`, `--force-with-lease`, `--force-if-includes` or a `+refspec` to the default branch | Law 7 | Rewriting the default branch's history; force-pushing a feature branch stays allowed |
 
