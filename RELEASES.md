@@ -2,6 +2,19 @@
 
 ---
 
+## v2.36.0 — October 7, 2026
+
+### What loading the rules costs every session, measured and budgeted ([#188](https://github.com/BojanKocijan/design-forge/issues/188))
+- **Every session loads 30,420 tokens of rules**, counted exactly on Opus 5.5 and Sonnet 5.5: `CLAUDE.md` 7,470, `CLAUDE_LAWS.md` 22,653, plus the lines Claude Code puts around them. This repo loads them twice: 60,623. The earlier ~20k guess was chars ÷ 4; the Claude 5 tokenizer gets 2.4 to 2.8 bytes per token.
+- **On Opus 5.5 that's $0.24 to load them at the start of a session and $0.006 for each later request,** about $0.54 over 50 requests, at list price. Sonnet 5.5, Haiku 4.5 and Fable 5.1 are in the [report](docs/features/issue-188/report.md).
+- **New `scripts/laws_cost.py`:** estimates each file's tokens from its bytes. `--measure` counts them exactly with the `claude` CLI on your own account, and refuses to run in CI.
+- **A budget that warns:** CI's new `Rules token budget` step warns when `CLAUDE.md` + `CLAUDE_LAWS.md` pass 33,000 tokens, and never fails the build.
+- **They grew 38% in 18 releases,** from 21,901 tokens at v2.17.0. The report ranks where to cut, each with its saving; each cut gets its own PR.
+- **Rules: 30,128 tokens** (estimate). Each release note records this from now on.
+- The Laws, `plugin.json` and `marketplace.json` are at 2.36.0.
+
+---
+
 ## v2.35.0 — October 7, 2026
 
 ### The Law 14 secret check catches what it promised, and lets removals through ([#119](https://github.com/BojanKocijan/design-forge/issues/119))
