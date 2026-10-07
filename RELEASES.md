@@ -7,6 +7,7 @@
 ### The BK Charterline page ([#177](https://github.com/BojanKocijan/bk-charterline/issues/177))
 - **New `site/`:** the BK Charterline page in plain HTML and CSS. It opens straight from the file, makes no requests to other sites, and follows the system's light or dark setting.
 - **The sticky header, the hero and the tiles:** the laws by number, the agents' flow from Lead to you, real skill and guide names.
+- **The numbers and the script:** three big counts and three gauges from `data.js`, each with its date; a System / Light / Dark switcher; motion that plays once and never under reduced motion.
 
 ---
 
