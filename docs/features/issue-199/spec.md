@@ -2,7 +2,7 @@
 
 Intent: [#199](https://github.com/BojanKocijan/design-forge/issues/199), approved by the owner in chat on 2026-10-07
 Design: none — a rename, no new UI
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-07, chat
 
 ## Owner decisions (chat, 2026-10-07)
 
