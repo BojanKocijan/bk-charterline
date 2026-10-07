@@ -1,7 +1,7 @@
 """Tests for the per-session Law 38 approvals store (#138).
 
 The store lives under $HOME, so each test points HOME at a temp folder
-and never touches the real ~/.design-forge.
+and never touches the real ~/.bk-charterline.
 """
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ class ApprovalsTests(unittest.TestCase):
         patcher = mock.patch.dict(os.environ, {"HOME": self.tmp.name})
         patcher.start()
         self.addCleanup(patcher.stop)
-        self.dir = os.path.join(self.tmp.name, ".design-forge")
+        self.dir = os.path.join(self.tmp.name, ".bk-charterline")
         self.path = os.path.join(self.dir, "ai-approvals.jsonl")
 
     def tearDown(self) -> None:

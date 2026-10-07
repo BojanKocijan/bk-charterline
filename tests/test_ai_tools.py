@@ -39,7 +39,7 @@ class AiToolsTests(unittest.TestCase):
         self.project = os.path.join(self.tmp.name, "project")
         os.makedirs(self.home)
         os.makedirs(self.project)
-        self.personal = os.path.join(self.home, ".design-forge", "ai-tools.json")
+        self.personal = os.path.join(self.home, ".bk-charterline", "ai-tools.json")
         self.shared = os.path.join(self.project, ".claude", "ai-tools.json")
         patcher = mock.patch.dict(os.environ, {"HOME": self.home})
         patcher.start()

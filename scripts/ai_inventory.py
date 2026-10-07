@@ -2,8 +2,8 @@
 """AI inventory (#114): every MCP server, extension, plugin, skill,
 agent, hook and permission rule a Claude Code session can use.
 
-Writes ~/.design-forge/ai-inventory.md (also printed) and keeps
-first-seen dates in ~/.design-forge/ai-inventory.json, so a re-run marks
+Writes ai-inventory.md (also printed) to the installed clone,
+~/.bk-charterline, and keeps first-seen dates in ai-inventory.json there, so a re-run marks
 what is new or removed since the last one.
 
 Only names are read, never secrets: MCP `args`, `env`, `headers` and URL
@@ -25,8 +25,9 @@ from datetime import date
 from urllib.parse import urlparse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.dont_write_bytecode = True  # keep the ~/.design-forge clone clean
+sys.dont_write_bytecode = True  # keep the installed clone clean
 import ai_tools  # noqa: E402  Law 38 tiers and owners (#115)
+from rules_home import rules_home  # noqa: E402  on the path through ai_tools (#199)
 
 
 TIERED = {"mcp", "extension", "plugin"}
@@ -325,7 +326,7 @@ def main(argv: list[str]) -> int:
                         help="MCP server names from the session's own tool list")
     args = parser.parse_args(argv)
 
-    out_dir = os.path.join(home(), ".design-forge")
+    out_dir = rules_home(home())
     state_path = os.path.join(out_dir, "ai-inventory.json")
     inv = collect(args.project, args.session)
     previous = inv.load_json(state_path)

@@ -53,7 +53,7 @@ class AiInventoryTests(unittest.TestCase):
         self.project = os.path.realpath(os.path.join(self.tmp.name, "project"))
         os.makedirs(self.home)
         os.makedirs(self.project)
-        self.df = os.path.join(self.home, ".design-forge")
+        self.df = os.path.join(self.home, ".bk-charterline")
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
@@ -191,7 +191,7 @@ class TierColumnTests(unittest.TestCase):
         write(os.path.join(self.project, ".mcp.json"), {"mcpServers": {
             "db": {"command": "db-mcp"}, "tracker": {"command": "npx"},
         }})
-        self.personal = os.path.join(self.home, ".design-forge", "ai-tools.json")
+        self.personal = os.path.join(self.home, ".bk-charterline", "ai-tools.json")
         self.shared = os.path.join(self.project, ".claude", "ai-tools.json")
 
     def tearDown(self) -> None:
@@ -227,7 +227,7 @@ class TierColumnTests(unittest.TestCase):
         write(self.personal, "{not json")
         out = self.run_inventory()
         self.assertIn("## Couldn't parse", out)
-        self.assertIn("~/.design-forge/ai-tools.json", out)
+        self.assertIn("~/.bk-charterline/ai-tools.json", out)
         self.assertIn("· 2 unclassified", out)
 
 
