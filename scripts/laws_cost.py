@@ -4,7 +4,7 @@
     python3 scripts/laws_cost.py [--budget N]
     python3 scripts/laws_cost.py --measure [--claude PATH] [--model NAME]
 
-Run from the repo root. Every Claude Code session under Design Forge
+Run from the repo root. Every Claude Code session under BK Charterline
 loads CLAUDE.md and CLAUDE_LAWS.md (through `~/.claude/CLAUDE.md`)
 before the first message, so their size is paid on every session.
 

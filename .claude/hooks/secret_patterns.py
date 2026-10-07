@@ -4,7 +4,7 @@ Law 38 registry (`scripts/ai_tools.py`) and the AI inventory
 same placeholders through (#186).
 
 It imports neither the hook nor `ai_tools.py`, so there is no import
-cycle. It lives under `.claude/hooks/` because `dforge-update` shows that
+cycle. It lives under `.claude/hooks/` because the update command shows that
 folder's diff before installing an update (Law 28).
 
 Dependency-free stdlib only.

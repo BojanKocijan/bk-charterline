@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The real numbers on the Design Forge page (#177).
+"""The real numbers on the BK Charterline page (#177).
 
 Counts come from the repo and merged-PR numbers from `gh`. They go to
 `site/data.js`, which the page loads with a <script> tag (a browser won't
@@ -181,8 +181,8 @@ def update(root: str, gh: str, today: str) -> bool:
 
 
 def main(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(description="Refresh the real numbers on the Design Forge page.")
-    parser.add_argument("--root", default=ROOT, help="the Design Forge repo (default: this checkout)")
+    parser = argparse.ArgumentParser(description="Refresh the real numbers on the BK Charterline page.")
+    parser.add_argument("--root", default=ROOT, help="the BK Charterline repo (default: this checkout)")
     parser.add_argument("--gh", default="gh", help="the GitHub CLI to use")
     parser.add_argument("--today", default=date.today().isoformat(), help="the date a changed number gets")
     args = parser.parse_args(argv)
