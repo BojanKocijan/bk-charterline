@@ -2,7 +2,7 @@
 
 Spec: [#187](https://github.com/BojanKocijan/design-forge/issues/187) (the issue) · Gate tier: Standard · Branch: `fix/issue-187-commit-contents` · Issue: #187
 Work pile: delegable (one hook check; machine-verifiable with temporary repos)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-07, chat (both decisions as recommended)
 
 ## The gap
 
