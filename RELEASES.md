@@ -9,6 +9,7 @@
 - **The sticky header, the hero and the tiles:** the laws by number, the agents' flow from Lead to you, real skill and guide names.
 - **The numbers and the script:** three big counts and three gauges from `data.js`, each with its date; a System / Light / Dark switcher; motion that plays once and never under reduced motion.
 - **The analytics demo:** governance, product analytics and usage for a fictional team, marked as example data, with Available now or Planned (linked to its issue) on each part.
+- **The dashboard's look:** tabs, KPI tiles, cards, and verified, partial or contradicted verdicts.
 
 ---
 
