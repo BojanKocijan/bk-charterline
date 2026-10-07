@@ -127,3 +127,8 @@ Each value carries the date it was collected.
 2. **Releases across the stack:** PRs 1 to 3 add their lines under `## Unreleased`, and PR 4 releases them as v2.37.0. Recommended: yes. The alternative is a version per PR (v2.37.0 to v2.40.0).
 3. **Where `site metrics` lives:** in `docs/MAINTAINER.md`, not as a trigger in `CLAUDE.md`. A trigger there loads in every session of every project (about 70 tokens each time) for a command that only applies to this repo. Recommended: `MAINTAINER.md`. #177 asked for a trigger.
 4. **Without JavaScript, all three demo panels show stacked,** instead of only the first one as the spec says. Recommended: yes.
+
+## Deviations after approval
+
+- **PR 1 splits in two.** The script and its tests are 397 lines; the first generated `data.js` and `metrics-state.json` (146 lines) go in their own `chore(site)` PR, 1b, so neither passes Law 31's 400-line ceiling.
+- **Generated files write one entry per line,** so a refresh shows each new PR or changed number as one line in the diff.
