@@ -26,7 +26,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
 import stat
 import sys
 import tempfile
@@ -39,19 +38,17 @@ MASKED = "[masked]"
 BROKEN = "*"  # in resolve(): the project file is broken, so every tool is unclassified
 _DUPLICATES = "\0duplicates"
 
-# Law 14 patterns. Shared with ai_inventory.py; anything matching is
-# masked in output and refused in the registry.
-SECRET_PATTERNS = [
-    re.compile(r"-----BEGIN (RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----"),
-    re.compile(r"AKIA[0-9A-Z]{16}"),
-    re.compile(r"\b(ghp|gho|github_pat|glpat|xoxb|xoxp)_[A-Za-z0-9_-]{10,}"),
-    re.compile(r"\bsk-[A-Za-z0-9_-]{16,}"),
-    re.compile(r"(?i)\b(api[_-]?key|secret|token|password)\s*[:=]\s*\S{16,}"),
-]
+# Law 14 secret shapes, the same list the hook uses (#186). Shared with
+# ai_inventory.py; anything found is masked in output and refused in the registry.
+HOOKS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".claude", "hooks")
+if HOOKS_DIR not in sys.path:
+    sys.path.insert(0, HOOKS_DIR)
+sys.dont_write_bytecode = True  # keep the ~/.design-forge clone clean
+from secret_patterns import find_secret  # noqa: E402
 
 
 def looks_secret(text: str) -> bool:
-    return any(p.search(text) for p in SECRET_PATTERNS)
+    return find_secret(text) is not None
 
 
 def personal_path() -> str:

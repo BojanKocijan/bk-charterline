@@ -29,6 +29,16 @@ SECRETS = [
     "desktop-config-marker",
 ]
 
+# Fake secrets are assembled at run time, so no whole token sits in this
+# file: the hook's commit check would block the commit that adds them (#119).
+MIX = "a1B2c3D4e5F6g7H8i9J0"  # 20 mixed letters and digits
+FAKE = {
+    "github": "gh" + "p_" + (MIX * 2)[:36],
+    "gitlab": "gl" + "pat-" + MIX,
+    "slack": "xo" + "xb-" + "1234567890-" + MIX,
+    "openai": "sk" + "-" + MIX + "T3Blbk" + "FJ" + MIX,  # a legacy key
+}
+
 
 def write(path: str, data) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -232,7 +242,7 @@ class TierColumnTests(unittest.TestCase):
         write(self.personal, {"version": 1, "tools": {"mcp:[masked]": {"tier": 1, "owner": "alice"}}})
         result = subprocess.run(
             [sys.executable, "-B", SCRIPT, "--project", self.project,
-             "--session", "ghp_abcdefghijklmnopqrstuvwxyz"],
+             "--session", FAKE["github"]],
             capture_output=True, text=True, env={**os.environ, "HOME": self.home},
         )
         self.assertIn("| [masked] | session | connected in this session | unclassified (tier 3) |", result.stdout)
@@ -249,12 +259,20 @@ class TierColumnTests(unittest.TestCase):
 
     def test_hand_edited_secrets_in_the_registry_are_masked(self) -> None:
         write(self.personal, {"version": 1, "tools": {"mcp:db": {
-            "tier": 2, "owner": "ghp_abcdefghijklmnopqrstuv", "label": "token=abcdefghijklmnopqrstuvwx",
-            "overrides": {"sk-abcdefghijklmnopqrstuvwx": 4}}}})
+            "tier": 2, "owner": FAKE["github"], "label": "token=r9" + MIX,
+            "overrides": {FAKE["openai"]: 4}}}})
         out = self.run_inventory()
-        for secret in ("ghp_abcdefghijklmnopqrstuv", "token=abcdefghijklmnopqrstuvwx", "sk-abcdefghijklmnopqrstuvwx"):
+        for secret in (FAKE["github"], MIX, FAKE["openai"]):
             self.assertNotIn(secret, out)
         self.assertIn("| db | project | [masked] · stdio · db-mcp · overrides: [masked] → 4 | 2 | [masked] |", out)
+
+    def test_gitlab_and_slack_tokens_are_masked(self) -> None:
+        write(self.personal, {"version": 1, "tools": {"mcp:db": {
+            "tier": 2, "owner": FAKE["slack"], "label": FAKE["gitlab"]}}})  # missed before #186
+        out = self.run_inventory()
+        for secret in (FAKE["gitlab"], FAKE["slack"]):
+            self.assertNotIn(secret, out)
+        self.assertIn("| db | project | [masked] · stdio · db-mcp | 2 | [masked] |", out)
 
 
     def test_broken_project_file_shows_every_tool_unclassified(self) -> None:

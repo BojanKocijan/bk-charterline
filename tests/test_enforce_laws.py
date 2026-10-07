@@ -369,6 +369,18 @@ class BlockLogWiringTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("Blocked (Law 5)", result.stderr)
 
+    def test_missing_secret_module_fails_open_only_for_secrets(self) -> None:
+        lone = os.path.join(self.tmp.name, "lone")
+        os.makedirs(lone)
+        shutil.copy(HOOK, lone)
+        lone_hook = os.path.join(lone, "enforce-laws.py")
+        with open(os.path.join(self.feat_repo, "config.py"), "w") as f:
+            f.write(f"value = '{fake_secrets()['a GitLab token']}'\n")
+        subprocess.run(["git", "add", "config.py"], cwd=self.feat_repo, check=True)
+        self.assertEqual(self.run_hook('git commit -m "feat: x"', self.feat_repo).returncode, 2)
+        self.assertEqual(self.run_hook('git commit -m "feat: x"', self.feat_repo, lone_hook).returncode, 0)
+        self.assertEqual(self.run_hook("gh pr merge 1", self.feat_repo, lone_hook).returncode, 2)
+
     def test_hook_leaves_no_bytecode_next_to_it(self) -> None:
         self.run_hook('git commit -m "fix: x"', self.main_repo)
         self.assertFalse(os.path.exists(os.path.join(HOOKS_DIR, "__pycache__")))
@@ -1304,6 +1316,11 @@ class SecretPatternTests(unittest.TestCase):
             start = time.monotonic()
             self.assertIsNone(self.hook.find_secret(text))
             self.assertLess(time.monotonic() - start, 1.0, text[:8])
+
+    def test_a_legacy_openai_key_is_caught(self) -> None:
+        key = "sk" + "-" + MIX + "T3Blbk" + "FJ" + MIX  # sk- + 48, the marker in the middle (#186)
+        self.assertEqual(self.hook.find_secret(f"--api {key}")[0], "an OpenAI key")
+        self.assertIsNone(self.hook.find_secret("sk" + "-" + MIX + MIX + "ab"))  # no marker: not a key shape we know
 
     def test_added_lines_reads_only_what_a_diff_adds(self) -> None:
         diff = "\n".join((

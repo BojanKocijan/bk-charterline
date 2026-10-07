@@ -21,6 +21,16 @@ sys.path.insert(0, SCRIPTS)
 sys.dont_write_bytecode = True
 import ai_tools  # noqa: E402
 
+# Fake secrets are assembled at run time, so no whole token sits in this
+# file: the hook's commit check would block the commit that adds them (#119).
+MIX = "a1B2c3D4e5F6g7H8i9J0"  # 20 mixed letters and digits
+FAKE = {
+    "github": "gh" + "p_" + (MIX * 2)[:36],
+    "gitlab": "gl" + "pat-" + MIX,
+    "slack": "xo" + "xb-" + "1234567890-" + MIX,
+    "openai": "sk" + "-" + MIX + "T3Blbk" + "FJ" + MIX,  # a legacy key
+}
+
 
 class AiToolsTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -160,14 +170,27 @@ class AiToolsTests(unittest.TestCase):
 
     def test_secrets_are_refused(self) -> None:
         for args in (
-            ["mcp:ghp_abcdefghijklmnopqrstuvwxyz", "--tier", "1", "--owner", "alice"],
-            ["mcp:db", "--tier", "1", "--owner", "alice", "--note", "token=sk-abcdefghijklmnopqrstuvwx"],
+            ["mcp:" + FAKE["github"], "--tier", "1", "--owner", "alice"],
+            ["mcp:db", "--tier", "1", "--owner", "alice", "--note", "token=r9" + MIX],
             ["mcp:db", "--tier", "1", "--owner", "alice", "--label", "AKIAABCDEFGHIJKLMNOP"],
         ):
             r = self.cli("set", *args, "--personal")
             self.assertEqual(r.returncode, 2, args)
             self.assertIn("looks like a secret", r.stderr)
         self.assertFalse(os.path.exists(self.personal))
+
+    def test_every_kind_the_hook_knows_is_refused(self) -> None:
+        for value in (FAKE["gitlab"], FAKE["slack"], FAKE["openai"]):  # missed before #186
+            with self.subTest(value=value[:6]):
+                r = self.cli("set", "mcp:db", "--tier", "1", "--owner", "alice", "--label", value, "--personal")
+                self.assertEqual(r.returncode, 2)
+                self.assertIn("looks like a secret", r.stderr)
+        self.assertFalse(os.path.exists(self.personal))
+
+    def test_placeholders_and_references_pass(self) -> None:
+        for value in ("gh" + "p_" + "x" * 36, "${{ secrets.API_KEY }}", "token=your-token-goes-here"):
+            with self.subTest(value=value):
+                self.assertFalse(ai_tools.looks_secret(value))
 
     def test_masked_name_cannot_be_classified(self) -> None:
         r = self.cli("set", "mcp:[masked]", "--tier", "1", "--owner", "alice", "--personal")
