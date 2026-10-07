@@ -143,7 +143,7 @@
   padding: 1.1rem 1.2rem 1.3rem;
   font: var(--small) / 1.65 var(--font-mono);
   min-width: 0;
-  box-shadow: 0 20px 40px -24px rgb(29 26 46 / 0.55);
+  box-shadow: 0 20px 40px -24px rgb(8 10 14 / 0.55);
 }
 
 .terminal figcaption {

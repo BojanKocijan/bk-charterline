@@ -37,7 +37,7 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  box-shadow: 0 24px 48px -32px rgb(29 26 46 / 0.35);
+  box-shadow: 0 24px 48px -32px rgb(8 10 14 / 0.35);
   min-width: 0;
 }
 
@@ -74,7 +74,7 @@
   background: var(--surface);
   color: var(--ink);
   font-weight: 600;
-  box-shadow: 0 1px 3px rgb(29 26 46 / 0.12);
+  box-shadow: 0 1px 3px rgb(8 10 14 / 0.12);
 }
 
 .badge {

@@ -2,6 +2,16 @@
 
 ---
 
+## v3.2.1 — October 7, 2026
+
+### A navy and lime palette for the page ([#215](https://github.com/BojanKocijan/bk-charterline/issues/215))
+- **Dark theme:** a near-black navy ground, lime numbers, buttons and highlights, and dark text on lime.
+- **Light theme:** the same character, with a deeper olive-lime where bright lime on white would fail contrast. The Site checks (WCAG 2.2 AA with axe in light and dark) pass.
+- **Rules: 30,613 tokens** (estimate).
+- The Laws, `plugin.json` and `marketplace.json` are at 3.2.1.
+
+---
+
 ## v3.2.0 — October 7, 2026
 
 ### The BK Charterline page ([#177](https://github.com/BojanKocijan/bk-charterline/issues/177))
