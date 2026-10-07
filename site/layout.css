@@ -1,0 +1,350 @@
+/* BK Charterline page (#177): the header, hero, sections and the What it does tiles. */
+/* Header: sticky and full width, the content column inside */
+.top {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 10;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+
+.top-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  padding-block: 0.8rem;
+}
+
+.brand {
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+.top nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-left: auto;
+  font-size: var(--small);
+}
+
+.top nav a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.top nav a:hover {
+  color: var(--ink);
+}
+
+/* Theme switcher: System, Light, Dark */
+.theme {
+  display: flex;
+  gap: 2px;
+  margin: 0;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.theme label {
+  position: relative;
+  display: block;
+}
+
+.theme input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.theme span {
+  display: block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.theme input:checked + span {
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.theme input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Hero: the promise, the install line, and a real hook block */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: calc(var(--gap) * 2);
+  align-items: center;
+  padding-block: var(--section) calc(var(--section) * 0.75);
+}
+
+.hero-copy {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.install {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.install code {
+  flex: 1;
+  min-width: 0;
+  padding: 0.7rem 0.9rem;
+  overflow-x: auto;
+  white-space: nowrap;
+  font-size: var(--small);
+}
+
+.install button {
+  border: 0;
+  border-left: 1px solid var(--line);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 600 var(--small) / 1 var(--font-body);
+  padding-inline: 1rem;
+  cursor: pointer;
+}
+
+.install button:hover {
+  filter: brightness(1.08);
+}
+
+.copy-status {
+  min-height: 1.4em;
+  font-size: var(--small);
+  color: var(--muted);
+}
+
+.terminal {
+  margin: 0;
+  background: var(--term-bg);
+  color: var(--term-ink);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.2rem 1.3rem;
+  font: var(--small) / 1.65 var(--font-mono);
+  min-width: 0;
+  box-shadow: 0 20px 40px -24px rgb(29 26 46 / 0.55);
+}
+
+.terminal figcaption {
+  color: var(--term-muted);
+  margin-bottom: 0.75rem;
+}
+
+.terminal pre {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+}
+
+.terminal .prompt {
+  color: var(--term-muted);
+}
+
+.terminal .blocked {
+  color: var(--term-alert);
+}
+
+/* Sections */
+.section {
+  display: grid;
+  gap: calc(var(--gap) * 1.25);
+  padding-block: var(--section);
+  border-top: 1px solid var(--line);
+}
+
+.section-head {
+  display: grid;
+  gap: 0.6rem;
+}
+
+/* What it does: tiles that show the real thing, not a description of it */
+.bento {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    "laws agents agents"
+    "laws skills guides";
+  gap: var(--gap);
+}
+
+.tile {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  min-width: 0;
+  padding: clamp(1.1rem, 0.8rem + 1vw, 1.6rem);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.tile-laws {
+  grid-area: laws;
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+
+.tile-agents {
+  grid-area: agents;
+}
+
+.tile-skills {
+  grid-area: skills;
+}
+
+.tile-guides {
+  grid-area: guides;
+}
+
+.tile-head {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.tile .count {
+  font: 700 var(--step-4) / 1 var(--font-display);
+  letter-spacing: -0.03em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.tile-note {
+  color: var(--muted);
+  font-size: var(--small);
+}
+
+.tile ol,
+.tile ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.laws {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.laws li {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.law-no {
+  display: grid;
+  place-items: center;
+  height: 2.4rem;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent);
+  font: 600 var(--small) / 1 var(--font-mono);
+}
+
+/* The team: one step after another, ending with you */
+.flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.flow li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--small);
+  white-space: nowrap;
+}
+
+.flow li::after {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-inline: 0.15rem 0.35rem;
+  border-top: 2px solid var(--muted);
+  border-right: 2px solid var(--muted);
+  transform: rotate(45deg);
+}
+
+.flow li:last-child::after {
+  content: none;
+}
+
+.flow li.you {
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.tags li {
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--sunken);
+  font: var(--tiny) / 1.5 var(--font-mono);
+}
+
+.files {
+  display: grid;
+  gap: 0.35rem;
+  font: var(--tiny) / 1.5 var(--font-mono);
+}
+
+.files li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.files li::before {
+  content: "";
+  flex: none;
+  width: 0.7rem;
+  height: 0.85rem;
+  border: 1.5px solid var(--muted);
+  border-radius: 2px;
+}
+
+.tags .more,
+.files .more {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-family: var(--font-body);
+}
+
+.files .more::before {
+  visibility: hidden;
+}
