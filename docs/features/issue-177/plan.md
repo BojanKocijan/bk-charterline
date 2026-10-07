@@ -132,3 +132,9 @@ Each value carries the date it was collected.
 
 - **PR 1 splits in two.** The script and its tests are 397 lines; the first generated `data.js` and `metrics-state.json` (146 lines) go in their own `chore(site)` PR, 1b, so neither passes Law 31's 400-line ceiling.
 - **Generated files write one entry per line,** so a refresh shows each new PR or changed number as one line in the diff.
+- **Owner requests during the build** (chat, 2026-10-07): a sticky header; a System / Light / Dark theme switcher that starts on System and is remembered in the browser; a richer What it does (four tiles showing real laws, the agents' flow, skill and guide names) and Numbers (three big counts and three gauges against the 400-line ceiling and the 33,000-token budget).
+- **Seven page PRs, not three** (owner's choice, 2026-10-07): the page and its checks came to about 2,100 lines, so each part stays under 400. The CSS is split into `styles.css`, `layout.css`, `numbers.css`, `demo.css` and `charts.css` along its sections.
+- **Charts are drawn from the data table in each figure,** so there's no `demo.js`; the table is the one source and the page reads the same without JavaScript.
+- **Values are printed on the charts** instead of shown on hover, which reads on touch screens and needs no tooltip code.
+- **The accessibility check and the deploy ship in the last PR,** as one CI change; the check covers the whole page. It found two issues the PR fixes: dates inside the numbers' `<dl>`, and install boxes that scrolled without keyboard focus.
+- **The release is v3.2.0,** since v3.0.0 (the rename) and v3.1.0 came first.

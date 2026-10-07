@@ -1,6 +1,6 @@
 # Master Claude Laws — BK Charterline
 
-**Version:** 3.1.0
+**Version:** 3.2.0
 **Last Updated:** 2026-10-07
 **Rules Repo:** https://github.com/BojanKocijan/bk-charterline
 **Inspired by:** Asimov's Three Laws of Robotics

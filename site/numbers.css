@@ -27,8 +27,10 @@
   font-variant-numeric: tabular-nums;
 }
 
-.stat time {
+.stat .stat-date {
   order: 3;
+  font: inherit;
+  letter-spacing: normal;
 }
 
 .gauges {

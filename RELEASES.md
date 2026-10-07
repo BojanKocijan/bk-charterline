@@ -2,7 +2,7 @@
 
 ---
 
-## Unreleased
+## v3.2.0 — October 7, 2026
 
 ### The BK Charterline page ([#177](https://github.com/BojanKocijan/bk-charterline/issues/177))
 - **New `site/`:** the BK Charterline page in plain HTML and CSS. It opens straight from the file, makes no requests to other sites, and follows the system's light or dark setting.
@@ -11,6 +11,10 @@
 - **The analytics demo:** governance, product analytics and usage for a fictional team, marked as example data, with Available now or Planned (linked to its issue) on each part.
 - **The dashboard's look:** tabs, KPI tiles, cards, and verified, partial or contradicted verdicts.
 - **The charts' look and motion:** bars and columns grow, lines draw in, once each, never under reduced motion.
+- **Published:** `.github/workflows/site.yml` checks every change to `site/` (WCAG 2.2 AA with axe at phone and desktop width, light and dark, the tabs, the numbers, the page without JavaScript) and deploys `main` to <https://bojankocijan.github.io/bk-charterline/>.
+- **Refreshing the numbers** is in `docs/MAINTAINER.md`.
+- **Rules: 30,613 tokens** (estimate).
+- The Laws, `plugin.json` and `marketplace.json` are at 3.2.0.
 
 ---
 

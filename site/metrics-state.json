@@ -1,15 +1,15 @@
-{"collected_through": "2026-10-07T13:09:57Z",
+{"collected_through": "2026-10-07T17:21:14Z",
 "numbers": {
   "agents": {"as_of": "2026-10-07", "value": 9},
   "guides": {"as_of": "2026-10-07", "value": 12},
   "laws": {"as_of": "2026-10-07", "value": 38},
-  "median_pr_lines": {"as_of": "2026-10-07", "value": 156},
-  "prs_merged": {"as_of": "2026-10-07", "value": 118},
+  "median_pr_lines": {"as_of": "2026-10-07", "value": 163},
+  "prs_merged": {"as_of": "2026-10-07", "value": 128},
   "prs_within_400": {"as_of": "2026-10-07", "value": 84},
-  "releases": {"as_of": "2026-10-07", "value": 22},
-  "rules_tokens": {"as_of": "2026-10-07", "value": 30171},
+  "releases": {"as_of": "2026-10-07", "value": 24},
+  "rules_tokens": {"as_of": "2026-10-07", "value": 30418},
   "skills": {"as_of": "2026-10-07", "value": 18},
-  "tests": {"as_of": "2026-10-07", "value": 210}
+  "tests": {"as_of": "2026-10-07", "value": 218}
 },
 "prs": {
   "3": {"lines": 41, "merged_at": "2026-06-06T15:06:02Z"},
@@ -129,5 +129,15 @@
   "191": {"lines": 104, "merged_at": "2026-10-07T12:41:46Z"},
   "192": {"lines": 353, "merged_at": "2026-10-07T12:42:15Z"},
   "193": {"lines": 81, "merged_at": "2026-10-07T13:09:33Z"},
-  "194": {"lines": 348, "merged_at": "2026-10-07T13:09:57Z"}
+  "194": {"lines": 348, "merged_at": "2026-10-07T13:09:57Z"},
+  "195": {"lines": 203, "merged_at": "2026-10-07T14:10:52Z"},
+  "196": {"lines": 397, "merged_at": "2026-10-07T14:11:04Z"},
+  "197": {"lines": 543, "merged_at": "2026-10-07T14:11:18Z"},
+  "200": {"lines": 184, "merged_at": "2026-10-07T14:22:01Z"},
+  "201": {"lines": 300, "merged_at": "2026-10-07T14:27:10Z"},
+  "202": {"lines": 364, "merged_at": "2026-10-07T14:37:25Z"},
+  "203": {"lines": 81, "merged_at": "2026-10-07T17:10:25Z"},
+  "204": {"lines": 278, "merged_at": "2026-10-07T17:10:47Z"},
+  "205": {"lines": 391, "merged_at": "2026-10-07T17:12:20Z"},
+  "207": {"lines": 67, "merged_at": "2026-10-07T17:21:14Z"}
 }}

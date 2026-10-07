@@ -1,12 +1,20 @@
 version: 2
 updates:
-  # BK Charterline ships no npm dependencies (markdownlint runs via npx in CI),
-  # so only the GitHub Actions used by the workflows are tracked here.
+  # BK Charterline ships no npm dependencies (markdownlint runs via npx in CI).
+  # The GitHub Actions are tracked here, and the page's dev-only checks in site/.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
     commit-message:
       prefix: "chore(ci)"
+    labels:
+      - "dependencies"
+  - package-ecosystem: "npm"
+    directory: "/site"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(site)"
     labels:
       - "dependencies"
