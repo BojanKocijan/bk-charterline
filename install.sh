@@ -1,32 +1,44 @@
 #!/usr/bin/env bash
-# Design Forge — Claude Code rules installer
+# BK Charterline — Claude Code rules installer (renamed from Design Forge, #199)
 # One-shot setup:
+#   0. Moves an install from before the rename (~/.design-forge) to
+#      ~/.bk-charterline, with its data files, and links the old name to it.
 #   1. Clones the rules repo locally and wires it into Claude's global memory
 #      (~/.claude/CLAUDE.md) so every Claude Code session auto-loads them.
 #   2. Registers the Law 32 guardrail hook in ~/.claude/settings.json.
 #   3. Links the agents and skills into ~/.claude/agents and ~/.claude/skills
 #      so Claude Code registers them.
-#   4. Installs `dforge-update` as a shell function that moves the clone to the
-#      newest release tag and re-runs this installer. Every step is safe to re-run.
+#   4. Installs `charterline-update` as a shell function that moves the clone to
+#      the newest release tag and re-runs this installer. Every step is safe to re-run.
 #
 # Run once:
-#   curl -fsSL https://raw.githubusercontent.com/bojankocijan/design-forge/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/BojanKocijan/bk-charterline/main/install.sh | bash
 #
-# Update anytime:
-#   dforge-update
+# Update anytime: type `update rules` in Claude Code, or run charterline-update
 
 set -euo pipefail
 
-RULES_REPO="https://github.com/bojankocijan/design-forge.git"
-LOCAL_DIR="${HOME}/.design-forge"
+RULES_REPO="https://github.com/BojanKocijan/bk-charterline.git"
+LOCAL_DIR="${HOME}/.bk-charterline"
 GLOBAL_MEMORY="${HOME}/.claude/CLAUDE.md"
-IMPORT_LINE="@${HOME}/.design-forge/CLAUDE.md"
-MARKER_BEGIN="<!-- design-forge:begin -->"
-MARKER_END="<!-- design-forge:end -->"
+IMPORT_LINE="@${HOME}/.bk-charterline/CLAUDE.md"
+MARKER_BEGIN="<!-- bk-charterline:begin -->"
+MARKER_END="<!-- bk-charterline:end -->"
 
 # Shell-rc function markers
-FN_MARKER_BEGIN="# design-forge:fn:begin"
-FN_MARKER_END="# design-forge:fn:end"
+FN_MARKER_BEGIN="# bk-charterline:fn:begin"
+FN_MARKER_END="# bk-charterline:fn:end"
+
+# The names from before v3.0.0, which step 1b moves away from (#199)
+OLD_DIR="${HOME}/.design-forge"
+OLD_MARKER_BEGIN="<!-- design-forge:begin -->"
+OLD_MARKER_END="<!-- design-forge:end -->"
+OLD_FN_MARKER_BEGIN="# design-forge:fn:begin"
+OLD_FN_MARKER_END="# design-forge:fn:end"
+
+# Set when the update function runs this installer: the new one sets
+# CHARTERLINE_UPDATE, the update function from before v3.0.0 DFORGE_UPDATE.
+UPDATING="${CHARTERLINE_UPDATE:-}${DFORGE_UPDATE:-}"
 
 # Colors (skip if not a TTY)
 if [ -t 1 ]; then
@@ -35,7 +47,7 @@ else
   BLUE=""; GREEN=""; YELLOW=""; RED=""; RESET=""
 fi
 
-say() { printf "%s[design-forge]%s %s\n" "$BLUE" "$RESET" "$1"; }
+say() { printf "%s[bk-charterline]%s %s\n" "$BLUE" "$RESET" "$1"; }
 ok()  { printf "%s✓%s %s\n"             "$GREEN" "$RESET" "$1"; }
 warn(){ printf "%s!%s %s\n"             "$YELLOW" "$RESET" "$1"; }
 die() { printf "%s✗%s %s\n"             "$RED"    "$RESET" "$1" >&2; exit 1; }
@@ -85,12 +97,33 @@ with open(path, "w") as f:
 PYEOF
 }
 
-# 2. Clone or pull the rules repo (dforge-update has already pulled)
-if [ -n "${DFORGE_UPDATE:-}" ]; then
+# 1b. Move an install from before the rename (#199). One rename on the same
+# disk, so the data files inside (projects.yaml, the hook log, the Law 38
+# registry and approvals, the patterns) move untouched. The old name stays
+# as a link for v3.0.0, so anything still pointing at it keeps working.
+# bash keeps reading this script through its open file, so moving the folder
+# it runs from is safe; everything below uses the new path.
+if [ -d "$OLD_DIR" ] && [ ! -L "$OLD_DIR" ]; then
+  if [ -e "$LOCAL_DIR" ] || [ -L "$LOCAL_DIR" ]; then
+    die "Both $OLD_DIR and $LOCAL_DIR exist, so nothing moved. Keep the one with your data files (projects.yaml, hook-log.jsonl, ai-tools.json), remove the other, then run the update again."
+  fi
+  if [ -d "$OLD_DIR/.git" ] && [ -n "$(git -C "$OLD_DIR" status --porcelain --untracked-files=no 2>/dev/null)" ]; then
+    die "$OLD_DIR has local changes, so nothing moved. Commit, stash or undo them, then run the update again."
+  fi
+  mv "$OLD_DIR" "$LOCAL_DIR" || die "Couldn't move $OLD_DIR to $LOCAL_DIR. Nothing changed; the old name still works."
+  ln -s "$LOCAL_DIR" "$OLD_DIR" || warn "Moved, but couldn't link $OLD_DIR to $LOCAL_DIR; anything still using the old path needs updating by hand."
+  if [ -d "$LOCAL_DIR/.git" ]; then
+    git -C "$LOCAL_DIR" remote set-url origin "$RULES_REPO" || warn "Couldn't point the clone at $RULES_REPO; run: git -C $LOCAL_DIR remote set-url origin $RULES_REPO"
+  fi
+  ok "Design Forge is now BK Charterline: moved $OLD_DIR to $LOCAL_DIR, and the old name links to it."
+fi
+
+# 2. Clone or pull the rules repo (the update function has already pulled)
+if [ -n "$UPDATING" ]; then
   :
 elif [ -d "$LOCAL_DIR/.git" ] && ! git -C "$LOCAL_DIR" symbolic-ref -q HEAD >/dev/null; then
-  # A release checkout (detached HEAD) can't be pulled; dforge-update moves it.
-  ok "On release $(git -C "$LOCAL_DIR" describe --tags --exact-match 2>/dev/null || echo "(detached)"); run dforge-update to update."
+  # A release checkout (detached HEAD) can't be pulled; the update function moves it.
+  ok "On release $(git -C "$LOCAL_DIR" describe --tags --exact-match 2>/dev/null || echo "(detached)"); type 'update rules' in Claude Code to update."
 elif [ -d "$LOCAL_DIR/.git" ]; then
   say "Updating existing rules clone at $LOCAL_DIR ..."
   git -C "$LOCAL_DIR" pull --quiet --ff-only || die "git pull failed in $LOCAL_DIR"
@@ -102,7 +135,7 @@ else
 fi
 
 # 2b. A clone on a branch that sits exactly on the newest release moves onto
-# that tag. No files change, so one run of any dforge-update (even one from
+# that tag. No files change, so one run of any update function (even one from
 # before tagged releases) ends on the release (#168).
 if git -C "$LOCAL_DIR" symbolic-ref -q HEAD >/dev/null \
     && [ -z "$(git -C "$LOCAL_DIR" status --porcelain --untracked-files=no)" ]; then
@@ -120,8 +153,8 @@ mkdir -p "$(dirname "$GLOBAL_MEMORY")"
 # 4. Write (or update) the import block in ~/.claude/CLAUDE.md
 BLOCK=$(cat <<EOF
 $MARKER_BEGIN
-# Design Forge governance — auto-installed by dforge
-# Edit ~/.design-forge/ to change rules (pull latest with: dforge-update)
+# BK Charterline governance — auto-installed
+# Edit ~/.bk-charterline/ to change rules (update with: update rules, or charterline-update)
 $IMPORT_LINE
 $MARKER_END
 EOF
@@ -130,37 +163,57 @@ EOF
 if [ -f "$GLOBAL_MEMORY" ]; then
   if grep -q "$MARKER_BEGIN" "$GLOBAL_MEMORY"; then
     if replace_block "$GLOBAL_MEMORY" "$MARKER_BEGIN" "$MARKER_END" "$BLOCK"; then
-      ok "Refreshed Design Forge block in $GLOBAL_MEMORY"
+      ok "Refreshed BK Charterline block in $GLOBAL_MEMORY"
     else
       warn "Left $GLOBAL_MEMORY unchanged: its '$MARKER_END' line is missing. Restore it, then re-run."
     fi
+  elif grep -q "$OLD_MARKER_BEGIN" "$GLOBAL_MEMORY"; then
+    if replace_block "$GLOBAL_MEMORY" "$OLD_MARKER_BEGIN" "$OLD_MARKER_END" "$BLOCK"; then
+      ok "Replaced the Design Forge block in $GLOBAL_MEMORY with BK Charterline's"
+    else
+      warn "Left $GLOBAL_MEMORY unchanged: its '$OLD_MARKER_END' line is missing. Restore it, then re-run."
+    fi
   else
     printf "\n%s\n" "$BLOCK" >> "$GLOBAL_MEMORY"
-    ok "Appended Design Forge block to $GLOBAL_MEMORY"
+    ok "Appended BK Charterline block to $GLOBAL_MEMORY"
   fi
 else
   printf "%s\n" "$BLOCK" > "$GLOBAL_MEMORY"
-  ok "Created $GLOBAL_MEMORY with Design Forge block"
+  ok "Created $GLOBAL_MEMORY with BK Charterline block"
 fi
 
 # 5. Register the Law 32 guardrail hook globally (~/.claude/settings.json)
 GLOBAL_SETTINGS="${HOME}/.claude/settings.json"
 HOOK_SCRIPT="${LOCAL_DIR}/.claude/hooks/enforce-laws.py"
 HOOK_COMMAND="python3 \"${HOOK_SCRIPT}\""
+OLD_HOOK_COMMAND="python3 \"${OLD_DIR}/.claude/hooks/enforce-laws.py\""
 
 mkdir -p "$(dirname "$GLOBAL_SETTINGS")"
 [ -f "$GLOBAL_SETTINGS" ] || printf '{}\n' > "$GLOBAL_SETTINGS"
-if python3 - "$GLOBAL_SETTINGS" "$HOOK_COMMAND" <<'PYEOF'
+if python3 - "$GLOBAL_SETTINGS" "$HOOK_COMMAND" "$OLD_HOOK_COMMAND" <<'PYEOF'
 import json
 import sys
 
-path, hook_command = sys.argv[1], sys.argv[2]
+path, hook_command, old_command = sys.argv[1], sys.argv[2], sys.argv[3]
 
 with open(path) as f:
-    content = f.read().strip()
-settings = json.loads(content) if content else {}
+    original = f.read()
+settings = json.loads(original) if original.strip() else {}
 
 hooks = settings.setdefault("hooks", {})
+
+# Re-point our hook from the folder's old name (#199). Only entries whose
+# command is exactly our old hook change; a backup comes first.
+moved = 0
+for entries in hooks.values():
+    for entry in entries if isinstance(entries, list) else []:
+        for h in entry.get("hooks", []) if isinstance(entry, dict) else []:
+            if isinstance(h, dict) and h.get("command") == old_command:
+                h["command"] = hook_command
+                moved += 1
+if moved:
+    with open(path + ".bk-charterline.bak", "w") as f:
+        f.write(original)
 
 # Bash commands, the file-editing tools so the hook can guard the
 # guardrail files themselves (#117), and MCP tools for Law 38's tier 3
@@ -185,9 +238,10 @@ for event, matcher in wanted:
             "hooks": [{"type": "command", "command": hook_command}],
         })
 
-with open(path, "w") as f:
-    json.dump(settings, f, indent=2)
-    f.write("\n")
+text = json.dumps(settings, indent=2) + "\n"
+if text != original:  # a second run writes nothing
+    with open(path, "w") as f:
+        f.write(text)
 PYEOF
 then
   ok "Registered Law 32 guardrail hook in $GLOBAL_SETTINGS"
@@ -196,7 +250,8 @@ else
 fi
 
 # 6. Link agents and skills into ~/.claude so Claude Code registers them.
-#    Only links that point into the clone are ever replaced or removed; the
+#    Only links that point into the clone (under its new or old name) are
+#    ever replaced or removed; the
 #    user's own agents and skills with the same name are left alone.
 AGENTS_DIR="${HOME}/.claude/agents"
 SKILLS_DIR="${HOME}/.claude/skills"
@@ -206,7 +261,7 @@ link_into() {
   local src="$1" dest="$2"
   if [ -L "$dest" ]; then
     case "$(readlink "$dest")" in
-      "$LOCAL_DIR"/*) ln -sfn "$src" "$dest"; return 0 ;;
+      "$LOCAL_DIR"/*|"$OLD_DIR"/*) ln -sfn "$src" "$dest"; return 0 ;;
     esac
   fi
   if [ -e "$dest" ] || [ -L "$dest" ]; then
@@ -222,7 +277,7 @@ prune_dangling() {
   for link in "$1"/*; do
     if [ -L "$link" ] && [ ! -e "$link" ]; then
       case "$(readlink "$link")" in
-        "$LOCAL_DIR"/*) rm "$link" ;;
+        "$LOCAL_DIR"/*|"$OLD_DIR"/*) rm "$link" ;;
       esac
     fi
   done
@@ -251,7 +306,7 @@ done
 ok "Linked $AGENT_COUNT agents and $SKILL_COUNT skills into ${HOME}/.claude"
 [ -z "$SKIPPED" ] || warn "Skipped, because your own file or link already uses the name:$SKIPPED"
 
-# 7. Install dforge-update as a shell function
+# 7. Install charterline-update as a shell function
 SHELL_RC=""
 case "${SHELL:-}" in
   *zsh)  SHELL_RC="$HOME/.zshrc" ;;
@@ -259,14 +314,14 @@ case "${SHELL:-}" in
 esac
 
 FN_BLOCK=$(cat <<'EOF'
-# design-forge:fn:begin
-# Design Forge — move the Claude rules clone to the newest release and
-# re-run the installer. Installed by design-forge install.sh (#116).
+# bk-charterline:fn:begin
+# BK Charterline — move the Claude rules clone to the newest release and
+# re-run the installer. Installed by bk-charterline install.sh (#116, #199).
 # A shell function, not a script in the clone, so `git checkout` never
 # rewrites the code that's running. Runs in zsh and bash.
-dforge-update() {
-  local rules_dir="$HOME/.design-forge" mode=release approve=""
-  local usage="usage: dforge-update [--main] [--approve <commit>]
+charterline-update() {
+  local rules_dir="$HOME/.bk-charterline" mode=release approve=""
+  local usage="usage: charterline-update [--main] [--approve <commit>]
   (no flag)           install the newest release tag (vX.Y.Z)
   --main              follow the main branch instead
   --approve <commit>  apply a hook change you approved in Claude's app
@@ -290,7 +345,7 @@ dforge-update() {
   done
 
   if [ ! -d "$rules_dir/.git" ]; then
-    echo "dforge: $rules_dir is not a git clone. Re-run install.sh first." >&2
+    echo "charterline: $rules_dir is not a git clone. Re-run install.sh first." >&2
     return 1
   fi
 
@@ -298,14 +353,14 @@ dforge-update() {
   local changed
   changed=$(command git -C "$rules_dir" status --porcelain --untracked-files=no) || return 1
   if [ -n "$changed" ]; then
-    echo "dforge: $rules_dir has local changes. Nothing changed. Commit, stash or undo them first:" >&2
+    echo "charterline: $rules_dir has local changes. Nothing changed. Commit, stash or undo them first:" >&2
     printf '%s\n' "$changed" >&2
     return 1
   fi
 
-  echo "dforge: checking for updates ..."
+  echo "charterline: checking for updates ..."
   if ! command git -C "$rules_dir" fetch --quiet --prune --prune-tags --force --tags origin; then
-    echo "dforge: fetch failed. Nothing changed." >&2
+    echo "charterline: fetch failed. Nothing changed." >&2
     return 1
   fi
 
@@ -313,7 +368,7 @@ dforge-update() {
   if [ "$mode" = release ]; then
     label=$(command git -C "$rules_dir" tag --list 'v*' --sort=-v:refname | command grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)
     if [ -z "$label" ]; then
-      echo "dforge: no release tags yet; following main." >&2
+      echo "charterline: no release tags yet; following main." >&2
       mode=main
     fi
   fi
@@ -336,15 +391,15 @@ dforge-update() {
     if [ "$mode" = release ] && [ -n "$(command git -C "$rules_dir" symbolic-ref -q HEAD)" ]; then
       command git -C "$rules_dir" checkout --quiet --detach "$new" || return 1
     fi
-    DFORGE_UPDATE=1 bash "$rules_dir/install.sh" || { echo "dforge: install.sh failed" >&2; return 1; }
-    echo "dforge: already on $label (DESIGN_FORGE v${version:-?})."
+    CHARTERLINE_UPDATE=1 bash "$rules_dir/install.sh" || { echo "charterline: install.sh failed" >&2; return 1; }
+    echo "charterline: already on $label (BK CHARTERLINE v${version:-?})."
     return 0
   fi
 
   # Never downgrade: a clone that followed main past the last release stays put.
   if [ "$mode" = release ] && command git -C "$rules_dir" merge-base --is-ancestor "$new" "$head"; then
-    echo "dforge: you're ahead of the latest release, $label (on v${version:-?}). Nothing changed."
-    echo "dforge: the next release tag moves you onto it; dforge-update --main follows main."
+    echo "charterline: you're ahead of the latest release, $label (on v${version:-?}). Nothing changed."
+    echo "charterline: the next release tag moves you onto it; charterline-update --main follows main."
     return 0
   fi
 
@@ -352,38 +407,38 @@ dforge-update() {
   # reviewed commit, never bring in commits of its own.
   # (No line continuations in this function: bash 3.2 drops them in the heredoc.)
   if [ "$mode" = main ] && command git -C "$rules_dir" rev-parse -q --verify refs/heads/main >/dev/null && ! command git -C "$rules_dir" merge-base --is-ancestor refs/heads/main "$new"; then
-    echo "dforge: your local main has commits that aren't on origin/main. Nothing changed." >&2
+    echo "charterline: your local main has commits that aren't on origin/main. Nothing changed." >&2
     return 1
   fi
 
   # A change to anything the hook runs needs the user's yes: typed in a real
   # terminal, or clicked in the app's prompt for --approve (#170).
   if [ -n "$(command git -C "$rules_dir" diff --stat "$head" "$new" -- .claude/hooks scripts/ai_tools.py install.sh .claude/settings.json)" ]; then
-    echo "dforge: this update changes the Law 32 hook:"
+    echo "charterline: this update changes the Law 32 hook:"
     command git -C "$rules_dir" --no-pager diff --stat "$head" "$new" -- .claude/hooks scripts/ai_tools.py install.sh .claude/settings.json
     command git -C "$rules_dir" --no-pager diff "$head" "$new" -- .claude/hooks scripts/ai_tools.py install.sh .claude/settings.json
     if [ -n "$approve" ]; then
       # The app only asks when the hook is registered; without it, --approve
       # would be nobody's approval.
       if ! command grep -q 'enforce-laws.py' "$HOME/.claude/settings.json" 2>/dev/null; then
-        echo "dforge: --approve needs the Law 32 hook in ~/.claude/settings.json, so the app asks you. Nothing changed. Run dforge-update in your own terminal." >&2
+        echo "charterline: --approve needs the Law 32 hook in ~/.claude/settings.json, so the app asks you. Nothing changed. Run charterline-update in your own terminal." >&2
         return 1
       fi
       if [ "${#approve}" -lt 7 ] || [ "${new#"$approve"}" = "$new" ]; then
-        echo "dforge: $approve isn't the update on offer (now $new). Nothing changed. Review the diff above, then approve that commit." >&2
+        echo "charterline: $approve isn't the update on offer (now $new). Nothing changed. Review the diff above, then approve that commit." >&2
         return 1
       fi
-      echo "dforge: applying the hook change you approved ($new)."
+      echo "charterline: applying the hook change you approved ($new)."
     elif [ -t 0 ] && [ -t 1 ]; then
       local reply
       printf 'Apply this hook change? [y/N] '
       read -r reply
       if [ "$reply" != y ] && [ "$reply" != Y ] && [ "$reply" != yes ] && [ "$reply" != Yes ] && [ "$reply" != YES ]; then
-        echo "dforge: nothing changed."
+        echo "charterline: nothing changed."
         return 1
       fi
     else
-      echo "dforge: the hook changed. Nothing was applied. Run dforge-update in your own terminal to review and approve it, or approve it in Claude's app prompt: dforge-update --approve $new" >&2
+      echo "charterline: the hook changed. Nothing was applied. Run charterline-update in your own terminal to review and approve it, or approve it in Claude's app prompt: charterline-update --approve $new" >&2
       return 1
     fi
   fi
@@ -392,25 +447,30 @@ dforge-update() {
   # fetch could move in the meantime.
   if [ "$mode" = main ]; then
     if ! command git -C "$rules_dir" checkout --quiet -B main "$new"; then
-      echo "dforge: couldn't move to the latest main." >&2
+      echo "charterline: couldn't move to the latest main." >&2
       return 1
     fi
   elif ! command git -C "$rules_dir" checkout --quiet --detach "$new"; then
-    echo "dforge: couldn't check out $label." >&2
+    echo "charterline: couldn't check out $label." >&2
     return 1
   fi
 
   # Checkout first, then run the installer, so the script never changes mid-run.
-  DFORGE_UPDATE=1 bash "$rules_dir/install.sh" || { echo "dforge: install.sh failed" >&2; return 1; }
+  CHARTERLINE_UPDATE=1 bash "$rules_dir/install.sh" || { echo "charterline: install.sh failed" >&2; return 1; }
 
   version=$(command grep -m1 -oE '\*\*Version:\*\* *[0-9]+\.[0-9]+\.[0-9]+' "$rules_dir/CLAUDE_LAWS.md" 2>/dev/null | awk '{print $2}')
   if [ "$mode" = main ]; then
-    echo "dforge: ready (DESIGN_FORGE v${version:-?}, main)."
+    echo "charterline: ready (BK CHARTERLINE v${version:-?}, main)."
   else
-    echo "dforge: ready (DESIGN_FORGE v${version:-?}, tag $label)."
+    echo "charterline: ready (BK CHARTERLINE v${version:-?}, tag $label)."
   fi
 }
-# design-forge:fn:end
+# Design Forge's old command, for v3.0.0 only (#199).
+dforge-update() {
+  echo "Design Forge is now BK Charterline: running charterline-update." >&2
+  charterline-update "$@"
+}
+# bk-charterline:fn:end
 EOF
 )
 
@@ -420,13 +480,19 @@ install_or_update_function() {
 
   if [ -f "$rc" ] && grep -q "$FN_MARKER_BEGIN" "$rc"; then
     if replace_block "$rc" "$FN_MARKER_BEGIN" "$FN_MARKER_END" "$FN_BLOCK"; then
-      ok "Refreshed dforge-update function in $rc"
+      ok "Refreshed charterline-update function in $rc"
     else
       warn "Left $rc unchanged: its '$FN_MARKER_END' line is missing. Restore it, then re-run."
     fi
+  elif [ -f "$rc" ] && grep -q "$OLD_FN_MARKER_BEGIN" "$rc"; then
+    if replace_block "$rc" "$OLD_FN_MARKER_BEGIN" "$OLD_FN_MARKER_END" "$FN_BLOCK"; then
+      ok "Replaced dforge-update in $rc with charterline-update (dforge-update points to it for v3.0.0)"
+    else
+      warn "Left $rc unchanged: its '$OLD_FN_MARKER_END' line is missing. Restore it, then re-run."
+    fi
   else
     printf "\n%s\n" "$FN_BLOCK" >> "$rc"
-    ok "Installed dforge-update function in $rc"
+    ok "Installed charterline-update function in $rc"
     warn "Reload your shell or run: source $rc"
   fi
 }
@@ -438,8 +504,8 @@ else
   warn "Update manually with: git -C $LOCAL_DIR fetch --tags && git -C $LOCAL_DIR checkout --detach <newest vX.Y.Z tag>"
 fi
 
-# 8. Done (dforge-update prints its own one-line summary instead)
-[ -n "${DFORGE_UPDATE:-}" ] && exit 0
+# 8. Done (the update function prints its own one-line summary instead)
+[ -n "$UPDATING" ] && exit 0
 
 INSTALLED_VERSION=$(grep -m1 -oE '\*\*Version:\*\* *[0-9]+\.[0-9]+\.[0-9]+' "$LOCAL_DIR/CLAUDE_LAWS.md" 2>/dev/null | awk '{print $2}' || true)
 
@@ -450,8 +516,8 @@ ${GREEN}Done.${RESET}
 Five things are now wired up:
 
   1. Claude global memory  →  $GLOBAL_MEMORY
-     (every Claude Code session auto-loads the Design Forge rules)
-  2. dforge-update         →  shell function in ${SHELL_RC:-<no rc found>}
+     (every Claude Code session auto-loads the BK Charterline rules)
+  2. charterline-update    →  shell function in ${SHELL_RC:-<no rc found>}
      (installs the newest release, then re-runs this installer)
   3. Law 32 guardrail hook →  $GLOBAL_SETTINGS
      (mechanically blocks merge/push-to-main/bad-commit-message/secret-commit tool calls)
@@ -459,7 +525,7 @@ Five things are now wired up:
   5. Skills                →  $SKILLS_DIR ($SKILL_COUNT linked)
 
 Verify in a new Claude Code session:
-  Rules loaded: DESIGN_FORGE v${INSTALLED_VERSION:-?}
+  Rules loaded: BK CHARTERLINE v${INSTALLED_VERSION:-?}
   Project: <repo-name>
   Persona: Frontend
   GitHub: <username>
@@ -468,10 +534,10 @@ Verify in a new Claude Code session:
 List the registered agents:
   claude agents
 
-Keep everything fresh:
-  dforge-update
+Keep everything fresh: type 'update rules' in Claude Code, or run
+  charterline-update
 
 Files on disk:
   Rules clone:    $LOCAL_DIR
-  Global memory:  $GLOBAL_MEMORY (between design-forge:begin / design-forge:end markers)
+  Global memory:  $GLOBAL_MEMORY (between bk-charterline:begin / bk-charterline:end markers)
 EOF
