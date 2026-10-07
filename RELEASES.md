@@ -2,6 +2,18 @@
 
 ---
 
+## v2.36.1 — October 7, 2026
+
+### The Law 14 check reads what the commit will contain ([#187](https://github.com/BojanKocijan/design-forge/issues/187))
+- **Fixed: a secret added in the same call got through.** The hook runs before the command, so it read the staging area as it was before `git add X && git commit`, and never saw what `git commit -a` or `git commit <path>` take from the working tree. It now reads those too.
+- **`git add` in the same call:** git's own `git add --dry-run` lists the files the add would stage, so `.gitignore`, `.`, globs and `-f` count as they do for the real add, and the hook changes nothing. New files are read whole: up to 1 MB each, 2,000 files and 32 MB in all, skipping binaries and links.
+- **Fixed: the `.env` check only ran when the command named `.env`,** so `git add -A && git commit` with an untracked `.env` got through. It now runs on every commit and matches `.env` and `.env.*` other than `.env.example`; a direnv `.envrc` passes.
+- Removing a secret is still never blocked, and a command the hook can't parse still falls back to the staged diff.
+- **Rules: 30,171 tokens** (estimate).
+- The Laws, `plugin.json` and `marketplace.json` are at 2.36.1.
+
+---
+
 ## v2.36.0 — October 7, 2026
 
 ### What loading the rules costs every session, measured and budgeted ([#188](https://github.com/BojanKocijan/design-forge/issues/188))

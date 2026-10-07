@@ -87,19 +87,24 @@ def current_branch(cwd: str) -> str | None:
     return None
 
 
-def staged_diff(cwd: str) -> str | None:
+def git_output(args: list[str], cwd: str) -> str | None:
+    """stdout of `git <args>`, or None when it fails in any way."""
     try:
-        # Plain output whatever the user's config says: color or an external
-        # diff tool would hide every `+` line from the secret check (#119).
         out = subprocess.run(
-            ["git", "diff", "--cached", "--no-color", "--no-ext-diff"],
-            capture_output=True, text=True, errors="replace", timeout=5, cwd=cwd,
+            ["git", *args], capture_output=True, text=True, errors="replace",
+            timeout=5, cwd=cwd, stdin=subprocess.DEVNULL,
         )
         if out.returncode == 0:
             return out.stdout
     except Exception:
         pass
     return None
+
+
+def git_diff(cwd: str, *args: str) -> str | None:
+    # Plain output whatever the user's config says: color or an external
+    # diff tool would hide every `+` line from the secret check (#119).
+    return git_output(["diff", "--no-color", "--no-ext-diff", *args], cwd)
 
 
 CONVENTIONAL_COMMIT_RE = re.compile(
@@ -1015,6 +1020,179 @@ def pr_body_has_screenshots_line(command: str) -> bool:
     return False
 
 
+# What a commit will contain (#187). The hook runs before the command, so the
+# staged diff misses what the same call adds: `git add X && git commit`,
+# `git commit -a` and `git commit <path>`.
+REDIRECT_RE = re.compile(r"\d*(?:&>>?|>>?|>&|<<?|<&)(.*)")
+ADD_SELECT_FLAGS = ("-A", "--all", "-u", "--update", "-f", "--force",
+                    "--no-ignore-removal", "--pathspec-file-nul")
+ADD_INTERACTIVE = ("-p", "--patch", "-i", "--interactive", "-e", "--edit")
+DRY_RUN_ADD_RE = re.compile(r"^add '(.*)'$")
+UNTRACKED_MAX_FILES = 2000
+UNTRACKED_MAX_BYTES = 1 << 20
+UNTRACKED_MAX_TOTAL = 32 << 20  # about 5 s of find_secret at worst
+
+
+def drop_redirections(tokens: list[str]) -> list[str]:
+    """`shlex` keeps `2>/dev/null` or `> out` as words; they aren't paths."""
+    kept, skip = [], False
+    for t in tokens:
+        if skip:
+            skip = False
+        elif (m := REDIRECT_RE.fullmatch(t)):
+            skip = not m.group(1)  # `> file`: the target is the next word
+        else:
+            kept.append(t)
+    return kept
+
+
+def git_segment(segment: str, sub: str, cwd: str) -> tuple[list[str], str] | None:
+    """(arguments, folder) of `git <sub>` in one segment. Only `-C` is
+    honored among git's own options: replaying `-c` could run a command."""
+    found = git_invocation(segment, sub)
+    if found is None:
+        return None
+    opts, args = found
+    i = 0
+    while i < len(opts):
+        if opts[i] == "-C" and i + 1 < len(opts):
+            cwd = os.path.join(cwd, os.path.expanduser(opts[i + 1]))
+        i += 2 if opts[i] in ("-C", "-c") else 1
+    return drop_redirections(args), cwd
+
+
+def git_add_dry_run(args: list[str], cwd: str) -> list[str]:
+    """The files `git add <args>` would stage, relative to the repo root, as
+    git's own dry run lists them, so `.gitignore`, `.`, globs and `-f` work
+    as they do for the real add. Only the flags that choose files are passed
+    on. [] when git refuses (an interactive add, a pathspec that matches
+    nothing) or anything fails, which fails open."""
+    flags, paths = [], []
+    rest = iter(args)
+    for t in rest:
+        if t == "--":
+            paths.extend(rest)
+        elif t in ADD_INTERACTIVE or re.fullmatch(r"-[A-Za-z]*[pie][A-Za-z]*", t):
+            return []
+        elif t in ADD_SELECT_FLAGS or t.startswith("--pathspec-from-file="):
+            flags.append(t)
+        elif t == "--pathspec-from-file":
+            flags += [t, next(rest, "")]
+        elif re.fullmatch(r"-[A-Za-z]+", t):
+            flags += [f"-{c}" for c in t[1:] if c in "Auf"]
+        elif not t.startswith("-"):
+            paths.append(t)
+    out = git_output(["add", "--dry-run", *flags, "--", *paths], cwd)
+    return [m.group(1) for m in map(DRY_RUN_ADD_RE.match, (out or "").splitlines()) if m]
+
+
+def commit_pathspecs(args: list[str]) -> tuple[bool, list[str] | None]:
+    """(`-a` given, the pathspecs) of one `git commit`. The pathspecs are
+    None for `--pathspec-from-file`: the caller reads the whole working tree."""
+    every, paths, skip = False, [], False
+    for i, t in enumerate(args):
+        if skip:
+            skip = False
+        elif t == "--":
+            paths += args[i + 1:]
+            break
+        elif t in ("-a", "--all"):
+            every = True
+        elif t.startswith("--pathspec-from-file"):
+            return every, None
+        elif t in COMMIT_VALUE_FLAGS:
+            skip = True  # its value is the next word
+        elif re.fullmatch(r"-[A-Za-z]+", t):
+            for ch in t[1:]:
+                every = every or ch == "a"
+                if ch in "mFCct":
+                    skip = ch == t[-1]  # otherwise the rest of the cluster is the value
+                    break
+                if ch in "uS":
+                    break  # optional value attached, e.g. -uno
+        elif not t.startswith("-"):
+            paths.append(t)
+    return every, paths
+
+
+def untracked_text(path: str) -> str | None:
+    """A new file's text, up to the size cap, or None for a link, a binary
+    or anything unreadable."""
+    if os.path.islink(path):
+        return None  # git commits the link's target path, not the file it points to
+    try:
+        with open(path, "rb") as f:
+            data = f.read(UNTRACKED_MAX_BYTES)
+    except OSError:
+        return None
+    return None if b"\0" in data[:8192] else data.decode("utf-8", "replace")
+
+
+def commit_contents(scan: str, base: str) -> tuple[list[tuple[str, str]], set[str]]:
+    """(file, the lines it adds) and the names of the files that the commits
+    in `scan` will contain: the staged diff, plus what a `git add` earlier
+    in the same call, `-a` or commit paths add. When no commit can be
+    parsed, the staged diff alone, as before (#187)."""
+    texts: list[tuple[str, str]] = []
+    names: set[str] = set()
+
+    def read(cwd: str, *args: str) -> None:
+        texts.extend(added_lines(git_diff(cwd, *args) or ""))
+        listed = git_diff(cwd, "--name-only", "-z", "--diff-filter=d", *args) or ""
+        names.update(n for n in listed.split("\0") if n)
+
+    def read_added(top: str, files: list[str]) -> None:
+        files = list(dict.fromkeys(files))
+        listed = git_output(["ls-files", "-z", "--", *(":(literal)" + f for f in files)], top) if files else None
+        if listed is None:
+            return  # nothing added, or can't tell tracked from new: fail open
+        tracked = set(listed.split("\0"))
+        if tracked & set(files):
+            read(top, "--", *(":(literal)" + f for f in files if f in tracked))
+        new = [f for f in files if f not in tracked]
+        names.update(new)
+        budget = UNTRACKED_MAX_TOTAL
+        for name in new[:UNTRACKED_MAX_FILES]:
+            if budget <= 0:
+                break  # the rest isn't checked: fails open, keeps the hook fast
+            text = untracked_text(os.path.join(top, name))
+            if text:
+                texts.append((name, text))
+                budget -= len(text)
+
+    segments = split_segments(scan) or []
+    adds: list[tuple[str | None, list[str]]] = []
+    commits = 0
+    for index, segment in enumerate(segments):
+        cwd = resolve_cwd("\n".join(segments[:index]), base)
+        add = git_segment(segment, "add", cwd) or git_segment(segment, "stage", cwd)
+        if add:
+            adds.append((git_toplevel(add[1]), git_add_dry_run(*add)))
+            continue
+        commit = git_segment(segment, "commit", cwd)
+        if commit is None:
+            continue
+        commits += 1
+        args, cwd = commit
+        read(cwd, "--cached")
+        every, paths = commit_pathspecs(args)
+        if every or paths is None:
+            read(cwd)
+        elif paths:
+            read(cwd, "--", *paths)
+        top = git_toplevel(cwd)
+        if top:
+            read_added(top, [f for add_top, files in adds if add_top == top for f in files])
+    if not commits:
+        read(resolve_cwd(scan, base), "--cached")
+    return texts, names
+
+
+def is_env_file(name: str) -> bool:
+    base = name.rsplit("/", 1)[-1]
+    return base == ".env" or (base.startswith(".env.") and base != ".env.example")
+
+
 def check_bash(command: str, base: str) -> None:
     cmd = command.strip()
     scan = strip_heredoc_bodies(cmd)
@@ -1159,35 +1337,25 @@ def check_bash(command: str, base: str) -> None:
                     "commit-message",
                 )
 
-        diff = staged_diff(cwd)
-        if diff:
-            for path, text in added_lines(diff):
-                found = find_secret(text)
-                if found:
-                    block(
-                        f"Blocked (Law 14): the staged diff adds what looks like {found[0]} "
-                        f"in {path}. Remove it before committing.",
-                        "secret",
-                    )
-        if re.search(r"(^|\s)\.env(\.\w+)?(\s|$)", cmd) and ".env.example" not in cmd:
-            # Best-effort: also check what's actually staged, not just the
-            # command line, since `git commit -a` won't name files at all.
-            try:
-                staged_names = subprocess.run(
-                    ["git", "diff", "--cached", "--name-only", "--diff-filter=d"],  # removing one is fine
-                    capture_output=True, text=True, timeout=5, cwd=cwd,
-                ).stdout.splitlines()
-            except Exception:
-                staged_names = []
-            for name in staged_names:
-                base = name.rsplit("/", 1)[-1]
-                if base.startswith(".env") and base != ".env.example":
-                    block(
-                        f"Blocked (Law 14): `{name}` is staged for commit. "
-                        "Env files other than `.env.example` must never be "
-                        "committed.",
-                        "env-file",
-                    )
+        # Law 14 — read what the commit will contain, not only what was staged
+        # before this command ran (#187). Removals never count.
+        texts, names = commit_contents(scan, base)
+        for path, text in texts:
+            found = find_secret(text)
+            if found:
+                block(
+                    f"Blocked (Law 14): the commit adds what looks like {found[0]} "
+                    f"in {path}. Remove it before committing.",
+                    "secret",
+                )
+        for name in sorted(names):
+            if is_env_file(name):
+                block(
+                    f"Blocked (Law 14): this commit adds `{name}`. "
+                    "Env files other than `.env.example` must never be "
+                    "committed.",
+                    "env-file",
+                )
 
     if pending_ask:
         ask(*pending_ask)

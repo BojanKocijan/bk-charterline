@@ -1,6 +1,6 @@
 # Master Claude Laws — Design Forge
 
-**Version:** 2.36.0
+**Version:** 2.36.1
 **Last Updated:** 2026-10-07
 **Rules Repo:** https://github.com/bojankocijan/design-forge
 **Inspired by:** Asimov's Three Laws of Robotics
@@ -317,7 +317,7 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
     | `git push` while the current branch is the default branch | Law 7 | Pushing directly to the default branch |
     | `git commit -m "..."` (or a heredoc-quoted message) whose first line doesn't match `type(scope): description` | Law 13 | Non-Conventional-Commits message |
     | `gh pr create` whose body (or `--body-file`) has no `Screenshots:` line (yes, skipped or not applicable) | Law 34 | Opening a PR without having asked about screenshot images |
-    | `git commit` when the lines the staged diff adds hold a secret from Law 14's list (the reason names the kind and the file, never the value), or a staged non-`.env.example` `.env*` file | Law 14 | A secret about to be committed. Removing one is never blocked |
+    | `git commit` when the lines the commit adds hold a secret from Law 14's list (the reason names the kind and the file, never the value), or the commit adds a `.env` or `.env.*` file other than `.env.example`. It reads the staged diff plus what `git add` earlier in the same call, `-a` or commit paths add | Law 14 | A secret about to be committed. Removing one is never blocked |
     | `git commit --no-verify` / `-n` (alone or in a short cluster such as `-an`), or `git push --no-verify` | Law 32 | Skipping git hooks; `git push -n` (dry run) stays allowed |
     | `git push` with `--force`, `-f`, `--force-with-lease`, `--force-if-includes` or a `+refspec` to the default branch | Law 7 | Rewriting the default branch's history; force-pushing a feature branch stays allowed |
 
