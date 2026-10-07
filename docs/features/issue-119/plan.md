@@ -2,7 +2,7 @@
 
 Spec: [spec.md](spec.md) · Gate tier: Significant · Issue: #119
 Work pile: judgment-heavy (patterns that must not block too often; done interactively)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-07, chat
 
 ## Three PRs (Law 31: a fix and a feature never share a PR)
 
