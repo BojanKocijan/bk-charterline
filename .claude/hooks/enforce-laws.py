@@ -26,6 +26,7 @@ Dependency-free stdlib only, so it runs anywhere Python 3 does.
 """
 from __future__ import annotations
 
+import base64
 import json
 import os
 import re
@@ -103,12 +104,108 @@ CONVENTIONAL_COMMIT_RE = re.compile(
     r"^(feat|fix|chore|docs|refactor|test|style|perf)(\([^)]+\))?!?: .+"
 )
 
-SECRET_PATTERNS = [
-    re.compile(r"-----BEGIN (RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----"),
-    re.compile(r"AKIA[0-9A-Z]{16}"),
-    re.compile(r"\b(ghp|gho|github_pat|glpat|xoxb|xoxp)_[A-Za-z0-9_-]{10,}"),
-    re.compile(r"(?i)\b(api[_-]?key|secret|token|password)\s*[:=]\s*['\"][A-Za-z0-9+/_-]{16,}['\"]"),
-]
+# Secret shapes for the Law 14 commit check and Law 39's MCP inputs (#119).
+# Every quantifier is bounded, so a large input can't backtrack for long.
+# `body` is the part after the prefix: one repeated character there is a
+# placeholder (`ghp_xxxx…`).
+SECRET_KINDS = [(kind, re.compile(pattern, re.ASCII)) for kind, pattern in (
+    ("an AWS access key", r"\b(?:AKIA|ASIA)(?P<body>[0-9A-Z]{16})\b"),
+    ("a GitHub token", r"\bgh[pousr]_(?P<body>[A-Za-z0-9]{36,255})\b"),
+    ("a GitHub token", r"\bgithub_pat_(?P<body>[A-Za-z0-9_]{60,255})\b"),
+    ("a GitLab token", r"\bglpat-(?P<body>[A-Za-z0-9_-]{20,255})"),
+    ("a Slack token", r"\bxox[abposr]-(?P<body>[A-Za-z0-9-]{10,255})"),
+    ("a Slack token", r"\bxapp-(?P<body>[A-Za-z0-9-]{10,255})"),
+    ("a Stripe live key", r"\b[rs]k_live_(?P<body>[A-Za-z0-9]{20,255})"),
+    ("an Anthropic key", r"\bsk-ant-(?P<body>[A-Za-z0-9_-]{20,255})"),
+    ("an OpenAI key", r"\bsk-(?:proj|svcacct|admin)-(?P<body>[A-Za-z0-9_-]{20,255})"),
+    ("a Google API key", r"\bAIza(?P<body>[0-9A-Za-z_-]{35})(?![0-9A-Za-z_-])"),
+    ("a Supabase key", r"\bsbp_(?P<body>[a-f0-9]{40})\b"),
+    ("a Supabase key", r"\bsb_secret_(?P<body>[A-Za-z0-9_-]{20,255})"),
+    ("a Netlify token", r"\bnfp_(?P<body>[A-Za-z0-9]{36,255})"),
+    ("an npm token", r"\bnpm_(?P<body>[A-Za-z0-9]{36})\b"),
+    ("a Figma token", r"\bfigd_(?P<body>[A-Za-z0-9_-]{30,255})"),
+)]
+PRIVATE_KEY_RE = re.compile(r"-----BEGIN ((RSA|EC|DSA|OPENSSH|ENCRYPTED|PGP) )?PRIVATE KEY( BLOCK)?-----")
+# A key body: a line break (or a literal `\n` in a .env value), then 40+ base64 characters.
+PRIVATE_KEY_BODY_RE = re.compile(r"(?:\r?\n|\\n)\s{0,8}[A-Za-z0-9+/=]{40,}")
+JWT_RE = re.compile(r"\beyJ[A-Za-z0-9_-]{10,4096}\.(?P<payload>eyJ[A-Za-z0-9_-]{10,8192})\.[A-Za-z0-9_-]{10,4096}", re.ASCII)
+# A name containing a credential word, then `=` or `:`, then a value. The match
+# starts at the word itself, so `STRIPE_SECRET_KEY` and `client_secret` count.
+ASSIGNMENT_RE = re.compile(
+    r"(?i)(?:api[_-]?key|secret|token|passw(?:or)?d|private[_-]?key|access[_-]?key)[\w.-]{0,40}"
+    r"[\"']?\s{0,4}[:=]\s{0,4}(?P<quote>[\"']?)(?P<value>[A-Za-z0-9+/=_.~-]{16,1024})(?P=quote)"
+    r"(?![A-Za-z0-9+/=_.~-])",
+    re.ASCII,
+)
+REFERENCE_PREFIXES = ("${{", "${", "$", "process.env", "os.environ", "import.meta.env")
+PUBLIC_PREFIXES = ("sk_test_", "pk_", "sb_publishable_")
+# A git SHA, a UUID or an integrity string: shaped like a key, but not one.
+NOT_A_KEY_RE = re.compile(
+    r"[0-9a-f]{40}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+    r"|sha(?:1|256|384|512)-.*",
+    re.ASCII,
+)
+PLACEHOLDER_RE = re.compile(r"(?:[A-Za-z]{1,12}[_-]){0,3}(.)\1{7,}", re.ASCII)
+
+
+def _jwt_role(payload: str) -> object:
+    try:
+        data = json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
+    except Exception:
+        return None
+    return data.get("role") if isinstance(data, dict) else None
+
+
+def _assignment_is_secret(value: str) -> bool:
+    if (value.startswith(REFERENCE_PREFIXES) or value.startswith(PUBLIC_PREFIXES)
+            or "EXAMPLE" in value or PLACEHOLDER_RE.fullmatch(value)
+            or NOT_A_KEY_RE.fullmatch(value) or JWT_RE.match(value)):
+        return False  # a JWT is judged by its own rule
+    mixed = re.search(r"[A-Za-z]", value) and re.search(r"[0-9]", value)
+    return bool(mixed) or len(value) >= 32
+
+
+def find_secret(text: str) -> tuple[str, int] | None:
+    """The kind and offset of the first secret in `text`, or None.
+    Placeholders, references, test and public keys, key headers with no
+    key body and Supabase anon JWTs pass (#119)."""
+    found: list[tuple[int, str]] = []
+    for kind, pattern in SECRET_KINDS:
+        for match in pattern.finditer(text):
+            if "EXAMPLE" not in match.group(0) and len(set(match.group("body"))) > 1:
+                found.append((match.start(), kind))
+                break
+    for match in PRIVATE_KEY_RE.finditer(text):
+        if PRIVATE_KEY_BODY_RE.search(text, match.end(), match.end() + 300):
+            found.append((match.start(), "a private key"))
+            break
+    for match in JWT_RE.finditer(text):
+        if _jwt_role(match.group("payload")) != "anon":
+            found.append((match.start(), "a JWT"))
+            break
+    for match in ASSIGNMENT_RE.finditer(text):
+        if _assignment_is_secret(match.group("value")):
+            found.append((match.start(), "a credential assignment"))
+            break
+    if not found:
+        return None
+    offset, kind = min(found)
+    return kind, offset
+
+
+def added_lines(diff: str) -> list[tuple[str, str]]:
+    """(file, the lines it adds) for each file in a unified diff. Removed and
+    context lines don't count, so deleting a leaked secret isn't blocked."""
+    files: dict[str, list[str]] = {}
+    path, previous = "?", ""
+    for line in diff.splitlines():
+        if line.startswith("+++ ") and previous.startswith("--- "):
+            target = line[4:]
+            path = target[2:] if target.startswith("b/") else target
+        elif line.startswith("+"):
+            files.setdefault(path, []).append(line[1:])
+        previous = line
+    return [(name, "\n".join(lines)) for name, lines in files.items()]
 
 
 HEREDOC_PLACEHOLDER_RE = re.compile(r"\x00HEREDOC(\d+)\x00")
@@ -1040,11 +1137,12 @@ def check_bash(command: str, base: str) -> None:
 
         diff = staged_diff(cwd)
         if diff:
-            for pattern in SECRET_PATTERNS:
-                if pattern.search(diff):
+            for path, text in added_lines(diff):
+                found = find_secret(text)
+                if found:
                     block(
-                        "Blocked (Law 14): staged diff matches a credential "
-                        "pattern. Remove the secret before committing.",
+                        f"Blocked (Law 14): the staged diff adds what looks like {found[0]} "
+                        f"in {path}. Remove it before committing.",
                         "secret",
                     )
         if re.search(r"(^|\s)\.env(\.\w+)?(\s|$)", cmd) and ".env.example" not in cmd:

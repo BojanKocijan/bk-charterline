@@ -8,12 +8,15 @@ Run: python3 -m unittest discover -s tests -v
 """
 from __future__ import annotations
 
+import base64
+import importlib.util
 import json
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from datetime import datetime, timedelta, timezone
 
@@ -1172,6 +1175,156 @@ class McpTierTests(unittest.TestCase):
         self.addCleanup(os.remove, patched)
         result = self.run_event("mcp__db__execute_sql", hook=patched, permission_mode="bypassPermissions")
         self.assertEqual(json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"], "deny")
+
+
+def load_hook():
+    """The hook as a module, for unit tests of its helpers."""
+    spec = importlib.util.spec_from_file_location("enforce_laws", HOOK)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+# Fake secrets are assembled at run time, so no whole token sits in this
+# file: the hook's own commit check and GitHub's push protection would
+# otherwise block the commit that adds these tests (#119).
+MIX = "a1B2c3D4e5F6g7H8i9J0"  # 20 mixed letters and digits
+
+
+def fake_jwt(payload: dict) -> str:
+    def part(data: dict) -> str:
+        return base64.urlsafe_b64encode(json.dumps(data).encode()).decode().rstrip("=")
+    return ".".join((part({"alg": "HS256", "typ": "JWT"}), part(payload), "s1G2n3A4t5U6r7E8x9Y0"))
+
+
+def fake_secrets() -> dict[str, str]:
+    m36 = (MIX * 2)[:36]
+    return {
+        "a private key": "-----BEGIN " + "RSA PRIVATE KEY-----\n" + "MIIE" + "a1B2" * 15 + "\n-----END RSA PRIVATE KEY-----",
+        "an AWS access key": "AK" + "IA" + "Q3B7XN2M4P5R6S8T",
+        "a GitHub token": "gh" + "p_" + m36,
+        "a GitLab token": "gl" + "pat-" + MIX,
+        "a Slack token": "xo" + "xb-" + "1234567890-" + MIX,
+        "a Stripe live key": "sk" + "_live_" + MIX + "Zz",
+        "an Anthropic key": "sk" + "-ant-" + "api03-" + MIX,
+        "an OpenAI key": "sk" + "-proj-" + MIX + MIX,
+        "a Google API key": "AI" + "za" + (MIX * 2)[:35],
+        "a Supabase key": "sb" + "_secret_" + MIX + "xY",
+        "a Netlify token": "nf" + "p_" + m36,
+        "an npm token": "np" + "m_" + m36,
+        "a Figma token": "fi" + "gd_" + MIX + MIX,
+        "a JWT": fake_jwt({"role": "service_role"}),
+        "a credential assignment": "STRIPE_SECRET" + "_KEY=" + "r9" + MIX,
+    }
+
+
+class SecretPatternTests(unittest.TestCase):
+    """One shared find_secret for Law 14 and Law 39 (#119)."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.hook = load_hook()
+
+    def test_every_kind_is_caught(self) -> None:
+        for kind, value in fake_secrets().items():
+            with self.subTest(kind=kind):
+                found = self.hook.find_secret(f"config = 1\nvalue: {value}\n")
+                self.assertIsNotNone(found, kind)
+                self.assertEqual(found[0], kind)
+
+    def test_more_shapes_are_caught(self) -> None:
+        for text in (
+            "-----BEGIN " + "PRIVATE KEY-----\\n" + "MIIE" + "a1B2" * 15,  # a key in a .env value
+            "-----BEGIN " + "OPENSSH PRIVATE KEY-----\n" + "b3Bl" * 12,
+            "AS" + "IA" + "Q3B7XN2M4P5R6S8T",
+            "gh" + "s_" + (MIX * 2)[:36],
+            "github" + "_pat_" + (MIX * 4)[:60],
+            "xo" + "xp-" + MIX,
+            "xa" + "pp-" + MIX,
+            "rk" + "_live_" + MIX,
+            "sb" + "p_" + "0123456789abcdef" * 2 + "01234567",
+            'client_secret: "' + MIX + '"',
+            "DB_PASSWORD=" + MIX,
+            '{"api_key": "' + MIX + '"}',
+        ):
+            with self.subTest(text=text[:12]):
+                self.assertIsNotNone(self.hook.find_secret(text))
+
+    def test_placeholders_references_and_public_values_pass(self) -> None:
+        for text in (
+            "gh" + "p_" + "x" * 36,
+            "AK" + "IA" + "IOSFODNN7" + "EXAMPLE",
+            "-----BEGIN " + "RSA PRIVATE KEY-----",
+            "-----BEGIN " + "PRIVATE KEY-----\n-----END PRIVATE KEY-----",
+            'api_key: "${{ secrets.API_KEY }}"',
+            "SECRET_KEY=${SECRET_KEY}",
+            "password=process.env.DATABASE_PASSWORD_VALUE",
+            "token = import.meta.env.VITE_TOKEN_VALUE_X1",
+            "client_secret=os.environ['CLIENT_SECRET']",
+            "GITHUB_TOKEN=" + "gh" + "p_" + "x" * 36,
+            "STRIPE_SECRET_KEY=" + "sk" + "_test_" + MIX,
+            "PUBLISHABLE_TOKEN=" + "pk" + "_live_" + MIX,
+            "supabase_token=" + "sb" + "_publishable_" + MIX,
+            'commit_token = "' + "0123456789abcdef" * 2 + "01234567" + '"',
+            'session_token: "123e4567-e89b-' + '12d3-a456-426614174000"',  # split: the old pattern misread UUIDs
+            'integrity_token: "sha512-' + "a1B2" * 10 + '"',
+            fake_jwt({"role": "anon", "iss": "supabase"}),
+            "anon_token=" + fake_jwt({"role": "anon"}),
+            'token_type: "refresh-token-name"',
+            "page_token = 1",
+        ):
+            with self.subTest(text=text[:16]):
+                self.assertIsNone(self.hook.find_secret(text))
+
+    def test_a_large_input_is_quick(self) -> None:
+        text = "lorem ipsum dolor sit amet 0123456789 token count = 3\n" * 20000  # about 1 MB
+        start = time.monotonic()
+        self.assertIsNone(self.hook.find_secret(text))
+        self.assertLess(time.monotonic() - start, 1.0)
+
+
+class CommitSecretTests(HookRunner, unittest.TestCase):
+    """The Law 14 commit check reads only the lines a commit adds (#119)."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.home = os.path.realpath(os.path.join(self.tmp.name, "home"))
+        os.makedirs(os.path.join(self.home, ".design-forge"))
+        self.project = os.path.realpath(os.path.join(self.tmp.name, "project"))
+        make_repo(self.project, "feat/x")
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def stage(self, name: str, text: str) -> None:
+        with open(os.path.join(self.project, name), "w") as f:
+            f.write(text)
+        subprocess.run(["git", "add", name], cwd=self.project, check=True)
+
+    def commit_directly(self, message: str) -> None:
+        subprocess.run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com",
+                        "commit", "-q", "-m", message], cwd=self.project, check=True)
+
+    def test_added_secrets_block_and_name_kind_and_file(self) -> None:
+        secrets = fake_secrets()
+        for kind in ("a GitLab token", "a Slack token"):  # missed before #119
+            with self.subTest(kind=kind):
+                self.stage("config.py", f"TOKEN_NAME = 'x'\nvalue = '{secrets[kind]}'\n")
+                result = self.run_payload({"tool_name": "Bash", "tool_input": {"command": 'git commit -m "feat: x"'}})
+                self.assertEqual(result.returncode, 2, result.stderr)
+                self.assertIn(kind, result.stderr)
+                self.assertIn("config.py", result.stderr)
+                self.assertNotIn(secrets[kind], result.stderr)
+
+    def test_removing_a_secret_is_allowed(self) -> None:
+        self.stage("config.py", f"value = '{fake_secrets()['a GitHub token']}'\n")
+        self.commit_directly("chore: add")
+        self.stage("config.py", "value = None\n")
+        self.assertEqual(self.bash('git commit -m "fix: remove the leaked token"'), "allow")
+
+    def test_a_staged_env_file_still_blocks(self) -> None:
+        self.stage(".env", "DEBUG=1\n")
+        self.assertEqual(self.bash('git add .env && git commit -m "feat: x"'), "block")
 
 
 if __name__ == "__main__":
