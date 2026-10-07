@@ -1374,5 +1374,100 @@ class CommitSecretTests(HookRunner, unittest.TestCase):
         self.assertEqual(self.bash('git status .env && git commit -m "fix: x"'), "allow")
 
 
+class CommitContentsTests(HookRunner, unittest.TestCase):
+    """The check reads what the commit will contain: what `git add`, `-a` or
+    commit paths add in the same call, not only what was staged before (#187)."""
+
+    setUp, tearDown = CommitSecretTests.setUp, CommitSecretTests.tearDown
+    stage, commit_directly = CommitSecretTests.stage, CommitSecretTests.commit_directly
+
+    def write(self, name: str, text: str | bytes) -> None:
+        path = os.path.join(self.project, name)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "wb" if isinstance(text, bytes) else "w") as f:
+            f.write(text)
+
+    def tracked(self, name: str, text: str = "value = None\n") -> None:
+        self.stage(name, text)
+        self.commit_directly("chore: add")
+
+    def secret(self, kind: str = "a GitLab token") -> str:
+        return f"value = '{fake_secrets()[kind]}'\n"
+
+    def test_add_in_the_same_call_blocks_and_names_kind_and_file(self) -> None:
+        self.write("config.py", self.secret())
+        result = self.run_payload({"tool_name": "Bash", "tool_input": {
+            "command": 'git add config.py && git commit -m "feat: x"'}})
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn("a GitLab token", result.stderr)
+        self.assertIn("config.py", result.stderr)
+        self.assertNotIn(fake_secrets()["a GitLab token"], result.stderr)
+
+    def test_add_of_a_tracked_file_in_the_same_call_blocks(self) -> None:
+        self.tracked("config.py")
+        self.write("config.py", self.secret())
+        self.assertEqual(self.bash('git add config.py && git commit -m "feat: x"'), "block")
+
+    def test_add_all_blocks_on_untracked_files_but_not_ignored_ones(self) -> None:
+        self.tracked(".gitignore", "*.log\n")
+        self.write("debug.log", self.secret())
+        self.assertEqual(self.bash('git add -A && git commit -m "feat: x"'), "allow")
+        self.write("notes/new.txt", self.secret("a Slack token"))
+        self.assertEqual(self.bash('git add . && git commit -m "feat: x"'), "block")
+
+    def test_add_runs_in_its_own_folder(self) -> None:
+        self.write("sub/f.txt", self.secret())
+        self.assertEqual(self.bash('cd sub && git add f.txt && cd .. && git commit -m "feat: x"'), "block")
+
+    def test_commit_all_reads_unstaged_changes(self) -> None:
+        self.tracked("config.py")
+        self.write("config.py", self.secret())
+        for command in ('git commit -am "feat: x"', 'git commit --all -m "feat: x"'):
+            with self.subTest(command=command):
+                self.assertEqual(self.bash(command), "block")
+
+    def test_commit_paths_read_their_working_tree(self) -> None:
+        self.tracked("config.py")
+        self.write("config.py", self.secret())
+        for command in ('git commit config.py -m "feat: x"', 'git commit -m "feat: x" -- config.py',
+                        'git commit -i config.py -m "feat: x"'):
+            with self.subTest(command=command):
+                self.assertEqual(self.bash(command), "block")
+
+    def test_unrelated_unstaged_changes_dont_block(self) -> None:
+        self.tracked("b.txt")
+        self.write("b.txt", self.secret())
+        self.stage("a.txt", "fine\n")
+        self.assertEqual(self.bash('git commit -m "feat: x"'), "allow")
+        self.write("a.txt", "still fine\n")
+        self.assertEqual(self.bash('git add a.txt && git commit -m "feat: x"'), "allow")
+        self.assertEqual(self.bash('git commit a.txt -m "feat: x"'), "allow")
+
+    def test_add_after_the_commit_doesnt_count(self) -> None:
+        self.write("config.py", self.secret())
+        self.assertEqual(self.bash('git commit -m "feat: x" && git add config.py'), "allow")
+
+    def test_env_files_the_commit_adds_block_and_envrc_doesnt(self) -> None:
+        self.write(".envrc", "use nix\n")
+        self.assertEqual(self.bash('git add -A && git commit -m "feat: x"'), "allow")
+        self.write(".env.local", "DEBUG=1\n")
+        self.assertEqual(self.bash('git add -A && git commit -m "feat: x"'), "block")
+
+    def test_a_staged_env_file_blocks_without_naming_it(self) -> None:
+        self.stage(".env", "DEBUG=1\n")
+        self.assertEqual(self.bash('git commit -m "feat: x"'), "block")
+
+    def test_removing_a_secret_with_commit_all_is_allowed(self) -> None:
+        self.tracked("config.py", self.secret())
+        self.write("config.py", "value = None\n")
+        self.assertEqual(self.bash('git commit -am "fix: remove the leaked token"'), "allow")
+
+    def test_binary_and_unparsable_commands_dont_crash(self) -> None:
+        self.write("img.bin", b"\x00\x01" + fake_secrets()["a GitLab token"].encode())
+        self.assertEqual(self.bash('git add img.bin && git commit -m "feat: x"'), "allow")
+        self.assertEqual(self.bash('git add -p && git commit -m "feat: x"'), "allow")
+        self.assertEqual(self.bash('git add "unclosed && git commit -m "feat: x"'), "allow")
+
+
 if __name__ == "__main__":
     unittest.main()
