@@ -95,3 +95,10 @@ About 6 files and 200 lines.
 
 1. **The `.env` check runs on every commit and on the same file list,** and its name rule narrows to `.env` and `.env.*` (except `.env.example`), so `.envrc` keeps passing. Recommended: yes. It's the same gap, about 10 lines. The alternative is to leave the `.env` check as it is and open a separate issue.
 2. **The caps for untracked files:** 1 MB per file, 2,000 files. Recommended as is. A lower file cap is faster; a higher one checks more of a large `git add -A`.
+
+## Deviations after approval
+
+- **A total cap of 32 MB for new files**, on top of 1 MB per file and 2,000 files. `find_secret` scans about 0.07 to 0.16 s per MB, so 2,000 files of 1 MB could run past the hook's timeout; 32 MB keeps the worst case near 5 s. The rest isn't checked (fails open).
+- **The block reasons say "the commit adds"** instead of "the staged diff adds" and "is staged for commit", since the check now reads more than the staged diff. The check ids (`secret`, `env-file`) don't change.
+- **`-C <dir>` is honored for the commit too,** not only for `git add`, so both read the same repo.
+- **Links are skipped** when reading new files: git commits a link's target path, not the file it points to.
