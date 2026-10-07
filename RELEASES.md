@@ -2,6 +2,16 @@
 
 ---
 
+## v3.1.0 — October 7, 2026
+
+### Every reply with open PRs ends with the merge order ([#206](https://github.com/BojanKocijan/bk-charterline/issues/206))
+- **Law 7:** whenever PRs are open for you, Claude's message ends with a numbered **Merge order**: each PR as a link, in order, why that order (stacked, depends on another, would conflict), and what to do after. The PR summary format has a `Merge order:` line.
+- Law 37 reports ready PRs together with the merge order, and Law 35's checklist follows it.
+- **Rules: 30,613 tokens** (estimate).
+- The Laws, `plugin.json` and `marketplace.json` are at 3.1.0.
+
+---
+
 ## v3.0.0 — October 7, 2026
 
 **Design Forge is now BK Charterline.** To update, type `update rules` in Claude Code as always. The first update shows you the hook diff to approve, then moves your install from `~/.design-forge` to `~/.bk-charterline` with all your data (projects, hook log, AI tool registry and approvals, patterns). Your next session starts with `Rules loaded: BK CHARTERLINE v3.0.0`.

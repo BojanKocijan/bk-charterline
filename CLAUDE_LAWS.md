@@ -1,6 +1,6 @@
 # Master Claude Laws — BK Charterline
 
-**Version:** 3.0.0
+**Version:** 3.1.0
 **Last Updated:** 2026-10-07
 **Rules Repo:** https://github.com/BojanKocijan/bk-charterline
 **Inspired by:** Asimov's Three Laws of Robotics
@@ -80,8 +80,12 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
     **Issue:** <issue title> — <full GitHub issue URL>
     **CI:** <green ✓ | pending ⏳ | failed ✗ | not run ⚠ (<reason>)>
 
+    **Merge order:** <numbered list, per the paragraph below>
+
     Merge it yourself in the GitHub UI when you're satisfied.
     ```
+
+    **Merge order.** Whenever one or more PRs are open for the owner, Claude's message ends with a numbered **Merge order**: each PR as a link, in the order to merge it, why that order (stacked, depends on another, would conflict), and what to do after (tell Claude, `update rules`, a manual step). One open PR still gets a one-item list. With nothing open, it says so in one line.
 
     **CI that didn't run.** When GitHub Actions didn't run at all (billing, an outage, Actions disabled), the `CI:` line says `not run ⚠ (<reason>)`, and the next line lists the local checks that passed (for example `Local: lint, typecheck, 862 tests, build`). Claude never writes `green` for checks that didn't run on GitHub.
 
@@ -367,6 +371,8 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
     5. Redeploy both sites.
     ```
 
+    The PR steps in this checklist follow Law 7's merge order.
+
     **Hand over SQL; never run it.** Claude never applies a migration or runs writing SQL on a hosted (shared or production) database, not even through a tool that allows it. It writes the migration in the repo (idempotent where possible) and puts in the checklist both the SQL to run and a short **check query** with its expected result (for example `select count(*) from plans where active;` → `1 row: 13`). A PR that depends on the migration is merged only after the owner confirms the check result. Law 38's tier 4 still applies to any read-only call Claude makes to that database.
 
     If a step genuinely can't be fully specified yet (the exact project/site isn't identified, a value needs to be generated first), Claude says so explicitly and offers to resolve it (e.g. "want me to generate this secret now?") rather than silently omitting the step. This checklist is not optional ceremony on top of the PR-ready summary — for a multi-step change it **is** the part the human actually needs, so it must be complete: every manual step across every repo involved in the change, not only the one Claude happens to be focused on at that moment. When new steps are discovered later (e.g. a follow-up PR's migration), Claude restates the full remaining sequence rather than mentioning only the new step in isolation, so the human never has to reconstruct order from scattered messages.
@@ -393,7 +399,7 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
 
     **4. Review depth follows risk.** Trivial: CI green and a glance. Standard: the Lead, or the human, reviews the diff against `plan.md`. Significant: an independent review by a Claude subagent with a fresh context that did not write the code, run by the Lead after the Tester gate, plus a second named reviewer when there is a team. AI review is input, never a verdict. A change written, reviewed, and approved only by models is unreviewed (Law 7 stands).
 
-    **5. Work is capped at review capacity.** Default cap: 3 open, non-draft, non-`chore:` PRs in the user's name awaiting review in the repo, checked read-only with `gh pr list --author @me --state open` before opening another. At the cap, Claude keeps the work on its branch and offers a draft PR or a wait. `review cap <N>` / `review cap off` change it for the session. Claude sorts each task at intake into **delegable** (specified, isolated, machine-verifiable; may run in a background subagent or worktree) or **judgment-heavy** (architecture, ambiguous bugs, UX decisions; done interactively, never parallelized or split across specialists). Ready PRs are reported together, not one message each. `review queue` prints a risk-sorted digest of PRs awaiting the user, with PRs missing an intake block at the top as unknown risk.
+    **5. Work is capped at review capacity.** Default cap: 3 open, non-draft, non-`chore:` PRs in the user's name awaiting review in the repo, checked read-only with `gh pr list --author @me --state open` before opening another. At the cap, Claude keeps the work on its branch and offers a draft PR or a wait. `review cap <N>` / `review cap off` change it for the session. Claude sorts each task at intake into **delegable** (specified, isolated, machine-verifiable; may run in a background subagent or worktree) or **judgment-heavy** (architecture, ambiguous bugs, UX decisions; done interactively, never parallelized or split across specialists). Ready PRs are reported together, with the merge order (Law 7), not one message each. `review queue` prints a risk-sorted digest of PRs awaiting the user, with PRs missing an intake block at the top as unknown risk.
 
     **Sources:** Anthropic's *AI-native SDLC playbook* and Addy Osmani's essays on the new SDLC, agentic code review, agentic code quality, conductors and orchestrators, the orchestration tax, agent harness engineering, and the factory model.
 
