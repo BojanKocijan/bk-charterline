@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+### Renamed to BK Charterline ([#199](https://github.com/BojanKocijan/bk-charterline/issues/199))
+- **The hook and the scripts find the install under either name:** `~/.bk-charterline`, or `~/.design-forge` until an install has moved. A new `.claude/hooks/rules_home.py` decides, and a fresh install uses the new name.
+- **The hook guards the installed clone under both names,** including the old name as a link to the new folder, and `charterline-update --approve` asks as `dforge-update --approve` does.
+
 ### A page for Design Forge, with an analytics demo ([#177](https://github.com/BojanKocijan/design-forge/issues/177))
 - **New `scripts/site_metrics.py`** collects the page's real numbers from git and `gh` into `site/data.js`: releases, laws, skills, agents, knowledge guides, tests, merged PRs, the median PR size, the share of PRs within 400 lines, and the rules' tokens per session. Each number keeps the date it last changed.
 - **It only asks `gh` for PRs merged since its last run** (`site/metrics-state.json`), and a run with nothing new changes no file. It reads public data only.

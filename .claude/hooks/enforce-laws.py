@@ -115,7 +115,7 @@ CONVENTIONAL_COMMIT_RE = re.compile(
 # fails open, and every other check still runs.
 if os.path.dirname(os.path.abspath(__file__)) not in sys.path:
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.dont_write_bytecode = True  # keep the ~/.design-forge clone clean
+sys.dont_write_bytecode = True  # keep the installed clone clean
 try:
     from secret_patterns import PRIVATE_KEY_RE, find_secret
 except Exception:
@@ -123,6 +123,14 @@ except Exception:
 
     def find_secret(text: str) -> tuple[str, int] | None:
         return None
+
+# Where the installed clone lives: ~/.bk-charterline, or ~/.design-forge
+# before the v3.0.0 move (#199). Guarded: without the module, the old path.
+try:
+    from rules_home import install_dirs
+except Exception:
+    def install_dirs(home: str | None = None) -> list[str]:
+        return [os.path.realpath(os.path.join(home or os.path.expanduser("~"), ".design-forge"))]
 
 
 def added_lines(diff: str) -> list[tuple[str, str]]:
@@ -355,7 +363,7 @@ ASK_DENIED_MODES: set[str] = set()
 FILE_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit")
 
 # Files under the installed clone that its own tools write (relative paths
-# or name prefixes); everything else in ~/.design-forge is protected. The
+# or name prefixes); everything else in the installed clone is protected. The
 # Law 38 registry and approvals are protected too: a tier is the user's call
 # and an approval is the user's click (#138).
 DF_DATA_PREFIXES = ("hook-log.", "ai-inventory.")
@@ -376,7 +384,7 @@ def _fold(path: str) -> str:
 def protected_target(path: str, cwd: str) -> str | None:
     """What a path protects, or None. Compared after expanding ~ and $VARS
     and resolving symlinks, so ~/.claude/skills/x (a link into
-    ~/.design-forge) counts. Fails open (None) if it can't be resolved."""
+    the installed clone) counts. Fails open (None) if it can't be resolved."""
     try:
         real = _fold(resolve_path(path, cwd))
         home = _fold(os.path.realpath(os.path.expanduser("~")))
@@ -396,8 +404,9 @@ def protected_target(path: str, cwd: str) -> str | None:
         # Moving or linking a folder onto .claude swaps its settings and
         # registry in one step, past the per-file checks above.
         return "a .claude folder"
-    forge = _fold(os.path.realpath(os.path.join(os.path.expanduser("~"), ".design-forge")))
-    if real == forge or real.startswith(forge + os.sep):
+    for forge in (_fold(d) for d in install_dirs()):
+        if real != forge and not real.startswith(forge + os.sep):
+            continue
         rel = os.path.relpath(real, forge)
         if rel == _fold("ai-tools.json"):
             return "your Law 38 tool registry"
@@ -405,7 +414,7 @@ def protected_target(path: str, cwd: str) -> str | None:
             return "your Law 38 approvals"
         if rel.startswith(tuple(_fold(p) for p in DF_DATA_PREFIXES)) or rel in {_fold(f) for f in DF_DATA_FILES}:
             return None
-        return "the installed Design Forge"
+        return "the installed BK Charterline"
     return None
 
 
@@ -481,7 +490,7 @@ def writes_registry(segment: str) -> bool:
     return bool(args) and args[0] == "set"
 
 
-# git subcommands that change the installed clone's files: dforge-update's
+# git subcommands that change the installed clone's files: the update's
 # reviewed-diff gate is skipped when Claude runs them by hand (#170).
 CLONE_GIT_MOVES = {
     "checkout", "switch", "pull", "reset", "merge", "rebase", "restore",
@@ -499,15 +508,15 @@ SHELLS = ("bash", "sh", "zsh", "$SHELL", "${SHELL}")
 def in_installed_clone(path: str) -> bool:
     try:
         real = _fold(os.path.realpath(path))
-        forge = _fold(os.path.realpath(os.path.join(os.path.expanduser("~"), ".design-forge")))
+        forges = [_fold(d) for d in install_dirs()]
     except Exception:
         return False
-    return real == forge or real.startswith(forge + os.sep)
+    return any(real == forge or real.startswith(forge + os.sep) for forge in forges)
 
 
 def moves_installed_clone(segment: str, cwd: str) -> str | None:
     """The git subcommand when `segment` would change the files of the
-    installed ~/.design-forge, else None. Follows `-C` (chained),
+    installed clone, else None. Follows `-C` (chained),
     `--git-dir`, `--work-tree`, `GIT_DIR=`/`GIT_WORK_TREE=` and a nested
     `bash|sh|zsh -c`. Untokenisable input is None (fail open)."""
     try:
@@ -680,8 +689,9 @@ def hosting_cli_write(segment: str) -> str | None:
     return " ".join([cli, *words[:2]])
 
 
-# `dforge-update … --approve`, also inside `"$SHELL" -ic '…'` or `bash -c`.
-APPROVE_RE = re.compile(r"\bdforge-update\b[^\n;&|]*?\s--approve\b")
+# `charterline-update … --approve` (or the v3.0.0 pointer `dforge-update`),
+# also inside `"$SHELL" -ic '…'` or `bash -c` (#199).
+APPROVE_RE = re.compile(r"\b(?:charterline|dforge)-update\b[^\n;&|]*?\s--approve\b")
 
 
 def tracked_by_git(path: str, cwd: str) -> bool:
@@ -1164,14 +1174,14 @@ def check_bash(command: str, base: str) -> None:
                     "which git tracks. Approve only if you want it removed.",
                     "tracked-delete",
                 )
-        # Law 32 — git that changes the installed clone skips dforge-update's
+        # Law 32 — git that changes the installed clone skips the update's
         # reviewed-diff gate (Law 28), so the user approves it here (#170).
         moved = moves_installed_clone(segment, write_cwd) if pending_ask is None else None
         if moved:
             pending_ask = (
-                f"Law 32 (guardrail): `git {moved}` would change the installed Design Forge "
-                "(~/.design-forge) without dforge-update's reviewed diff. Approve only if you "
-                "asked for it; to update, use dforge-update.",
+                f"Law 32 (guardrail): `git {moved}` would change the installed BK Charterline "
+                "without the reviewed diff an update shows. Approve only if you asked for it; "
+                "to update, use `update rules`.",
                 "guardrail-git",
             )
         # Law 38 — a hosting CLI acts with the user's account: anything but a
@@ -1192,12 +1202,12 @@ def check_bash(command: str, base: str) -> None:
                 "registry-write",
             )
 
-    # Law 28 — `dforge-update --approve` applies a hook change without the
+    # Law 28 — `charterline-update --approve` applies a hook change without the
     # terminal y; the user's click in this prompt is that approval (#170).
     if pending_ask is None and APPROVE_RE.search(scan):
         pending_ask = (
-            "Law 28: this applies a Design Forge update that changes the Law 32 hook "
-            "(dforge-update --approve). Approve only if you reviewed its diff and want "
+            "Law 28: this applies an update that changes the Law 32 hook "
+            "(charterline-update --approve). Approve only if you reviewed its diff and want "
             "exactly that commit installed.",
             "update-approve",
         )
@@ -1277,7 +1287,7 @@ def import_from(folder: str, name: str):
     """A sibling module of this script or of the clone's scripts/."""
     if folder not in sys.path:
         sys.path.insert(0, folder)
-    sys.dont_write_bytecode = True  # keep the ~/.design-forge clone clean
+    sys.dont_write_bytecode = True  # keep the installed clone clean
     return __import__(name)
 
 
@@ -1370,7 +1380,7 @@ def log_block(blocked: Blocked, command: str, base: str, record_type: str = "blo
     must not change the decision."""
     try:
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-        sys.dont_write_bytecode = True  # keep the ~/.design-forge clone clean
+        sys.dont_write_bytecode = True  # keep the installed clone clean
         import hook_log
 
         m = re.search(r"Law (\d+)", blocked.reason)

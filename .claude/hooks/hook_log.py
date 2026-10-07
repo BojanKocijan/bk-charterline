@@ -33,7 +33,6 @@ try:
 except ImportError:  # Windows: append without a lock
     fcntl = None
 
-LOG_DIR = "~/.design-forge"
 LOG_NAME = "hook-log.jsonl"
 OLD_NAME = "hook-log.1.jsonl"
 LOCK_NAME = "hook-log.lock"
@@ -44,7 +43,11 @@ TS_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
 def log_dir() -> str:
-    return os.path.expanduser(LOG_DIR)
+    """The installed clone: ~/.bk-charterline, or ~/.design-forge before
+    the v3.0.0 move (#199)."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from rules_home import rules_home
+    return rules_home()
 
 
 def utc_now() -> str:

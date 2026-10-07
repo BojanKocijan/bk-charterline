@@ -4,7 +4,7 @@ for every MCP server, desktop extension and plugin.
 
 Two files with the same shape; the project file wins over the personal
 one for the same key:
-    ~/.design-forge/ai-tools.json        personal, gitignored
+    ~/.bk-charterline/ai-tools.json      personal, gitignored
     <project>/.claude/ai-tools.json      shared, committed
 
     {"version": 1, "tools": {"mcp:gmail": {"tier": 2, "owner": "alice",
@@ -43,8 +43,9 @@ _DUPLICATES = "\0duplicates"
 HOOKS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".claude", "hooks")
 if HOOKS_DIR not in sys.path:
     sys.path.insert(0, HOOKS_DIR)
-sys.dont_write_bytecode = True  # keep the ~/.design-forge clone clean
+sys.dont_write_bytecode = True  # keep the installed clone clean
 from secret_patterns import find_secret  # noqa: E402
+from rules_home import rules_home  # noqa: E402  ~/.bk-charterline or the old name (#199)
 
 
 def looks_secret(text: str) -> bool:
@@ -52,7 +53,7 @@ def looks_secret(text: str) -> bool:
 
 
 def personal_path() -> str:
-    return os.path.join(os.path.expanduser("~"), ".design-forge", "ai-tools.json")
+    return os.path.join(rules_home(), "ai-tools.json")
 
 
 def project_path(project: str) -> str:

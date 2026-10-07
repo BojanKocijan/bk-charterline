@@ -29,7 +29,7 @@ HOOK_LOG = os.path.join(HOOKS_DIR, "hook_log.py")
 
 def env_with_home(home: str) -> dict:
     """The block log lives under $HOME. Tests point HOME at a temp
-    folder so they never touch the real ~/.design-forge log."""
+    folder so they never touch the real ~/.bk-charterline log."""
     return {**os.environ, "HOME": home}
 
 
@@ -198,7 +198,7 @@ class HookLogTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
         self.home = self.tmp.name
-        self.dir = os.path.join(self.home, ".design-forge")
+        self.dir = os.path.join(self.home, ".bk-charterline")
         self.log = os.path.join(self.dir, "hook-log.jsonl")
         self.old_log = os.path.join(self.dir, "hook-log.1.jsonl")
 
@@ -320,7 +320,7 @@ class BlockLogWiringTests(unittest.TestCase):
         self.feat_repo = os.path.join(self.tmp.name, "feat-repo")
         make_repo(self.main_repo, "main")
         make_repo(self.feat_repo, "feat/x")
-        self.log = os.path.join(self.home, ".design-forge", "hook-log.jsonl")
+        self.log = os.path.join(self.home, ".bk-charterline", "hook-log.jsonl")
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
@@ -354,7 +354,7 @@ class BlockLogWiringTests(unittest.TestCase):
         self.assertNotIn("secret-marker-xyz", log)
 
     def test_unwritable_log_still_blocks(self) -> None:
-        with open(os.path.join(self.home, ".design-forge"), "w") as f:
+        with open(os.path.join(self.home, ".bk-charterline"), "w") as f:
             f.write("not a folder")
         result = self.run_hook('git commit -m "fix: x"', self.main_repo)
         self.assertEqual(result.returncode, 2)
@@ -514,7 +514,7 @@ class GuardrailAskTests(HookRunner, unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
         self.home = os.path.realpath(os.path.join(self.tmp.name, "home"))
-        self.forge = os.path.join(self.home, ".design-forge")
+        self.forge = os.path.join(self.home, ".bk-charterline")
         os.makedirs(os.path.join(self.forge, "skills", "ux-writing"))
         os.makedirs(os.path.join(self.forge, "knowledge"))
         os.makedirs(os.path.join(self.home, ".claude", "skills"))
@@ -530,7 +530,7 @@ class GuardrailAskTests(HookRunner, unittest.TestCase):
     def test_wrong_case_paths_still_ask_on_macos(self) -> None:
         self.assertEqual(self.edit(f"{self.home}/.Claude/Settings.json", "Write"), "ask")
         self.assertEqual(self.edit(f"{self.home}/.DESIGN-FORGE/CLAUDE_LAWS.md", "Write"), "ask")
-        self.assertEqual(self.edit(f"{self.home}/.design-forge/Hook-Log.jsonl", "Write"), "allow")
+        self.assertEqual(self.edit(f"{self.home}/.bk-charterline/Hook-Log.jsonl", "Write"), "allow")
 
     def test_non_object_payload_fails_open(self) -> None:
         for raw in ("[]", '"x"', "null", "42"):
@@ -579,10 +579,10 @@ class GuardrailAskTests(HookRunner, unittest.TestCase):
             "echo '{}' > ~/.claude/settings.json",
             "echo x >> ~/.claude/CLAUDE.md",
             "echo x | tee ~/.claude/settings.local.json",
-            "sed -i '' 's/a/b/' ~/.design-forge/CLAUDE_LAWS.md",
+            "sed -i '' 's/a/b/' ~/.bk-charterline/CLAUDE_LAWS.md",
             "cp /tmp/evil.json ~/.claude/settings.json",
-            "mv ~/.design-forge/CLAUDE_LAWS.md /tmp/x",
-            "rm ~/.design-forge/.claude/hooks/enforce-laws.py",
+            "mv ~/.bk-charterline/CLAUDE_LAWS.md /tmp/x",
+            "rm ~/.bk-charterline/.claude/hooks/enforce-laws.py",
             "chmod 777 .claude/settings.local.json",
         ):
             self.assertEqual(self.bash(command), "ask", command)
@@ -591,8 +591,8 @@ class GuardrailAskTests(HookRunner, unittest.TestCase):
         os.makedirs(os.path.join(self.home, ".claude"), exist_ok=True)
         for command in (
             'echo x >> "$HOME/.claude/CLAUDE.md"',
-            "cp /tmp/x.py $HOME/.design-forge/.claude/hooks/enforce-laws.py",
-            'rm -rf "$HOME/.design-forge/.claude/hooks"',
+            "cp /tmp/x.py $HOME/.bk-charterline/.claude/hooks/enforce-laws.py",
+            'rm -rf "$HOME/.bk-charterline/.claude/hooks"',
             "cp /tmp/settings.json ~/.claude/",
             "mv /tmp/settings.json ~/.claude",
             "cp -t ~/.claude /tmp/settings.json",
@@ -626,8 +626,8 @@ class GuardrailAskTests(HookRunner, unittest.TestCase):
             self.assertEqual(self.decision(result), "ask", path)
             self.assertIn(what, json.loads(result.stdout)["hookSpecificOutput"]["permissionDecisionReason"])
         for command in (
-            "echo '{}' > ~/.design-forge/ai-tools.json",
-            "echo x >> ~/.design-forge/ai-approvals.jsonl",
+            "echo '{}' > ~/.bk-charterline/ai-tools.json",
+            "echo x >> ~/.bk-charterline/ai-approvals.jsonl",
             "cp /tmp/x.json .claude/ai-tools.json",
             "mv stage .claude",
             "ln -s stage .claude",
@@ -637,8 +637,8 @@ class GuardrailAskTests(HookRunner, unittest.TestCase):
 
     def test_registry_set_asks_and_show_is_free(self) -> None:
         for command in (
-            "python3 ~/.design-forge/scripts/ai_tools.py set mcp:db --tier 2 --owner a --personal",
-            "python ~/.design-forge/scripts/ai_tools.py set mcp:db --tier 2 --owner a --personal",
+            "python3 ~/.bk-charterline/scripts/ai_tools.py set mcp:db --tier 2 --owner a --personal",
+            "python ~/.bk-charterline/scripts/ai_tools.py set mcp:db --tier 2 --owner a --personal",
             "python3.12 -B scripts/ai_tools.py set mcp:db --tier 2 --owner a --personal",
             "python3 -W ignore scripts/ai_tools.py set mcp:db --tier 2 --owner a --personal",
             "./scripts/ai_tools.py set mcp:db --tier 2 --owner a --personal",
@@ -655,7 +655,7 @@ class GuardrailAskTests(HookRunner, unittest.TestCase):
         reason = json.loads(result.stdout)["hookSpecificOutput"]["permissionDecisionReason"]
         self.assertIn("Law 38", reason)
         for command in (
-            "python3 ~/.design-forge/scripts/ai_tools.py show mcp:db",
+            "python3 ~/.bk-charterline/scripts/ai_tools.py show mcp:db",
             "python3 scripts/ai_tools.py show set",
             "python3 scripts/ai_inventory.py --project . --session set",
             "grep set scripts/ai_tools.py",
@@ -681,7 +681,7 @@ class GuardrailAskTests(HookRunner, unittest.TestCase):
             "grep -n hooks ~/.claude/settings.json",
             "cp ~/.claude/settings.json /tmp/settings-backup.json",
             '"$SHELL" -ic dforge-update',  # git by hand in the clone asks now (#170)
-            "python3 ~/.design-forge/scripts/ai_tools.py show mcp:db",
+            "python3 ~/.bk-charterline/scripts/ai_tools.py show mcp:db",
             "echo hi > notes.txt",
         ):
             self.assertEqual(self.bash(command), "allow", command)
@@ -726,13 +726,13 @@ class GuardrailAskTests(HookRunner, unittest.TestCase):
 
 
 class InstalledCloneGitTests(HookRunner, unittest.TestCase):
-    """git that changes the installed ~/.design-forge asks the user, since
-    it skips dforge-update's reviewed-diff gate (#170)."""
+    """git that changes the installed ~/.bk-charterline asks the user, since
+    it skips the reviewed diff an update shows (#170)."""
 
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
         self.home = os.path.realpath(os.path.join(self.tmp.name, "home"))
-        self.forge = os.path.join(self.home, ".design-forge")
+        self.forge = os.path.join(self.home, ".bk-charterline")
         make_repo(self.forge, "main")
         os.makedirs(os.path.join(self.forge, "knowledge"))
         self.project = os.path.realpath(os.path.join(self.tmp.name, "project"))
@@ -745,46 +745,46 @@ class InstalledCloneGitTests(HookRunner, unittest.TestCase):
         link = os.path.join(self.tmp.name, "forge-link")
         os.symlink(self.forge, link)
         for command in (
-            "git -C ~/.design-forge checkout v2.27.0",
-            "cd ~/.design-forge && git pull",
-            "cd ~/.design-forge\ngit fetch && git reset --hard origin/main",
-            'git -C "$HOME/.design-forge" switch main',
-            "git -C ~/.design-forge/knowledge restore .",
-            "git -C ~ -C .design-forge merge origin/main",
+            "git -C ~/.bk-charterline checkout v2.27.0",
+            "cd ~/.bk-charterline && git pull",
+            "cd ~/.bk-charterline\ngit fetch && git reset --hard origin/main",
+            'git -C "$HOME/.bk-charterline" switch main',
+            "git -C ~/.bk-charterline/knowledge restore .",
+            "git -C ~ -C .bk-charterline merge origin/main",
             f"git -C {link} rebase origin/main",
-            "git --git-dir ~/.design-forge/.git --work-tree ~/.design-forge checkout v2.27.0",
-            "git --work-tree=$HOME/.design-forge checkout .",
-            "GIT_WORK_TREE=~/.design-forge git checkout x",
-            'bash -c "cd ~/.design-forge && git switch main"',
-            '"$SHELL" -ic "git -C ~/.design-forge pull --ff-only"',
-            "git -C ~/.design-forge stash pop",
-            "git -C ~/.design-forge stash",
-            "git -C ~/.design-forge clean -fdx",
-            "git -C ~/.design-forge cherry-pick abc123",
-            "git -C ~/.design-forge apply /tmp/x.patch",
+            "git --git-dir ~/.bk-charterline/.git --work-tree ~/.bk-charterline checkout v2.27.0",
+            "git --work-tree=$HOME/.bk-charterline checkout .",
+            "GIT_WORK_TREE=~/.bk-charterline git checkout x",
+            'bash -c "cd ~/.bk-charterline && git switch main"',
+            '"$SHELL" -ic "git -C ~/.bk-charterline pull --ff-only"',
+            "git -C ~/.bk-charterline stash pop",
+            "git -C ~/.bk-charterline stash",
+            "git -C ~/.bk-charterline clean -fdx",
+            "git -C ~/.bk-charterline cherry-pick abc123",
+            "git -C ~/.bk-charterline apply /tmp/x.patch",
         ):
             self.assertEqual(self.bash(command), "ask", command)
 
     def test_the_ask_names_the_command_and_is_logged(self) -> None:
-        result = self.run_payload({"tool_name": "Bash", "tool_input": {"command": "git -C ~/.design-forge pull"}})
+        result = self.run_payload({"tool_name": "Bash", "tool_input": {"command": "git -C ~/.bk-charterline pull"}})
         reason = json.loads(result.stdout)["hookSpecificOutput"]["permissionDecisionReason"]
         self.assertIn("`git pull`", reason)
-        self.assertIn("dforge-update", reason)
+        self.assertIn("update rules", reason)
         with open(os.path.join(self.forge, "hook-log.jsonl")) as f:
             [record] = [json.loads(line) for line in f]
         self.assertEqual((record["type"], record["law"], record["check"]), ("ask", 32, "guardrail-git"))
 
     def test_reads_exceptions_and_updates_are_free(self) -> None:
         for command in (
-            "git -C ~/.design-forge status",
-            "git -C ~/.design-forge log -1 --format=%ct",
-            "git -C ~/.design-forge fetch --tags",
-            "git -C ~/.design-forge ls-remote --tags origin 'v*'",
-            "git -C ~/.design-forge describe --tags",
-            "git -C ~/.design-forge tag --list",
-            "git -C ~/.design-forge rev-parse HEAD",
-            "git -C ~/.design-forge stash list",
-            "git -C ~/.design-forge stash show -p",
+            "git -C ~/.bk-charterline status",
+            "git -C ~/.bk-charterline log -1 --format=%ct",
+            "git -C ~/.bk-charterline fetch --tags",
+            "git -C ~/.bk-charterline ls-remote --tags origin 'v*'",
+            "git -C ~/.bk-charterline describe --tags",
+            "git -C ~/.bk-charterline tag --list",
+            "git -C ~/.bk-charterline rev-parse HEAD",
+            "git -C ~/.bk-charterline stash list",
+            "git -C ~/.bk-charterline stash show -p",
             "dforge-update",
             "dforge-update --main",
             '"$SHELL" -ic dforge-update',
@@ -798,16 +798,16 @@ class InstalledCloneGitTests(HookRunner, unittest.TestCase):
             f"git -C {dev} pull",
             f"cd {dev} && git checkout -b feat/x",
             "git reset --hard HEAD",
-            "git -C ~/.design-forge-old checkout x",
+            "git -C ~/.bk-charterline-old checkout x",
         ):
             self.assertEqual(self.bash(command), "allow", command)
         self.assertEqual(self.bash("git pull", self.forge), "ask")
 
     def test_a_block_still_wins(self) -> None:
-        self.assertEqual(self.bash("cd ~/.design-forge && git pull && git push"), "block")
+        self.assertEqual(self.bash("cd ~/.bk-charterline && git pull && git push"), "block")
 
     def test_unbalanced_quotes_fail_open(self) -> None:
-        self.assertEqual(self.bash("git -C ~/.design-forge checkout 'x"), "allow")
+        self.assertEqual(self.bash("git -C ~/.bk-charterline checkout 'x"), "allow")
 
 
 class UpdateApproveTests(HookRunner, unittest.TestCase):
@@ -817,7 +817,7 @@ class UpdateApproveTests(HookRunner, unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
         self.home = os.path.realpath(os.path.join(self.tmp.name, "home"))
-        os.makedirs(os.path.join(self.home, ".design-forge"))
+        os.makedirs(os.path.join(self.home, ".bk-charterline"))
         self.project = os.path.realpath(os.path.join(self.tmp.name, "project"))
         make_repo(self.project, "feat/x")
 
@@ -836,7 +836,7 @@ class UpdateApproveTests(HookRunner, unittest.TestCase):
 
     def test_the_ask_is_logged_under_law_28(self) -> None:
         self.bash("dforge-update --approve 3021c61aa")
-        with open(os.path.join(self.home, ".design-forge", "hook-log.jsonl")) as f:
+        with open(os.path.join(self.home, ".bk-charterline", "hook-log.jsonl")) as f:
             [record] = [json.loads(line) for line in f]
         self.assertEqual((record["type"], record["law"], record["check"]), ("ask", 28, "update-approve"))
 
@@ -853,7 +853,7 @@ class HostingCliTests(HookRunner, unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
         self.home = os.path.realpath(os.path.join(self.tmp.name, "home"))
-        os.makedirs(os.path.join(self.home, ".design-forge"))
+        os.makedirs(os.path.join(self.home, ".bk-charterline"))
         self.project = os.path.realpath(os.path.join(self.tmp.name, "project"))
         make_repo(self.project, "feat/x")
         os.makedirs(os.path.join(self.project, "site"))
@@ -961,7 +961,7 @@ class HostingCliTests(HookRunner, unittest.TestCase):
         result = self.run_payload({"tool_name": "Bash", "tool_input": {"command": "netlify api deleteSite"}})
         reason = json.loads(result.stdout)["hookSpecificOutput"]["permissionDecisionReason"]
         self.assertIn("`netlify api deleteSite`", reason)
-        with open(os.path.join(self.home, ".design-forge", "hook-log.jsonl")) as f:
+        with open(os.path.join(self.home, ".bk-charterline", "hook-log.jsonl")) as f:
             [record] = [json.loads(line) for line in f]
         self.assertEqual((record["type"], record["law"], record["check"]), ("ask", 38, "hosting-write"))
 
@@ -1044,7 +1044,7 @@ class TrackedDeleteTests(unittest.TestCase):
 
     def test_tracked_delete_is_logged_under_law_8(self) -> None:
         self.bash("rm tracked.txt")
-        with open(os.path.join(self.home, ".design-forge", "hook-log.jsonl")) as f:
+        with open(os.path.join(self.home, ".bk-charterline", "hook-log.jsonl")) as f:
             [record] = [json.loads(line) for line in f]
         self.assertEqual((record["type"], record["law"], record["check"]), ("ask", 8, "tracked-delete"))
 
@@ -1055,7 +1055,7 @@ class McpTierTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
         self.home = os.path.realpath(os.path.join(self.tmp.name, "home"))
-        self.forge = os.path.join(self.home, ".design-forge")
+        self.forge = os.path.join(self.home, ".bk-charterline")
         os.makedirs(self.forge)
         self.project = os.path.realpath(os.path.join(self.tmp.name, "project"))
         make_repo(self.project, "feat/x")
@@ -1337,7 +1337,7 @@ class CommitSecretTests(HookRunner, unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
         self.home = os.path.realpath(os.path.join(self.tmp.name, "home"))
-        os.makedirs(os.path.join(self.home, ".design-forge"))
+        os.makedirs(os.path.join(self.home, ".bk-charterline"))
         self.project = os.path.realpath(os.path.join(self.tmp.name, "project"))
         make_repo(self.project, "feat/x")
 
@@ -1484,6 +1484,62 @@ class CommitContentsTests(HookRunner, unittest.TestCase):
         self.assertEqual(self.bash('git add img.bin && git commit -m "feat: x"'), "allow")
         self.assertEqual(self.bash('git add -p && git commit -m "feat: x"'), "allow")
         self.assertEqual(self.bash('git add "unclosed && git commit -m "feat: x"'), "allow")
+
+
+class InstallNameTests(HookRunner, unittest.TestCase):
+    """The hook and the scripts find the install under either name: only
+    ~/.design-forge (before the v3.0.0 move), only ~/.bk-charterline, or the
+    new folder with the old name as a link to it (#199)."""
+
+    NAMES = {"old": [".design-forge"], "new": [".bk-charterline"], "moved": [".bk-charterline", ".design-forge"]}
+
+    def use_home(self, layout: str) -> None:
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.home = os.path.realpath(os.path.join(tmp.name, "home"))
+        make_repo(os.path.join(self.home, self.NAMES[layout][0]), "main")
+        if layout == "moved":
+            os.symlink(os.path.join(self.home, ".bk-charterline"), os.path.join(self.home, ".design-forge"))
+        self.project = os.path.realpath(os.path.join(tmp.name, "project"))
+        make_repo(self.project, "feat/x")
+
+    def paths(self) -> list[str]:
+        code = ("import sys; sys.path.insert(0, sys.argv[1]); import ai_tools, hook_log; "
+                "print(ai_tools.personal_path()); print(hook_log.log_dir())")
+        scripts = os.path.join(os.path.dirname(HOOKS_DIR), "..", "scripts")
+        out = subprocess.run([sys.executable, "-B", "-c", code, scripts], capture_output=True,
+                             text=True, check=True, env=env_with_home(self.home)).stdout.split()
+        return [os.path.relpath(p, self.home) for p in out]
+
+    def test_the_clone_is_guarded_under_every_name(self) -> None:
+        for layout, names in self.NAMES.items():
+            self.use_home(layout)
+            for name in names:
+                with self.subTest(layout=layout, name=name):
+                    self.assertEqual(self.edit(os.path.join(self.home, name, "CLAUDE_LAWS.md")), "ask")
+                    self.assertEqual(self.edit(os.path.join(self.home, name, "projects.yaml")), "allow")
+                    self.assertEqual(self.bash(f"git -C ~/{name} pull"), "ask")
+
+    def test_the_scripts_use_the_folder_that_exists(self) -> None:
+        for layout, name in (("old", ".design-forge"), ("new", ".bk-charterline"), ("moved", ".bk-charterline")):
+            with self.subTest(layout=layout):
+                self.use_home(layout)
+                self.assertEqual(self.paths(), [os.path.join(name, "ai-tools.json"), name])
+
+    def test_a_fresh_home_gets_the_new_name(self) -> None:
+        self.use_home("new")
+        shutil.rmtree(os.path.join(self.home, ".bk-charterline"))
+        self.assertEqual(self.paths(), [os.path.join(".bk-charterline", "ai-tools.json"), ".bk-charterline"])
+
+    def test_the_new_update_command_asks_only_to_approve(self) -> None:
+        self.use_home("new")
+        for command in ("charterline-update --approve 3021c61aa", "\"$SHELL\" -ic 'charterline-update --approve 3021c61aa'",
+                        "dforge-update --approve 3021c61aa"):
+            with self.subTest(command=command):
+                self.assertEqual(self.bash(command), "ask")
+        for command in ("charterline-update", "charterline-update --main", "\"$SHELL\" -ic charterline-update"):
+            with self.subTest(command=command):
+                self.assertEqual(self.bash(command), "allow")
 
 
 if __name__ == "__main__":
