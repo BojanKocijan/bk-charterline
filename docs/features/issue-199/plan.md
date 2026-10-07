@@ -2,7 +2,7 @@
 
 Spec: [spec.md](spec.md) · Gate tier: Significant · Branches: `feat/rename-1-paths` … `feat/rename-5-release` · Issue: #199
 Work pile: judgment-heavy (every install depends on it), built in this session, not split across agents
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-07, chat
 
 ## How it ships
 
