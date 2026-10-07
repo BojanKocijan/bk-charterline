@@ -2,7 +2,7 @@
 
 Spec: [spec.md](spec.md) · Gate tier: Significant · Branches: `feat/site-1-metrics` … `feat/site-4-publish` · Issue: #177
 Work pile: judgment-heavy (a new public page and its look), built in one session, not split across agents
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-07, chat (all four decisions as recommended)
 
 ## Design decisions (owner, 2026-10-07, chat)
 
