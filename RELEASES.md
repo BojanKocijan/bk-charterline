@@ -2,6 +2,14 @@
 
 ---
 
+## Unreleased
+
+### A page for Design Forge, with an analytics demo ([#177](https://github.com/BojanKocijan/design-forge/issues/177))
+- **New `scripts/site_metrics.py`** collects the page's real numbers from git and `gh` into `site/data.js`: releases, laws, skills, agents, knowledge guides, tests, merged PRs, the median PR size, the share of PRs within 400 lines, and the rules' tokens per session. Each number keeps the date it last changed.
+- **It only asks `gh` for PRs merged since its last run** (`site/metrics-state.json`), and a run with nothing new changes no file. It reads public data only.
+
+---
+
 ## v2.36.2 — October 7, 2026
 
 ### One secret pattern list for the hook, the registry and the inventory ([#186](https://github.com/BojanKocijan/design-forge/issues/186))
