@@ -1,0 +1,215 @@
+/* BK Charterline page (#177): the demo's charts and their motion. */
+/* Horizontal bars and the funnel */
+.hbars {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.hbar {
+  display: grid;
+  grid-template-columns: minmax(6rem, 38%) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: var(--small);
+}
+
+.hbar-label {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.hbar-track {
+  height: 0.7rem;
+  background: var(--sunken);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.hbar-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+  transform-origin: left center;
+  transform: scaleX(var(--v, 0));
+}
+
+.hbar-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.hbar-step {
+  margin-left: 0.4rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* Columns, with a ceiling line before the ones over the limit */
+.cols {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  height: 11rem;
+}
+
+.col {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0.35rem;
+  text-align: center;
+  font-size: var(--small);
+}
+
+.col-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.col-bar {
+  display: flex;
+  align-items: flex-end;
+  background: var(--sunken);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.col-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: center bottom;
+  transform: scaleY(var(--v, 0));
+}
+
+.col-over .col-fill {
+  background: var(--bad);
+}
+
+.col-over::before {
+  content: "";
+  position: absolute;
+  inset: 1.4rem auto 1.6rem calc(-0.375rem - 1px);
+  border-left: 2px dashed var(--bad);
+  pointer-events: none;
+}
+
+.col-over .col-label {
+  color: var(--bad);
+  font-weight: 600;
+}
+
+.cols-note {
+  color: var(--muted);
+  font-size: var(--tiny);
+}
+
+.col-label {
+  color: var(--muted);
+  font-size: var(--tiny);
+}
+
+/* Line chart */
+.line-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.line-chart .grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.line-chart .axis {
+  fill: var(--muted);
+  font: 10px var(--font-mono);
+}
+
+.line-chart .area {
+  fill: var(--accent-soft);
+}
+
+.line-chart .stroke {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.line-chart .dot {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+.line-chart .end {
+  fill: var(--accent);
+}
+
+.line-chart .end-label {
+  fill: var(--ink);
+  font: 600 11px var(--font-body);
+}
+
+.line-chart .reveal {
+  transform-box: fill-box;
+  transform-origin: left center;
+}
+
+/* Motion: everything rests in its final state; .grow plays once when a
+   chart is first seen, and never when motion is off. */
+[data-motion="on"] .grow .hbar-fill {
+  animation: fill-x var(--motion-fill) var(--motion-ease) both;
+  animation-delay: calc(var(--motion-stagger) * var(--i, 0));
+}
+
+[data-motion="on"] .grow .col-fill {
+  animation: fill-y var(--motion-fill) var(--motion-ease) both;
+  animation-delay: calc(var(--motion-stagger) * var(--i, 0));
+}
+
+[data-motion="on"] .grow .reveal {
+  animation: fill-x calc(var(--motion-fill) * 1.4) var(--motion-ease) both;
+}
+
+[data-motion="on"] .panel:not([hidden]) {
+  animation: panel-in var(--motion-enter) var(--motion-ease) both;
+}
+
+@keyframes fill-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes fill-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (max-width: 720px) {
+  .cards,
+  .kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .brief li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.35rem;
+  }
+}
