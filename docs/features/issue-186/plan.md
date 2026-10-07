@@ -2,7 +2,7 @@
 
 Spec: [#186](https://github.com/BojanKocijan/design-forge/issues/186) (the issue) · Gate tier: Standard · Branch: `fix/issue-186-shared-secret-patterns` · Issue: #186
 Work pile: delegable (a move plus one import; machine-verifiable)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-07, chat (all three decisions as recommended)
 
 ## The gap
 
