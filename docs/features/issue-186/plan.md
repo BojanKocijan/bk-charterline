@@ -74,3 +74,8 @@ About 9 files and 350 lines: the move counts twice, about 100 lines out and 100 
 1. **The registry and inventory follow the hook's pass rules,** as the issue says, and the three fixtures switch to realistic fakes. Recommended: yes. Alternative: a strict mode that also masks placeholders and short assignments in the registry and inventory.
 2. **Add the legacy OpenAI key pattern** (`sk-` + 20 characters + `T3BlbkFJ` + 20 characters, the shape secret scanners use) to the shared list. It keeps what the old `sk-` catch-all masked, and the Law 14 commit check gets it too. Recommended: yes. Law 14 already names OpenAI, so its text doesn't change.
 3. **A guarded import in the hook,** so a missing module disables only the secret check, not the never-merge and never-push-to-`main` checks. Recommended: yes.
+
+## Deviations after approval
+
+- **Two PRs, not one:** the plan and the fix came to 424 lines in 11 files, past Law 31's ceilings. This plan ships in its own docs PR, and the fix (10 files, 348 lines) follows it.
+- **Two imports go:** `re` from `ai_tools.py` and `base64` from the hook, which only the moved code used.
