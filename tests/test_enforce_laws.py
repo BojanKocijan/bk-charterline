@@ -1246,6 +1246,11 @@ class SecretPatternTests(unittest.TestCase):
             'client_secret: "' + MIX + '"',
             "DB_PASSWORD=" + MIX,
             '{"api_key": "' + MIX + '"}',
+            'DB_PASSWORD="S3cure!' + 'Pass#2024xyz"',  # symbols in a quoted value
+            "gh" + "u_" + (MIX * 2)[:36],
+            "gh" + "r_" + (MIX * 2)[:36],
+            "-----BEGIN " + "ENCRYPTED PRIVATE KEY-----\n" + "MIIE" + "a1B2" * 15,
+            "-----BEGIN " + "PGP PRIVATE KEY BLOCK-----\n\n" + "lQdG" + "a1B2" * 15,
         ):
             with self.subTest(text=text[:12]):
                 self.assertIsNotNone(self.hook.find_secret(text))
@@ -1272,15 +1277,41 @@ class SecretPatternTests(unittest.TestCase):
             "anon_token=" + fake_jwt({"role": "anon"}),
             'token_type: "refresh-token-name"',
             "page_token = 1",
+            'API_TOKEN="${SECRET_VALUE_FROM_CI}"',
+            "STRIPE_SECRET_KEY=" + "rk" + "_test_" + MIX,
+            "xo" + "xb-" + "x" * 12 + "-" + "x" * 13 + "-" + "x" * 24,
+            "sk" + "-ant-" + "api03-" + "x" * 40,
+            "sk" + "-ant-" + "your-api-key-goes-here",
+            # design tokens, files and model names under a token or secret name
+            "token: color.primary.500",
+            '<Badge token="semantic.success.bg2" />',
+            "secretName: tls-secret-prod-2024",
+            'tokenizer: "bert-base-uncased-v2"',
+            'token_file = "credentials/token_v2.json"',
         ):
             with self.subTest(text=text[:16]):
                 self.assertIsNone(self.hook.find_secret(text))
 
-    def test_a_large_input_is_quick(self) -> None:
-        text = "lorem ipsum dolor sit amet 0123456789 token count = 3\n" * 20000  # about 1 MB
-        start = time.monotonic()
-        self.assertIsNone(self.hook.find_secret(text))
-        self.assertLess(time.monotonic() - start, 1.0)
+    def test_a_token_in_an_assignment_reports_its_own_kind(self) -> None:
+        self.assertEqual(self.hook.find_secret("GITHUB_TOKEN=" + "gh" + "p_" + (MIX * 2)[:36])[0], "a GitHub token")
+
+    def test_large_and_crafted_inputs_are_quick(self) -> None:
+        for text in (  # about 1 MB each
+            "lorem ipsum dolor sit amet 0123456789 token count = 3\n" * 20000,
+            "eyJ-" * 250000,
+            "token=" * 166666,
+        ):
+            start = time.monotonic()
+            self.assertIsNone(self.hook.find_secret(text))
+            self.assertLess(time.monotonic() - start, 1.0, text[:8])
+
+    def test_added_lines_reads_only_what_a_diff_adds(self) -> None:
+        diff = "\n".join((
+            "diff --git a/old.txt b/new.txt", "similarity index 90%", "rename from old.txt", "rename to new.txt",
+            "--- a/old.txt", "+++ b/new.txt", "@@ -1,3 +1,3 @@", " kept", "-gone", "++ starts with a plus",
+            "\\ No newline at end of file", "diff --git a/img.png b/img.png", "Binary files a/img.png and b/img.png differ",
+        ))
+        self.assertEqual(self.hook.added_lines(diff), [("new.txt", "+ starts with a plus")])
 
 
 class CommitSecretTests(HookRunner, unittest.TestCase):
@@ -1322,9 +1353,25 @@ class CommitSecretTests(HookRunner, unittest.TestCase):
         self.stage("config.py", "value = None\n")
         self.assertEqual(self.bash('git commit -m "fix: remove the leaked token"'), "allow")
 
-    def test_a_staged_env_file_still_blocks(self) -> None:
+    def test_a_key_body_added_under_a_committed_header_blocks(self) -> None:
+        header, footer = "-----BEGIN " + "RSA PRIVATE KEY-----", "-----END RSA PRIVATE KEY-----"
+        self.stage("key.pem", f"{header}\n{footer}\n")
+        self.commit_directly("chore: add")
+        self.stage("key.pem", f"{header}\n" + "MIIE" + "a1B2" * 15 + f"\n{footer}\n")
+        self.assertEqual(self.bash('git commit -m "feat: x"'), "block")
+
+    def test_color_or_an_external_diff_doesnt_hide_a_secret(self) -> None:
+        subprocess.run(["git", "config", "color.ui", "always"], cwd=self.project, check=True)
+        subprocess.run(["git", "config", "diff.external", "false"], cwd=self.project, check=True)
+        self.stage("config.py", f"value = '{fake_secrets()['a GitLab token']}'\n")
+        self.assertEqual(self.bash('git commit -m "feat: x"'), "block")
+
+    def test_a_staged_env_file_still_blocks_and_removing_one_doesnt(self) -> None:
         self.stage(".env", "DEBUG=1\n")
         self.assertEqual(self.bash('git add .env && git commit -m "feat: x"'), "block")
+        self.commit_directly("chore: add")
+        subprocess.run(["git", "rm", "-q", "--cached", ".env"], cwd=self.project, check=True)
+        self.assertEqual(self.bash('git status .env && git commit -m "fix: x"'), "allow")
 
 
 if __name__ == "__main__":

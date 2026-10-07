@@ -7,8 +7,9 @@
 ### The Law 14 secret check catches what it promised, and lets removals through ([#119](https://github.com/BojanKocijan/design-forge/issues/119))
 - **Fixed: GitLab `glpat-` and Slack `xoxb-` / `xoxp-` tokens were never caught.** The pattern expected `_` where these tokens use `-`.
 - **Wider patterns, one shared function:** private keys of any type (with a key body), AWS `AKIA` / `ASIA`, all GitHub token types, GitLab, Slack, Stripe live, Anthropic, OpenAI, Google, Supabase, Netlify, npm and Figma tokens, JWTs (a Supabase anon key passes), and credential assignments whose name *contains* a keyword (`STRIPE_SECRET_KEY=…`, `client_secret: "…"`).
-- **Fewer false blocks:** placeholders (`ghp_xxxx…`, `EXAMPLE`), references (`${{ secrets.X }}`, `process.env.X`), Stripe test and public keys, git SHAs, UUIDs and integrity strings pass.
-- **Fixed: removing a leaked secret was blocked.** The check read removed and context lines too; now it reads only the lines a commit adds, as the #122 runbook needs.
+- **Fewer false blocks:** placeholders (`ghp_xxxx…`, `EXAMPLE`, `sk-ant-your-api-key-goes-here`), references (`${{ secrets.X }}`, `process.env.X`), Stripe test and public keys, git SHAs, UUIDs, integrity strings, and design-token or file names such as `color.primary.500` under a token or secret name pass.
+- **Fixed: removing a leaked secret was blocked,** including a committed `.env`. The check read removed and context lines too; now it reads only the lines a commit adds, as the #122 runbook needs. A key body added under an already-committed key header still blocks.
+- **Fixed: color or an external diff tool hid every secret.** With `color.ui=always` or `diff.external` set, no line started with `+`; the check now asks git for plain output.
 - **The block names the kind and the file,** never the value.
 - **The first tests for this check,** with fake tokens assembled at run time so no whole token sits in the repo.
 - Law 14's list now matches the hook, without the "high-entropy strings" it never checked.

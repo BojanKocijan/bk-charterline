@@ -89,9 +89,11 @@ def current_branch(cwd: str) -> str | None:
 
 def staged_diff(cwd: str) -> str | None:
     try:
+        # Plain output whatever the user's config says: color or an external
+        # diff tool would hide every `+` line from the secret check (#119).
         out = subprocess.run(
-            ["git", "diff", "--cached"],
-            capture_output=True, text=True, timeout=5, cwd=cwd,
+            ["git", "diff", "--cached", "--no-color", "--no-ext-diff"],
+            capture_output=True, text=True, errors="replace", timeout=5, cwd=cwd,
         )
         if out.returncode == 0:
             return out.stdout
@@ -128,24 +130,37 @@ SECRET_KINDS = [(kind, re.compile(pattern, re.ASCII)) for kind, pattern in (
 PRIVATE_KEY_RE = re.compile(r"-----BEGIN ((RSA|EC|DSA|OPENSSH|ENCRYPTED|PGP) )?PRIVATE KEY( BLOCK)?-----")
 # A key body: a line break (or a literal `\n` in a .env value), then 40+ base64 characters.
 PRIVATE_KEY_BODY_RE = re.compile(r"(?:\r?\n|\\n)\s{0,8}[A-Za-z0-9+/=]{40,}")
-JWT_RE = re.compile(r"\beyJ[A-Za-z0-9_-]{10,4096}\.(?P<payload>eyJ[A-Za-z0-9_-]{10,8192})\.[A-Za-z0-9_-]{10,4096}", re.ASCII)
+JWT_RE = re.compile(
+    r"(?<![A-Za-z0-9_-])eyJ[A-Za-z0-9_-]{10,4096}\.(?P<payload>eyJ[A-Za-z0-9_-]{10,8192})\.[A-Za-z0-9_-]{10,4096}",
+    re.ASCII,
+)
 # A name containing a credential word, then `=` or `:`, then a value. The match
 # starts at the word itself, so `STRIPE_SECRET_KEY` and `client_secret` count.
+# A quoted value may hold symbols (`"S3cure!Pass#2024"`); a bare one may not.
 ASSIGNMENT_RE = re.compile(
-    r"(?i)(?:api[_-]?key|secret|token|passw(?:or)?d|private[_-]?key|access[_-]?key)[\w.-]{0,40}"
-    r"[\"']?\s{0,4}[:=]\s{0,4}(?P<quote>[\"']?)(?P<value>[A-Za-z0-9+/=_.~-]{16,1024})(?P=quote)"
-    r"(?![A-Za-z0-9+/=_.~-])",
+    r"(?i)(?P<word>api[_-]?key|secret|token|passw(?:or)?d|private[_-]?key|access[_-]?key)[\w.-]{0,40}"
+    r"[\"']?\s{0,4}[:=]\s{0,4}(?:(?P<quote>[\"'])(?P<quoted>[^\"'\s\\]{16,256})(?P=quote)"
+    r"|(?P<bare>[A-Za-z0-9+/_.~-]{16,256}={0,2})(?![A-Za-z0-9+/=_.~-]))",  # `=` only as padding
     re.ASCII,
 )
 REFERENCE_PREFIXES = ("${{", "${", "$", "process.env", "os.environ", "import.meta.env")
-PUBLIC_PREFIXES = ("sk_test_", "pk_", "sb_publishable_")
+PUBLIC_PREFIXES = ("sk_test_", "rk_test_", "pk_", "sb_publishable_")
 # A git SHA, a UUID or an integrity string: shaped like a key, but not one.
 NOT_A_KEY_RE = re.compile(
     r"[0-9a-f]{40}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
     r"|sha(?:1|256|384|512)-.*",
     re.ASCII,
 )
-PLACEHOLDER_RE = re.compile(r"(?:[A-Za-z]{1,12}[_-]){0,3}(.)\1{7,}", re.ASCII)
+# A design token, file or model name (`color.primary.500`, `tls-secret-prod-2024`).
+DOTTED_NAME_RE = re.compile(r"[a-z0-9]{1,15}(?:[./_-][a-z0-9]{1,15}){2,}", re.ASCII)
+
+
+def _is_placeholder(body: str) -> bool:
+    """One repeated character once separators and up to three short leading
+    parts go (`xoxb-xxxx-xxxx`, `api03-xxxx`), or no digit and no capital at
+    all (`your-api-key-goes-here`): real tokens are random."""
+    core = re.sub(r"^(?:[A-Za-z0-9]{1,12}[-_]){1,3}", "", body)
+    return len(set(core) - {"-", "_"}) <= 1 or not re.search(r"[0-9A-Z]", body)
 
 
 def _jwt_role(payload: str) -> object:
@@ -156,11 +171,13 @@ def _jwt_role(payload: str) -> object:
     return data.get("role") if isinstance(data, dict) else None
 
 
-def _assignment_is_secret(value: str) -> bool:
+def _assignment_is_secret(word: str, value: str) -> bool:
     if (value.startswith(REFERENCE_PREFIXES) or value.startswith(PUBLIC_PREFIXES)
-            or "EXAMPLE" in value or PLACEHOLDER_RE.fullmatch(value)
+            or "EXAMPLE" in value or _is_placeholder(value)
             or NOT_A_KEY_RE.fullmatch(value) or JWT_RE.match(value)):
         return False  # a JWT is judged by its own rule
+    if not word.lower().startswith("passw") and DOTTED_NAME_RE.fullmatch(value):
+        return False  # never for passwords: a passphrase looks just like this
     mixed = re.search(r"[A-Za-z]", value) and re.search(r"[0-9]", value)
     return bool(mixed) or len(value) >= 32
 
@@ -168,43 +185,50 @@ def _assignment_is_secret(value: str) -> bool:
 def find_secret(text: str) -> tuple[str, int] | None:
     """The kind and offset of the first secret in `text`, or None.
     Placeholders, references, test and public keys, key headers with no
-    key body and Supabase anon JWTs pass (#119)."""
-    found: list[tuple[int, str]] = []
+    key body and Supabase anon JWTs pass (#119). Where a token sits in an
+    assignment, the token's own kind is reported."""
+    found: list[tuple[int, int, str]] = []
     for kind, pattern in SECRET_KINDS:
         for match in pattern.finditer(text):
-            if "EXAMPLE" not in match.group(0) and len(set(match.group("body"))) > 1:
-                found.append((match.start(), kind))
+            if "EXAMPLE" not in match.group(0) and not _is_placeholder(match.group("body")):
+                found.append((match.start(), 0, kind))
                 break
     for match in PRIVATE_KEY_RE.finditer(text):
         if PRIVATE_KEY_BODY_RE.search(text, match.end(), match.end() + 300):
-            found.append((match.start(), "a private key"))
+            found.append((match.start(), 0, "a private key"))
             break
     for match in JWT_RE.finditer(text):
         if _jwt_role(match.group("payload")) != "anon":
-            found.append((match.start(), "a JWT"))
+            found.append((match.start(), 0, "a JWT"))
             break
     for match in ASSIGNMENT_RE.finditer(text):
-        if _assignment_is_secret(match.group("value")):
-            found.append((match.start(), "a credential assignment"))
+        group = "quoted" if match.group("quoted") is not None else "bare"
+        if _assignment_is_secret(match.group("word"), match.group(group)):
+            found.append((match.start(group), 1, "a credential assignment"))
             break
     if not found:
         return None
-    offset, kind = min(found)
+    offset, _, kind = min(found)
     return kind, offset
 
 
 def added_lines(diff: str) -> list[tuple[str, str]]:
     """(file, the lines it adds) for each file in a unified diff. Removed and
-    context lines don't count, so deleting a leaked secret isn't blocked."""
+    context lines don't count, so deleting a leaked secret isn't blocked. A
+    private-key header in context does, so a key body added under it is caught."""
     files: dict[str, list[str]] = {}
-    path, previous = "?", ""
-    for line in diff.splitlines():
-        if line.startswith("+++ ") and previous.startswith("--- "):
-            target = line[4:]
-            path = target[2:] if target.startswith("b/") else target
-        elif line.startswith("+"):
+    path, in_hunk = "?", False
+    for line in diff.split("\n"):
+        if line.startswith("diff --git "):
+            in_hunk = False
+        elif line.startswith("@@"):
+            in_hunk = True
+        elif not in_hunk:
+            if line.startswith("+++ "):
+                target = line[4:]
+                path = target[2:] if target.startswith("b/") else target
+        elif line.startswith("+") or (line.startswith(" ") and PRIVATE_KEY_RE.search(line)):
             files.setdefault(path, []).append(line[1:])
-        previous = line
     return [(name, "\n".join(lines)) for name, lines in files.items()]
 
 
@@ -1150,7 +1174,7 @@ def check_bash(command: str, base: str) -> None:
             # command line, since `git commit -a` won't name files at all.
             try:
                 staged_names = subprocess.run(
-                    ["git", "diff", "--cached", "--name-only"],
+                    ["git", "diff", "--cached", "--name-only", "--diff-filter=d"],  # removing one is fine
                     capture_output=True, text=True, timeout=5, cwd=cwd,
                 ).stdout.splitlines()
             except Exception:
