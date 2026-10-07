@@ -2,7 +2,7 @@
 
 Intent: [#177](https://github.com/BojanKocijan/design-forge/issues/177), as the owner changed it in chat on 2026-10-07 (below)
 Design: none — translated from #177 and the owner's answers in chat (Laws 19 and 30)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-07, chat ("approve plan", read as the spec; both flagged items as recommended)
 
 ## What changed from #177
 
