@@ -2,6 +2,18 @@
 
 ---
 
+## v2.34.0 — October 6, 2026
+
+### Parallel sessions: one worktree each ([#182](https://github.com/BojanKocijan/design-forge/issues/182))
+- **Law 5:** when another session may work in the same folder, Claude creates its branch in its own git worktree, never checks out, switches or pulls in the shared folder (fetch only, which overrides the checkouts and pulls in Laws 9 and 25), and never shares one checkout with another session. Two sessions in one folder share one checked-out branch, so a commit can land on the other session's branch (it happened with #173 and #180).
+- **New `knowledge/SKILLS.md` §6.b:** when a folder counts as shared, setup, the shared stash, plain git commands in a worktree, running `update rules` from outside it, recovery after a collision (including staged and new files) without touching the other session's work, the version order when two PRs bump the version, and cleanup after the merge.
+- **New `parallel-sessions` skill** with the commands for setup, recovery and cleanup.
+- **Law 18:** the main folder keeps the project's locked preview port; a worktree previews on the locked port + 100 (up to +109), says `(worktree)` in its footer, and names the project from the main folder.
+- An independent review of the first draft found the shared-folder checkouts, the port clash and the staged-file gap before release.
+- The Laws, `plugin.json` and `marketplace.json` are at 2.34.0.
+
+---
+
 ## v2.33.0 — October 6, 2026
 
 ### The hook asks before Netlify or Vercel commands that change a site ([#173](https://github.com/BojanKocijan/design-forge/issues/173))
