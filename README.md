@@ -284,6 +284,8 @@ build feature: add CSV export to the invoices page
 
 The **Lead** runs it end-to-end — scope, build, test, document, review, PR — pausing for your approval on multi-file edits (Law 2) and stopping at "PR open, CI green" for you to merge (Law 7).
 
+**One team, any skill.** Each stage uses the right skill for the job, whether it's ours, built into Claude Code (`/code-review`, plan mode, worktrees) or in Anthropic's design, engineering and frontend-design plugins when you have them installed. The map is in [TEAM_WORKFLOW §8](knowledge/TEAM_WORKFLOW.md#8-which-skill-for-which-job); every stage works without the plugins.
+
 **Or call a single role:**
 
 | Goal | Trigger |
