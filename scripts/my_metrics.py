@@ -130,7 +130,7 @@ def overview(d: dict) -> str:
     if "error" in act or not act["calls"]:
         feed = empty(act) if "error" in act else '<p class="empty">Your first approved call shows up here.</p>'
     else:
-        feed = "".join(f'<li><time>{w}</time><span class="dot sev-{c}" aria-label="{c}"></span><span><strong>{e(l)}</strong> · {e(a)}</span></li>'
+        feed = "".join(f'<li><time>{w}</time><span class="dot sev-{c}"></span><span><span class="visually-hidden">{c.title()}: </span><strong>{e(l)}</strong> · {e(a)}</span></li>'
                        for w, c, l, a, _ in (call_row(x, tools.get("tools", [])) for x in act["calls"][:5]))
         feed = f'<div class="card"><ul class="feed">{feed}</ul></div><a class="see" href="tools.html#calls">See every call →</a>'
     main += section("Calls", "Latest tools you approved", feed)
@@ -167,7 +167,7 @@ def tools_page(d: dict) -> str:
                    f"<td><code>{e(t)}</code></td></tr>" for w, c, l, a, t in (call_row(x, tools.get("tools", [])) for x in act.get("calls", [])))
     head = "".join(f'<th scope="col">{h}</th>' for h in ("When", "Severity", "Tool", "What it can do", "Call"))
     main += section(f"Last {d['window_days']} days · UTC", "Every High and Critical call",
-                    f'<div class="table"><table><thead><tr>{head}</tr></thead><tbody>{rows}</tbody></table></div>' if rows
+                    f'<div class="table" tabindex="0" role="region" aria-label="Every call"><table><thead><tr>{head}</tr></thead><tbody>{rows}</tbody></table></div>' if rows
                     else (empty(act) if "error" in act else '<p class="empty">No calls yet.</p>'), "calls")
     prs = d["pull_requests"]
     if "error" in prs:
@@ -178,7 +178,7 @@ def tools_page(d: dict) -> str:
         rows = "".join(f'<tr><th scope="row">{e(p["name"])}</th>' + "".join(f'<td{" colspan=6" if len(cells(p)) == 1 else ""}>{c}</td>' for c in cells(p)) + "</tr>"
                        for p in prs["projects"])
         head = "".join(f'<th scope="col">{h}</th>' for h in ("Project", "Merged", "Median lines", "Within 400", "Median time to merge", "Reverts", "Made with Claude Code"))
-        body = f'<div class="table"><table><thead><tr>{head}</tr></thead><tbody>{rows}</tbody></table></div>' if rows else '<p class="empty">No projects with a repo in projects.yaml.</p>'
+        body = f'<div class="table" tabindex="0" role="region" aria-label="Pull requests per project"><table><thead><tr>{head}</tr></thead><tbody>{rows}</tbody></table></div>' if rows else '<p class="empty">No projects with a repo in projects.yaml.</p>'
     return page("Tools and calls · My BK Charterline", main + section(f"Last {d['window_days']} days", "Pull requests per project", body, "projects"))
 
 

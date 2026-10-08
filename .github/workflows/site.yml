@@ -1,13 +1,14 @@
 name: Site
 
-# The BK Charterline page (#177): accessibility and page checks on every PR
-# that touches site/, and a deploy to GitHub Pages from main after they pass.
+# The BK Charterline page (#177) and the private dashboard (#120): accessibility
+# and page checks on every PR that touches them, and a deploy of the page to
+# GitHub Pages from main after they pass.
 on:
   push:
     branches: [main]
-    paths: ["site/**", ".github/workflows/site.yml"]
+    paths: ["site/**", "scripts/my_metrics*.py", "scripts/dashboard_assets/**", ".github/workflows/site.yml"]
   pull_request:
-    paths: ["site/**", ".github/workflows/site.yml"]
+    paths: ["site/**", "scripts/my_metrics*.py", "scripts/dashboard_assets/**", ".github/workflows/site.yml"]
   workflow_dispatch:
 
 # A newer push to the same PR cancels its older run. Runs on main are never

@@ -30,6 +30,7 @@ It's not only for developers. BK Charterline carries the full product craft, fro
 ## Table of contents
 
 - [Why BK Charterline](#why-bk-charterline)
+- [Your private dashboard](#your-private-dashboard)
 - [Quick start](#quick-start)
 - [Installation](#installation)
 - [Architecture](#architecture)
@@ -58,6 +59,16 @@ Out of the box, an AI coding assistant will happily push to `main`, invent APIs,
 | No audit trail | Pre-execution announcements, Conventional Commits, living `PROJECT_KNOWLEDGE.md` |
 | Stale repos | Auto branch cleanup, orphaned issue detection, README kept current with every PR |
 | "Claude might forget and merge/push to `main` anyway" | **Law 32** — a `PreToolUse` hook mechanically blocks merge, push or force-push to `main`, skipped git hooks, malformed commits and secret commits, and asks you in the app before Claude changes its own guardrails (including git in the installed `~/.bk-charterline`), deletes tracked files, runs a Netlify or Vercel command that changes a site, or calls a tier 3 or 4 MCP tool |
+
+---
+
+## Your private dashboard
+
+Every install builds a private dashboard of what the rules do for you: what the hook stopped, what you were asked, which tools Claude can reach and how risky each one is (Critical, High, Low, Minimal), which tool was used on which call, and how your pull requests go in each project you registered. The screenshots at the top show it with example data.
+
+- **Where:** `~/.bk-charterline/dashboard/index.html`. Open it straight from the file; it needs no server.
+- **When it's rebuilt:** on every `update rules`, after every pull request you merge and every pull of `main`, quietly at session start when something changed, and whenever you type `my metrics`.
+- **Private:** it's built on your machine from your own files and your own `gh` login. Nothing is committed or sent anywhere.
 
 ---
 
