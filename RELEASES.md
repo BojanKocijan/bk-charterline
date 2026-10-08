@@ -13,6 +13,16 @@
 
 ---
 
+## v3.3.1 — October 8, 2026
+
+### The dashboard shows styled in the Claude app's browser pane ([#234](https://github.com/BojanKocijan/bk-charterline/issues/234))
+- **Each dashboard page now carries its own styles and scripts.** The app shows a local file outside the project folder as the HTML alone, so the six stylesheets and two scripts the pages loaded from files next to them never arrived, and the dashboard showed unstyled. `my_metrics.py` now writes them into `index.html` and `tools.html` as `<style>` and `<script>` blocks, in the same order, and no longer copies them into `dashboard/`. The page still reads fully without JavaScript, and `site/` keeps its separate files.
+- **Checked:** a test makes sure the built pages have no `<link rel="stylesheet">` or `<script src=`, and the Playwright + axe dashboard check still passes at phone and desktop width, in light and dark.
+- **Rules: 31,214 tokens** (estimate).
+- The Laws, `plugin.json` and `marketplace.json` are at 3.3.1.
+
+---
+
 ## v3.3.0 — October 8, 2026
 
 Your own private dashboard: what the rules did for you, which tools Claude can reach and how risky each is, and how your pull requests go, built on your machine and never sent anywhere.

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Build a user's private dashboard (#120) in ~/.bk-charterline/dashboard/: an
 overview and a Tools and calls page, in the site's styles, opened from the file.
+Each page carries its own CSS and JS, so it shows styled even where only the HTML
+file is read (the Claude app's browser pane, #234).
 
     python3 scripts/my_metrics.py [--local-only] [--if-changed]
 """
@@ -10,7 +12,6 @@ import datetime
 import html
 import json
 import os
-import shutil
 import sys
 
 sys.dont_write_bytecode = True
@@ -20,7 +21,9 @@ import my_metrics_data as data  # noqa: E402
 
 REPO = os.path.dirname(HERE)
 ASSETS = os.path.join(HERE, "dashboard_assets")
-SITE_FILES = ("styles.css", "layout.css", "numbers.css", "demo.css", "charts.css", "site.js", "charts.js")
+CSS = [os.path.join(REPO, "site", f) for f in ("styles.css", "layout.css", "numbers.css", "demo.css", "charts.css")] \
+    + [os.path.join(ASSETS, "dashboard.css")]
+JS = [os.path.join(REPO, "site", f) for f in ("site.js", "charts.js")]
 SOURCES = ("hook-log.jsonl", "ai-approvals.jsonl", "ai-tools.json", "ai-inventory.json", "projects.yaml")
 SEV = {4: ("Critical", "critical", "Asks you every time"), 3: ("High", "high", "Asks you once per session"),
        2: ("Low", "low", "Reads only; no question"), 1: ("Minimal", "minimal", "Stays on your machine; no question")}
@@ -85,19 +88,30 @@ def empty(part: dict) -> str:
     return f'<p class="empty">{e(part["error"])}</p>'
 
 
+def inline(tag: str, paths: list) -> str:
+    out = ""
+    for path in paths:
+        with open(path, encoding="utf-8") as f:
+            text = f.read()
+        if "</" + tag in text.lower():
+            raise ValueError(f"{path} contains </{tag}, which would end the inline block early")
+        out += f"<{tag}>\n{text}</{tag}>"
+    return out
+
+
 def page(title: str, main: str) -> str:
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{title}</title>
 <script>try {{ var t = localStorage.getItem("df-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; }} catch (e) {{}}</script>
-{"".join(f'<link rel="stylesheet" href="{f}">' for f in SITE_FILES if f.endswith(".css"))}<link rel="stylesheet" href="dashboard.css">
-<script src="site.js" defer></script><script src="charts.js" defer></script></head>
+{inline("style", CSS)}</head>
 <body><header class="top"><div class="page top-inner"><a class="brand" href="index.html">My BK Charterline</a>
 <nav aria-label="Pages"><a href="index.html">Overview</a><a href="tools.html">Tools and calls</a></nav>
 <fieldset class="theme" hidden><legend class="visually-hidden">Theme</legend>{"".join(
     f'<label><input type="radio" name="theme" id="theme-{v}" value="{v}"{" checked" if v == "system" else ""}><span>{v.title()}</span></label>'
     for v in ("system", "light", "dark"))}</fieldset></div></header>
 <div class="page"><main>{main}</main>
-<footer class="bottom"><p>Private: built on this machine from your own data. Nothing is committed or sent anywhere.</p></footer></div></body></html>
+<footer class="bottom"><p>Private: built on this machine from your own data. Nothing is committed or sent anywhere.</p></footer></div>
+{inline("script", JS)}</body></html>
 """
 
 
@@ -214,9 +228,6 @@ def build(home: str | None = None, *, network: bool = True, if_changed: bool = F
             pass
     d = data.collect(home, network=network, gh=gh)
     os.makedirs(out, exist_ok=True)
-    for name in SITE_FILES:
-        shutil.copyfile(os.path.join(REPO, "site", name), os.path.join(out, name))
-    shutil.copyfile(os.path.join(ASSETS, "dashboard.css"), os.path.join(out, "dashboard.css"))
     write(os.path.join(out, "tools.html"), tools_page(d))
     write(os.path.join(out, "index.html"), overview(d))
     write(stamp, json.dumps(now))
