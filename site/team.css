@@ -1,0 +1,129 @@
+/* One team (#230): the team's stages and the skills each one uses, from any source. */
+/* 7 stages and "You merge." make 8 cards: rows of 4, 2 or 1 are always full. */
+.stages {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stage {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: clamp(1rem, 0.8rem + 0.8vw, 1.4rem);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.stage-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.stage-no {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font: 600 var(--small) / 1 var(--font-mono);
+}
+
+.stage h3 {
+  margin: 0;
+  font: 600 var(--step-1) / 1.2 var(--font-display);
+}
+
+.stage-who {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--small);
+}
+
+.stage-skills {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.stage-skills div {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.stage-skills dt {
+  color: var(--muted);
+  font: 600 var(--tiny) / 1.4 var(--font-body);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.stage-skills dd {
+  margin: 0;
+}
+
+.stage-skills .tags {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stage-skills .tags li {
+  overflow-wrap: break-word; /* long plugin skills break after the colon (<wbr>), not mid-word */
+}
+
+/* Where a skill comes from is in the label; the tags only echo it. */
+.src-ours .tags li {
+  border-color: transparent;
+  background: var(--accent-soft);
+}
+
+.src-plugin .tags li {
+  border-style: dashed;
+  background: none;
+}
+
+@media (min-width: 36rem) {
+  .stages {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 62rem) {
+  .stages {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.team-end {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 0.75rem;
+  padding: clamp(1rem, 0.8rem + 0.8vw, 1.4rem);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-lg);
+  color: var(--muted);
+}
+
+.team-end p {
+  margin: 0;
+}
+
+.team-end .you {
+  padding: 0.3rem 0.85rem;
+  font-size: var(--step-1);
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}

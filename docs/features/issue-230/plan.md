@@ -52,3 +52,8 @@ One PR, about 150 lines in 3–4 files, base `main`. Screenshots in light and da
 - **A skill changes name upstream:** the note carries the date; a docs PR fixes the name.
 - **Long skill lists on phones:** they wrap inside their stage; nothing scrolls sideways.
 - **No JavaScript:** plain HTML, fully shown.
+
+## Deviations after approval
+
+- **Layout:** 7 stages don't fit one row with the skill names readable, so the stages are a grid of 4, 2 or 1 columns, with **"You merge."** as the eighth card, which keeps every row full. Plugin skills break after the colon, never mid-word.
+- **Found while checking:** the analytics demo already scrolls sideways at 320px on `main`; that's a separate fix, not part of this PR.
