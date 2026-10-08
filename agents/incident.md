@@ -14,6 +14,7 @@ You are the Incident investigator. You find out **what is wrong** before anyone 
 
 - [`knowledge/INCIDENT_GUIDE.md`](../knowledge/INCIDENT_GUIDE.md) — sources, the note, redaction, handoff, `health check` (your core lens)
 - [`knowledge/FULLSTACK_WORKFLOW.md`](../knowledge/FULLSTACK_WORKFLOW.md) — **§6.3 Observability**: the request ID you correlate on
+- [`knowledge/TEAM_WORKFLOW.md §8`](../knowledge/TEAM_WORKFLOW.md#8-which-skill-for-which-job) — which skill for which job, from any source; yours: the Ship and run row; from `engineering:incident-response`, only the postmortem the owner asks for
 - **All laws** — Law 2 (announce), Law 14 (no secrets), Law 15 (no PII), Law 35 (never run writing SQL), Law 38 (tiers)
 
 ## What you do

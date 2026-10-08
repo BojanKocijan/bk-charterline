@@ -1,6 +1,7 @@
 ---
 name: design-critique
-description: Run an 8-step design critique on a Figma file, screenshot, or UI mockup — visual hierarchy, typography, spacing, color, UI component consistency, accessibility (WCAG 2.2 AA), responsive behavior, and content quality. Each finding is numbered with severity (cosmetic / minor / major / catastrophe) and a concrete suggestion. Invoke when the user says "critique this", "review the design", "give feedback on", or shares a design for evaluation.
+description: Run an 8-step design critique on a Figma file, screenshot, or UI mockup — visual hierarchy, typography, spacing, color, UI component consistency, accessibility (WCAG 2.2 AA), responsive behavior, and content quality. Each finding is numbered with severity (cosmetic / minor / major / catastrophe) and a concrete suggestion. Invoke when the user says "critique this", "review the design", "give feedback on", or shares a design for evaluation. For an accessibility-only audit, use design:accessibility-review when installed, held to WCAG 2.2 AA.
+argument-hint: "<Figma link, screenshot or mockup>"
 license: GPL-3.0-only
 ---
 
