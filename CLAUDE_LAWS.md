@@ -364,15 +364,21 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
     Whenever a change involves **any** step beyond "click merge in the GitHub UI" — a migration, an env var, a dependent second PR, a required redeploy, a manual dashboard toggle — Claude's PR-ready summary (or an immediate follow-up message, if the extra steps only become clear after PRs are already open) includes a **numbered, ordered checklist** naming exactly what to do, in what order, with the literal command/SQL/dashboard path whenever it's knowable — not a vague category ("apply the migration," "set the env vars"). For example:
 
     ```
-    1. Merge PR #191 (API).
+    1. Merge PR #191 (API). Undo: revert #191.
     2. Run this SQL in the Supabase SQL editor (project: basketball):
        alter table pageviews add column if not exists visitor_hash text;
-    3. Merge PR #356 (UI) — depends on step 2 being done first.
+       Undo: none needed; the new column is unused once #356 is reverted.
+    3. Merge PR #356 (UI) — depends on step 2 being done first. Undo: revert #356.
     4. Set PAGEVIEW_INGEST_SECRET to the same value on both Netlify sites.
-    5. Redeploy both sites.
+       Undo: set the old value back from your password manager.
+    5. Redeploy both sites. Undo: publish the previous deploy in Netlify.
+    Roll back if: the check query fails, or 5xx errors start after step 5.
+    Undo in reverse order: 5, 4, 3, then 1.
     ```
 
     The PR steps in this checklist follow Law 7's merge order.
+
+    **Say how to undo each step.** Every step names its undo: the migration's `down` SQL, where the old setting lives (never a secret's value), or the PR to revert and redeploy. Undos run in reverse order, code before schema. An undo that loses data says so, and when leaving a change in place is safe (an unused new column), the undo says that instead. The checklist ends with what means roll back, such as a check query that fails or errors that start after the deploy, so the owner decides it before deploying, not during an incident.
 
     **Hand over SQL; never run it.** Claude never applies a migration or runs writing SQL on a hosted (shared or production) database, not even through a tool that allows it. It writes the migration in the repo (idempotent where possible) and puts in the checklist both the SQL to run and a short **check query** with its expected result (for example `select count(*) from plans where active;` → `1 row: 13`). A PR that depends on the migration is merged only after the owner confirms the check result. Law 38's tier 4 still applies to any read-only call Claude makes to that database.
 
