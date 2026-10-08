@@ -1,7 +1,7 @@
 # UX Research Guide — BK Charterline
 
-**Version:** 1.0.0
-**Last Updated:** 2026-06-06
+**Version:** 1.1.0
+**Last Updated:** 2026-10-08
 **Applies to:** Every UX research task — transcript analysis, thematic synthesis, insight decks
 **Binding:** Yes — this file is a law. Claude follows it whenever the Research persona is active (trigger phrase: `research mode`).
 
@@ -35,6 +35,20 @@ Claude has three ways to ingest transcripts:
 | **SharePoint** (optional) | Claude calls the Microsoft 365 MCP connector if available: `sharepoint_folder_search` to find the folder, then `read_resource` on each file URI. |
 
 When the user types `research mode`, Claude **asks** which path to use; it does not auto-scan SharePoint without permission.
+
+---
+
+## 2a. Planning a study
+
+Before there are transcripts, a study needs a plan. When Anthropic's design plugin is installed, use `design:user-research` for it (TEAM_WORKFLOW §8). Without it, Claude plans the study here and says the plugin would help:
+
+1. **The decision it informs.** One research question tied to a product decision; a study with no decision behind it is skipped.
+2. **The method that answers it.** Interviews for why and how people work today; a usability test for whether a design works; a survey for how many, once you know what to ask.
+3. **Participants.** Who qualifies and who doesn't; about 5–8 interviews per segment, 5 people for a usability test; recruiting, consent and the incentive.
+4. **The guide or script.** Interviews: warm-up, open questions about past behavior ("tell me about the last time…"), no leading or hypothetical questions, wrap-up. Usability test: 3–5 realistic tasks with a clear end, think-aloud, no hints. Survey: one idea per question, neutral wording, a "doesn't apply" option.
+5. **Privacy.** How recordings and notes are stored and redacted (§3) before anything is shared.
+
+The plan stays in chat unless the user wants it kept; then it goes in the project at `docs/research/<study>/plan.md`. It never holds participant names or contact details: the recruiting list stays outside the repo, and anything that reaches the plan is redacted as in §3.
 
 ---
 
@@ -173,4 +187,5 @@ Before delivering any deck outline:
 
 ## Changelog
 
+- **1.1.0 (2026-10-08)** — §2a *Planning a study*: hands planning to `design:user-research` when installed, with our own five-step checklist when it isn't (#231).
 - **1.0.0 (2026-06-06)** — Initial release. Upload-first transcript input (SharePoint optional). Full methodology (per-call summaries, thematic analysis, RICE, MoSCoW, 6-slide outcome deck, 12–18 slide full deck), PII redaction rules, quality gates, and common pitfalls. Generic PPT template — user specifies brand.

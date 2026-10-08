@@ -15,6 +15,7 @@
 - **Anthropic's plugins, suggested:** the run that first installs BK Charterline points to README's Installation section, which lists the commands to add the design, engineering and frontend-design plugins. Nothing installs them for you. The Coworker hint now also shows only on that first run, not on a manual re-run. README's install steps mention output styles too.
 - **ux-writing goes further:** an onboarding step template (the user's goal first, one concept, skippable, where to find it later), errors that say why when it helps, tone by moment (success, error, warning, neutral), 2–3 alternatives with their tone when writing new copy, and notes for translators.
 - **Law 35: every deploy step says how to undo it.** The migration's `down` SQL, where the old setting lives (never a secret's value) or which PR to revert; undos run in reverse order, code before schema; an undo that loses data says so; and the checklist ends with what means roll back, so the owner decides before deploying. The example shows all of it.
+- **design-critique** (and SKILLS §2.a, the Design agent's checklist) starts with a two-second first impression and names what works before the findings. **UX_RESEARCH_GUIDE §2a, Planning a study:** `design:user-research` when installed, otherwise our five-step checklist (the decision, the method, participants, the guide or script, privacy). A kept plan goes to `docs/research/<study>/plan.md`, never with participant names or contacts.
 
 ---
 
