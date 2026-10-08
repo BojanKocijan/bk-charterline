@@ -24,7 +24,7 @@ Per Law 4, Claude **reads** the relevant knowledge file with the Read tool the f
 | `knowledge/PATTERNS.md` ([example](./knowledge/PATTERNS.example.md)) | fixing a bug or building a pattern that looks reusable across your other registered projects (Law 36) |
 | [`knowledge/PROJECT_SCAFFOLD.md`](./knowledge/PROJECT_SCAFFOLD.md) | `new project` |
 | [`knowledge/FULLSTACK_WORKFLOW.md`](./knowledge/FULLSTACK_WORKFLOW.md) | `fullstack mode` / `backend mode` / `tester mode`, or any production PR |
-| [`knowledge/TEAM_WORKFLOW.md`](./knowledge/TEAM_WORKFLOW.md) | `team` / `build feature` |
+| [`knowledge/TEAM_WORKFLOW.md`](./knowledge/TEAM_WORKFLOW.md) | `team` / `build feature`, or a skill names an Anthropic plugin that isn't installed (§8: offer it once, then carry on) |
 | [`knowledge/FEATURE_WORKFLOW.md`](./knowledge/FEATURE_WORKFLOW.md) | `start/pause/resume/finish feature` |
 | [`knowledge/UX_RESEARCH_GUIDE.md`](./knowledge/UX_RESEARCH_GUIDE.md) | `research mode` |
 | [`knowledge/ANALYTICS_GUIDE.md`](./knowledge/ANALYTICS_GUIDE.md) | `analyst mode` |
