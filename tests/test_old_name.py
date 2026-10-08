@@ -23,7 +23,8 @@ ALLOWED = {
     ".claude/hooks/enforce-laws.py": 4,  # guards the old path; accepts dforge-update --approve
     ".claude/hooks/hook_log.py": 1,  # says where the log lives before the move
     "CLAUDE.md": 1,  # update rules falls back to dforge-update
-    "CLAUDE_LAWS.md": 2,  # Law 28's update line and Law 32's --approve row
+    "CLAUDE_LAWS.md": 1,  # Law 28's update line
+    "knowledge/GUARDRAILS.md": 1,  # the hook's --approve row, moved from Law 32 (#239)
     "README.md": 2,  # the rename note, and the license section's rename sentence
     "tests/test_enforce_laws.py": None,  # tests of the old path
     "tests/test_update.py": None,  # tests of the move

@@ -174,7 +174,7 @@ BK Charterline has three layers:
 │  Fullstack · Design · Research · Analyst        │
 │  Incident                                       │
 ├─────────────────────────────────────────────────┤
-│  knowledge/ — 12 binding guides                  │
+│  knowledge/ — 13 binding guides                  │
 │  (loaded on demand per task scope)              │
 ├─────────────────────────────────────────────────┤
 │  skills/ — 18 reusable skill definitions        │
@@ -388,7 +388,7 @@ bk-charterline/
 │   ├── analyst.md
 │   ├── incident.md
 │   └── fullstack.md
-├── knowledge/                   # 12 binding guides (loaded on demand)
+├── knowledge/                   # 13 binding guides (loaded on demand)
 │   ├── FRONTEND_GUIDE.md
 │   ├── COMPONENT_PATTERNS.md
 │   ├── ANIMATION_GUIDE.md
@@ -401,6 +401,7 @@ bk-charterline/
 │   ├── ANALYTICS_GUIDE.md
 │   ├── INCIDENT_GUIDE.md
 │   ├── HUMAN_IN_THE_LOOP.md
+│   ├── GUARDRAILS.md
 │   ├── PATTERNS.example.md
 │   └── PATTERNS.md              # gitignored — your copy of the example above
 ├── skills/                      # 18 reusable skill definitions

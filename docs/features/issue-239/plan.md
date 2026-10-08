@@ -2,6 +2,8 @@
 
 Gate tier: Significant (it restructures the laws). The issue states the intent; this plan carries the spec.
 
+Approved-by: BojanKocijan, 2026-10-08, chat (spec and plan)
+
 ## Where the load goes today (measured, v3.4.0 + #248)
 
 | Loads every session | Tokens (est.) |
@@ -68,3 +70,7 @@ The biggest laws by size: Law 32 (15%), Law 31 (7%), Law 38 (7%), Law 37 (6%), L
 - **A moved rule is needed but its file isn't loaded:** only explanation moves. If a reviewer finds an obligation in the moved text, it goes back into the law.
 - **A user on an install from before v3.0.0:** the exclude pattern names the new folder only, and installs from before v3.0.0 have already moved there.
 - **Someone copies CLAUDE_LAWS.md alone (claude.ai web):** the laws still read whole. The pointers say where the detail is.
+
+## Deviations after approval
+
+- **PR 1 is the owner's to apply.** The test worked (`claude -p` lists the loaded files: with `claudeMdExcludes` the installed copy and its imports drop out), but shipping it in the repo's `.claude/settings.json` would make a session started inside `~/.bk-charterline` exclude its only laws file and load none. The safe form is a personal setting that excludes only the owner's development checkout (and its `AGENTS.md`, which loads as a fallback). Claude may not change which instructions load for itself, so the owner adds it to `~/.claude/settings.json`; it isn't shipped or documented as a default.
