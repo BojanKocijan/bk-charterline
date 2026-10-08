@@ -2,7 +2,9 @@
 
 ---
 
-## Unreleased
+## v3.4.0 — October 8, 2026
+
+One team: BK Charterline brings Claude Code's own skills and Anthropic's plugins into the team instead of competing with them, reviews every change with Claude's own code review, and gets an optional coworker with a sense of humor.
 
 ### The page fits a 320px phone ([#243](https://github.com/BojanKocijan/bk-charterline/issues/243))
 - **No more sideways scroll below 390px.** The analytics demo's three tabs set the width of its one grid column, so every panel spilled past the screen at 320–389px, and at 390–414px ran into the frame's right padding. The column now shrinks (`minmax(0, 1fr)`), the badge and the "In your project" line wrap, and below 415px the tabs get tighter sides, with "Product analytics" on two lines on the narrowest phones. At 768px and wider the demo looks exactly as before.
@@ -23,6 +25,9 @@
 
 ### The whole team, on the page ([#230](https://github.com/BojanKocijan/bk-charterline/issues/230))
 - **New section "Every skill your team needs, in one place"** after "What it does", with a Team link in the header: the 7 stages from plan to ship and run, who leads each and the skills it uses, labeled BK Charterline, Claude Code or Anthropic plugin, ending with "You merge." It matches TEAM_WORKFLOW §8; the page checks (axe in light and dark at phone and desktop width) cover it, plus a check for the 7 stages and that every skill shown is in §8. Section links now stop below the sticky header at any width, also when the nav wraps.
+
+- **Rules: 31,531 tokens** (estimate).
+- The Laws, `plugin.json` and `marketplace.json` are at 3.4.0.
 
 ---
 
