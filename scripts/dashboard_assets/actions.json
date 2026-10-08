@@ -1,0 +1,25 @@
+{
+  "areas": {"Supabase": "Database", "Gmail": "Email", "Google Drive": "Files and docs", "Claude Docs": "Files and docs", "Terminal panel": "Your computer", "Computer use": "Your computer", "Built-in browser": "Web", "Claude in Chrome": "Web", "Connector search": "Web", "Figma": "Design and dev tools", "Figma Dev Mode": "Design and dev tools", "iOS Simulator": "Design and dev tools", "Inline widgets": "Design and dev tools", "Inline visuals": "Design and dev tools", "Scheduled tasks": "Claude app"},
+  "area_order": ["Database", "Email", "Files and docs", "Your computer", "Web", "Claude app", "Design and dev tools"],
+  "web_actions": "Click, type, fill in forms and run code on web pages",
+  "actions": {
+    "Supabase": {"*": "Run SQL, migrations and deploys on your database"},
+    "Gmail": {"*": "Read, draft and label mail", "send_message": "Send an email", "reply": "Reply to an email", "forward": "Forward an email", "trash_message": "Move mail to the trash", "trash_thread": "Move a conversation to the trash", "delete_draft": "Delete a draft", "delete_label": "Delete a label", "create_draft": "Draft an email"},
+    "Google Drive": {"*": "Read, create and edit files", "share_file": "Share a file with other people", "trash_file": "Move a file to the trash", "update_file": "Edit a file"},
+    "Claude Docs": {"*": "Create and edit documents", "delete": "Delete a document"},
+    "Terminal panel": {"*": "Read and open terminal tabs", "run_in_terminal": "Run a command in your terminal"},
+    "Computer use": {"*": "Take screenshots and click in apps you allowed", "request_access": "Get access to a desktop app", "request_full_control": "Take full control of your desktop", "request_teach_access": "Get access to teach an app"},
+    "App PR bar": {"*": "Watch pull requests and CI", "set_auto_merge": "Turn on auto-merge for a pull request"},
+    "App sessions": {"*": "Manage Claude sessions", "delete_session": "Delete a Claude session", "set_session_permission_mode": "Change what a session may do without asking"},
+    "Scheduled tasks": {"*": "Create and run scheduled tasks", "delete_scheduled_task": "Delete a scheduled task"},
+    "App connectors": {"*": "Turn connectors on or off"},
+    "App host": {"*": "Open folders and editors, sync branches", "clean_up_worktrees": "Delete finished worktrees", "discard_kept_worktree": "Delete a kept worktree"},
+    "App settings": {"*": "Change your Code tab preferences", "get_settings": "Read your Code tab preferences"},
+    "Built-in browser": {"*": "Read web pages"},
+    "Claude in Chrome": {"*": "Read web pages in your Chrome"},
+    "Figma": {"*": "Read designs", "add_code_connect_map": "Link a design to code"},
+    "App session UI": {"move_to_cloud": "Move this session to the cloud"},
+    "App sidebar": {"delete_group": "Delete a sidebar group", "delete_section": "Delete a sidebar section"}
+  },
+  "checks": {"commit-on-default": "Commit on main", "commit-message": "Commit message", "secret": "Secret in a commit", "env-file": ".env file", "merge": "Merge", "push-default": "Push to main", "screenshots": "Screenshots line", "no-verify": "Skipped hooks", "force-push-default": "Force push to main", "tier3-first-use": "First use of a tool (High)", "tier4-unapproved": "Critical tool call", "update-approve": "Update with a hook change", "guardrail-write": "Edit to a guardrail", "guardrail-edit": "Edit to a guardrail", "guardrail-git": "git in the installed rules", "tracked-delete": "Deleting a tracked file", "hosting-write": "Netlify or Vercel change", "registry-write": "Tool rating saved"}
+}

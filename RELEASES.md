@@ -7,6 +7,7 @@
 ### A private dashboard for every user ([#120](https://github.com/BojanKocijan/bk-charterline/issues/120))
 - **The hook log names the tool behind each MCP prompt** (`tool`, for example `mcp__gmail__send_message`), so the dashboard can show which tool was asked about on which call. Only a well-formed tool name is kept; a tool's inputs are never logged.
 - **New `scripts/my_metrics_data.py`** gathers the dashboard's data from local files only: what the hook blocked and asked, which tool was asked about on which call, every tool's severity and the ones not rated yet, and, through the user's own `gh` login, pull request numbers for each project in `projects.yaml`, fetched only since the last run. A missing or broken source shows a message in its own section and never stops the rest.
+- **New `scripts/my_metrics.py`** builds the two pages in `~/.bk-charterline/dashboard/`: an overview (headline numbers, tools by severity, the latest calls, what the hook did) and Tools and calls (a card per tool with what it can do, every High and Critical call, pull requests per project). Commands get a Copy command button; nothing points to another site.
 
 ---
 

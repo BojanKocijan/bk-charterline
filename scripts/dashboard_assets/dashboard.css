@@ -1,0 +1,37 @@
+/* My BK Charterline (#120): the private dashboard's own parts, on top of the site's styles. */
+.sev-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); }
+.sev { display: grid; align-content: start; gap: 0.6rem; padding: 1.1rem 1.2rem; color: inherit; text-decoration: none; background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--c); border-radius: var(--radius); transition: border-color 0.2s, transform 0.2s; }
+.sev:hover { border-color: var(--c); transform: translateY(-2px); }
+.sev-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+.sev-num { font: 700 var(--step-4) / 1 var(--font-display); color: var(--c); font-variant-numeric: tabular-nums; }
+.sev-name { font-weight: 600; }
+.sev-rule { color: var(--muted); font-size: var(--small); }
+.sev-critical { --c: var(--bad); }
+.sev-high { --c: var(--warn); }
+.sev-low { --c: var(--good); }
+.sev-minimal { --c: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0; padding: 0; list-style: none; }
+.chips li { padding: 0.15rem 0.55rem; border: 1px solid var(--line); border-radius: 999px; background: var(--sunken); font-size: var(--tiny); white-space: nowrap; }
+.chips .more { border: 0; background: none; color: var(--muted); }
+.unrated { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.5rem 1.25rem; padding: 1rem 1.2rem; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--warn); border-radius: var(--radius); }
+.unrated-text { display: grid; gap: 0.15rem; }
+.unrated-text span, .cmd-status, .empty { color: var(--muted); font-size: var(--small); }
+.cmd { display: flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.cmd code { padding: 0.55rem 0.8rem; font-size: var(--small); white-space: nowrap; }
+.cmd button { border: 0; padding: 0 1rem; background: var(--accent); color: var(--accent-ink); font: 600 var(--small) / 1 var(--font-body); cursor: pointer; }
+.cmd-status { grid-column: 1 / -1; margin: 0; font-size: var(--tiny); }
+.see { justify-self: start; font-weight: 600; }
+.feed { display: grid; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+.feed li { display: grid; grid-template-columns: 7.5rem auto minmax(0, 1fr); align-items: center; gap: 0.75rem; font-size: var(--small); }
+.feed time { color: var(--muted); font: var(--tiny) / 1.4 var(--font-mono); }
+.dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 999px; background: var(--c); }
+.tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: var(--gap); }
+.tool { display: grid; align-content: start; gap: 0.5rem; padding: 1rem 1.1rem; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: var(--radius); }
+.tool h3 { font: 600 var(--step-0) / 1.3 var(--font-body); }
+.tool .area { color: var(--muted); font: var(--tiny) / 1.4 var(--font-mono); letter-spacing: 0.05em; text-transform: uppercase; }
+.tool ul { margin: 0; padding-left: 1.1rem; color: var(--muted); font-size: var(--small); }
+.table { overflow-x: auto; }
+.table table { width: 100%; border-collapse: collapse; font-size: var(--small); font-variant-numeric: tabular-nums; }
+.table th, .table td { padding: 0.5rem 0.75rem 0.5rem 0; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+@media (max-width: 960px) { .sev-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .sev-grid, .unrated { grid-template-columns: minmax(0, 1fr); } .feed li { grid-template-columns: auto minmax(0, 1fr); } .feed time { grid-column: 1 / -1; } }
