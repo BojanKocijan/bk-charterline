@@ -4,6 +4,18 @@ Intent: [#120](https://github.com/BojanKocijan/bk-charterline/issues/120), as th
 Design: the owner-reviewed prototype from 2026-10-08 (overview plus a "Tools and calls" page, in the site's navy and lime design)
 Approved-by: BojanKocijan, 2026-10-08, chat (all three decisions as recommended)
 
+## What it looks like
+
+The prototype, built from fictional example data (no real accounts or calls), in dark mode at 1280 px.
+
+**Overview:** the headline numbers, the severity tiles, the not-rated note with its Copy command button, the latest approved calls, and what the hook did.
+
+![The dashboard's overview page](dashboard-overview.png)
+
+**Tools and calls:** a card per tool under its severity, what it can do, the tools not rated yet, and every approved call.
+
+![The dashboard's Tools and calls page](dashboard-tools.png)
+
 ## Owner decisions (chat, 2026-10-07 and 2026-10-08)
 
 - **Every user gets a private dashboard** once they use the rules: what the rules stopped, what they were asked, which tools Claude can reach and how risky each is, and how their pull requests go.
