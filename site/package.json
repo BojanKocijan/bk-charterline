@@ -1,6 +1,7 @@
 {
   "name": "bk-charterline-site-checks",
   "private": true,
+  "license": "GPL-3.0-only",
   "description": "Checks for the BK Charterline page (#177). Dev-only: the page itself has no dependencies.",
   "scripts": {
     "test": "playwright test"

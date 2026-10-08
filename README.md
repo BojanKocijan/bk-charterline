@@ -385,7 +385,7 @@ See [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) for the full governance framework.
 
 ## License
 
-[GPL-3.0](./LICENSE) &copy; Bojan Kocijan. Free to use for personal and commercial projects. If you modify it and share your version, you must publish your changes under the same license. See [CONTRIBUTING.md](./CONTRIBUTING.md) to send your improvements back.
+[GPL-3.0](./LICENSE). Copyright &copy; 2026 Bojan Kocijan. BK Charterline was named Design Forge before v3.0.0; the rename didn't change the license or who holds the copyright. Free to use for personal and commercial projects. If you modify it and share your version, you must publish your changes under the same license. See [CONTRIBUTING.md](./CONTRIBUTING.md) to send your improvements back.
 
 **Commercial license.** If your company wants to ship a changed version without publishing the changes, or can't use GPL software, a commercial license is available. See [BK Charterline for companies](./FOR_COMPANIES.md), which also covers paid team setup.
 
