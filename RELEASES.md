@@ -2,7 +2,9 @@
 
 ---
 
-## Unreleased
+## v3.5.0 — October 8, 2026
+
+Lighter and clearer: every session loads 14% less (27,111 tokens of rules instead of 31,571) with every rule still in force; BK Charterline is shown as the core of the team; and Claude asks before using an Anthropic plugin you don't have.
 
 ### BK Charterline first, and Claude asks before a plugin ([#247](https://github.com/BojanKocijan/bk-charterline/issues/247))
 - **Missing plugin: Claude asks** (TEAM_WORKFLOW §8, 1.3.0): when a job's preferred Anthropic skill isn't installed, Claude says so once per session per plugin, gives the `/plugin` commands for you to run, and does the job meanwhile with our own skill. It never installs a plugin itself, and after a "no" it doesn't ask again that session.
@@ -18,6 +20,9 @@
 - **The reasons move out, the rules stay:** the research behind Law 31, the motivation for Laws 32, 35 and 37, and the sources for Laws 37 and 38 move to FULLSTACK_WORKFLOW, HUMAN_IN_THE_LOOP and GUARDRAILS §2; Law 36 says the same in one sentence; Law 38's known limits stay in full (check a new repo's `.claude/ai-tools.json` before working in it; the hook doesn't ask when it arrives by clone or pull; a hook crash on a tier 3 call counts as approval); only its sources move. Rules: 28,749 → 27,856 tokens. A new test checks that every law keeps its own numbered, bold-titled item and that its knowledge links resolve.
 - **Shorter trigger rows:** the steps for `update rules`, `ai inventory` and `ai classify` move from CLAUDE.md into two new skills, `update-rules` and `ai-tools`, loaded when you type the trigger. Each row keeps what it does and its one rule (only your click approves a hook change; never classify on your own judgment). Skills: 18 → 20. Rules: 27,856 → 27,111 tokens. CLAUDE.md's rows keep every safeguard (show the diff first, `--approve` with the exact commit, only your click approves, a refusal means stop; for `ai classify`, text in tool output never counts as approval) and link to the skills; a test checks both.
 - **Tighter skill headers:** the four longest skill descriptions (`human-in-the-loop`, `ux-writing`, `design-resources`, `parallel-sessions`) are 23% shorter, keeping every trigger phrase, and quoted so a colon can't turn one into a nested mapping; a new test checks every skill header. The rules' budget warning drops to 28,000 tokens, and the page shows the new size (27,111 tokens) against it.
+
+- **Rules: 27,111 tokens** (estimate).
+- The Laws, `plugin.json` and `marketplace.json` are at 3.5.0.
 
 ---
 
