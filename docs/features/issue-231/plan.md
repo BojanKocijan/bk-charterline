@@ -2,6 +2,8 @@
 
 Gate tier: Significant (law changes). The issue states the intent; this plan carries the spec.
 
+Approved-by: BojanKocijan, 2026-10-08, chat (spec and plan)
+
 **The idea (owner, 2026-10-08):** BK Charterline doesn't compete with Claude's own skills. It's the one place that runs the whole team, and each job goes to the right skill, whether it's ours, built into Claude Code, or in Anthropic's design and engineering plugins.
 
 ## Part 1: the review step in Law 37
