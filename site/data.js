@@ -7,7 +7,7 @@ window.DF_METRICS = {"numbers": {
   "prs_merged": {"as_of": "2026-10-08", "value": 158},
   "prs_within_400": {"as_of": "2026-10-07", "value": 84},
   "releases": {"as_of": "2026-10-08", "value": 29},
-  "rules_tokens": {"as_of": "2026-10-08", "value": 31531},
+  "rules_tokens": {"as_of": "2026-10-08", "value": 27111},
   "skills": {"as_of": "2026-10-08", "value": 20},
   "tests": {"as_of": "2026-10-08", "value": 242}
 }};

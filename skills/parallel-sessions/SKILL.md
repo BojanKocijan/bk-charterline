@@ -1,6 +1,6 @@
 ---
 name: parallel-sessions
-description: Run parallel Claude sessions safely — each session that does branch work while another may use the same repo folder works in its own git worktree. Sets up the worktree, recovers when two sessions collided (a branch that changed by itself, commits or edits you didn't make, a commit on the wrong branch or PR), and cleans up after the merge. Invoke before creating a branch when ListAgents shows another session on the same project or the owner says sessions run in parallel, and on any sign of a collision.
+description: "Run parallel Claude sessions safely: each session doing branch work while another may use the same repo works in its own git worktree. Sets it up, recovers from collisions (a branch that changed by itself, commits or edits you didn't make, a commit on the wrong branch or PR) and cleans up after merge. Invoke before branching when ListAgents shows another session on the same project or the owner says sessions run in parallel, and on any sign of a collision."
 license: GPL-3.0-only
 ---
 
