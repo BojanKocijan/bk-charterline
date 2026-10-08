@@ -1374,7 +1374,8 @@ def record_mcp(tool_name: str, session_id: object, base: str) -> None:
         import_from(HOOKS_DIR, "ai_approvals").record(session_id, tool_name)
 
 
-def log_block(blocked: Blocked, command: str, base: str, record_type: str = "block") -> None:
+def log_block(blocked: Blocked, command: str, base: str, record_type: str = "block",
+              tool: str | None = None) -> None:
     """Record the block in the local block log (`hook_log.py`, #113).
     Never raises: a missing module, an unwritable log or a held lock
     must not change the decision."""
@@ -1387,7 +1388,7 @@ def log_block(blocked: Blocked, command: str, base: str, record_type: str = "blo
         cwd = resolve_cwd(strip_heredoc_bodies(command.strip()), base)
         hook_log.append_block(
             int(m.group(1)) if m else None, blocked.check, cwd,
-            current_branch(cwd), command, record_type,
+            current_branch(cwd), command, record_type, tool,
         )
     except Exception:
         pass
@@ -1443,7 +1444,7 @@ def main() -> None:
     except Asked as asked:
         mode = payload.get("permission_mode")
         decision = "deny" if mode in ASK_DENIED_MODES else "ask"
-        log_block(asked, command, base, "ask" if decision == "ask" else "block")
+        log_block(asked, command, base, "ask" if decision == "ask" else "block", tool if is_mcp else None)
         reason = asked.reason if decision == "ask" else (
             asked.reason + f" In `{mode}` mode this can't be confirmed in a prompt, so it's "
             "blocked: do it yourself or switch permission mode."

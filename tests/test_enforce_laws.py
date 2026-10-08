@@ -1097,6 +1097,21 @@ class McpTierTests(unittest.TestCase):
         with open(os.path.join(self.forge, "hook-log.jsonl")) as f:
             return [(r["type"], r["check"]) for r in map(json.loads, f)]
 
+    def test_mcp_asks_log_the_tool_name_never_its_input(self) -> None:
+        marker = "input-marker-7a1c"
+        self.run_event("mcp__db__execute_sql", tool_input={"query": marker})
+        self.run_event("mcp__wiki__edit_page", tool_input={"text": marker})
+        self.run_event("Bash", tool_input={"command": 'git commit -m "no type here"'})  # a block: no tool name
+        with open(os.path.join(self.forge, "hook-log.jsonl")) as f:
+            text = f.read()
+        records = [json.loads(line) for line in text.splitlines()]
+        self.assertEqual([(r["check"], r.get("tool")) for r in records], [
+            ("tier4-unapproved", "mcp__db__execute_sql"),
+            ("tier3-first-use", "mcp__wiki__edit_page"),
+            ("commit-message", None),
+        ])
+        self.assertNotIn(marker, text)
+
     def test_tier_1_and_2_get_no_output(self) -> None:
         self.assertEqual(self.decision("mcp__notes__search"), "allow")
         self.assertEqual(self.decision("mcp__mail__search_threads"), "allow")
