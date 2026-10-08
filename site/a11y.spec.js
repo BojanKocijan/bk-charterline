@@ -1,6 +1,6 @@
 // Checks for the BK Charterline page (#177): WCAG 2.2 AA with axe at phone and
 // desktop width in light and dark, the tabs by keyboard, the real numbers,
-// the page without JavaScript, the team's stages, and no requests to other sites.
+// the page without JavaScript, the why strip, the team's stages, and no requests to other sites.
 // Run: cd site && npx playwright test
 const { test, expect } = require("@playwright/test");
 const { AxeBuilder } = require("@axe-core/playwright");
@@ -68,6 +68,16 @@ test("the team shows 7 stages, each with skills, and ends with you merging", asy
   const names = chips.filter((t) => /^\/?[a-z-]+(:[a-z-]+)?$/.test(t));
   expect(names.length).toBeGreaterThan(25);
   expect(names.filter((n) => !map.includes("`" + n) && !map.includes(" " + n))).toEqual([]);
+});
+
+test("the why strip compares each tool on its own and with BK Charterline", async ({ page }) => {
+  await page.goto(PAGE);
+  const rows = page.locator("#why .why-row");
+  await expect(rows).toHaveCount(4);
+  for (const row of await rows.all()) {
+    await expect(row.locator(".why-before")).toContainText("On its own");
+    await expect(row.locator(".why-after")).toContainText("With BK Charterline");
+  }
 });
 
 test("every real number matches data.js and shows its date", async ({ page }) => {
