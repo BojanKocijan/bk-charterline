@@ -538,23 +538,33 @@ class InstallScriptTests(unittest.TestCase):
             fx.write("output-styles/coworker.md", "---\nname: Coworker\n---\n")
             fx.write("output-styles/mine.md", "theirs\n")
             fx.release("2.0.0")
-            fx.make_clone(at="v2.0.0")
+            # A first install clones the rules; point that clone at the fixture's origin.
+            env = dict(fx.env, SHELL="/bin/bash", GIT_CONFIG_COUNT="1",
+                       GIT_CONFIG_KEY_0=f"url.{fx.origin}.insteadOf",
+                       GIT_CONFIG_VALUE_0="https://github.com/BojanKocijan/bk-charterline.git")
             styles = os.path.join(fx.home, ".claude", "output-styles")
             os.makedirs(styles)
             with open(os.path.join(styles, "mine.md"), "w") as f:
                 f.write("my own style\n")
-            first = self.install(fx, update=False).stdout
+            done = subprocess.run(["bash", INSTALL], env=env, capture_output=True, text=True, timeout=120)
+            self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+            first = done.stdout
+            self.assertIn("Rules repo cloned.", first)
             self.assertEqual(os.readlink(os.path.join(styles, "coworker.md")),
                              os.path.join(fx.clone, "output-styles", "coworker.md"))
             with open(os.path.join(styles, "mine.md")) as f:
                 self.assertEqual(f.read(), "my own style\n")  # a user's own file is never overwritten
             self.assertIn("mine.md", first)
             self.assertIn("/output-style coworker", first)
+            self.assertIn("Anthropic's design, engineering and frontend-design plugins", first)  # suggested, never installed
             with open(os.path.join(fx.home, ".claude", "settings.json")) as f:
                 self.assertNotIn("outputStyle", json.load(f))
-            again = self.install(fx).stdout  # an update keeps the link and doesn't repeat the hint
-            self.assertTrue(os.path.islink(os.path.join(styles, "coworker.md")))
-            self.assertNotIn("/output-style coworker", again)
+            update = dict(env, CHARTERLINE_UPDATE="1")
+            rerun = lambda e: subprocess.run(["bash", INSTALL], env=e, capture_output=True, text=True, timeout=120).stdout  # noqa: E731
+            for again in (rerun(env), rerun(update), self.install(fx).stdout):  # a manual re-run and both update paths
+                self.assertTrue(os.path.islink(os.path.join(styles, "coworker.md")))
+                self.assertNotIn("/output-style coworker", again)
+                self.assertNotIn("Anthropic's design", again)
 
     def test_the_coworker_style_stays_opt_in(self) -> None:
         with open(os.path.join(REPO, "output-styles", "coworker.md")) as f:

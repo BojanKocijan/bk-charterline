@@ -120,12 +120,23 @@ curl -fsSL https://raw.githubusercontent.com/BojanKocijan/bk-charterline/main/in
 1. Clones this repo to `~/.bk-charterline`
 2. Adds `@~/.bk-charterline/CLAUDE.md` to `~/.claude/CLAUDE.md` (Claude's global memory)
 3. Registers the Law 32 guardrail hook in `~/.claude/settings.json`
-4. Links each agent into `~/.claude/agents/` and each skill into `~/.claude/skills/`. Your own agents and skills with the same name are never overwritten.
+4. Links each agent into `~/.claude/agents/`, each skill into `~/.claude/skills/` and each output style into `~/.claude/output-styles/` (off until you pick one). Your own files with the same name are never overwritten.
 5. Installs the `charterline-update` shell function, which moves the clone to the newest release and re-runs the installer
 
 Re-running the script is safe. Use one install method only: installing the plugin as well would list every agent and skill twice.
 
 </details>
+
+**Optional: Anthropic's plugins.** The team uses Anthropic's design, engineering and frontend-design plugins when they're installed ([TEAM_WORKFLOW §8](knowledge/TEAM_WORKFLOW.md#8-which-skill-for-which-job)), and works without them. To add them, in Claude Code:
+
+```
+/plugin marketplace add anthropics/knowledge-work-plugins
+/plugin install design@knowledge-work-plugins
+/plugin install engineering@knowledge-work-plugins
+/plugin install frontend-design@claude-plugins-official
+```
+
+Skip any you already have, for example through your claude.ai organization: two copies of a plugin list its skills twice. `claude-plugins-official` comes with Claude Code; if the last command says the marketplace is missing, add it with `/plugin marketplace add anthropics/claude-plugins-official`.
 
 ### Path B — Manual clone
 

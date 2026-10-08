@@ -120,6 +120,7 @@ if [ -d "$OLD_DIR" ] && [ ! -L "$OLD_DIR" ]; then
 fi
 
 # 2. Clone or pull the rules repo (the update function has already pulled)
+FIRST_INSTALL=""  # set when this run makes the clone; one-time hints show only then
 if [ -n "$UPDATING" ]; then
   :
 elif [ -d "$LOCAL_DIR/.git" ] && ! git -C "$LOCAL_DIR" symbolic-ref -q HEAD >/dev/null; then
@@ -133,6 +134,7 @@ else
   say "Cloning rules repo to $LOCAL_DIR ..."
   git clone --quiet "$RULES_REPO" "$LOCAL_DIR" || die "git clone failed. Check your network connection."
   ok "Rules repo cloned."
+  FIRST_INSTALL=1
 fi
 
 # 2b. A clone on a branch that sits exactly on the newest release moves onto
@@ -316,8 +318,11 @@ for src in "$LOCAL_DIR"/output-styles/*.md; do
 done
 
 ok "Linked $AGENT_COUNT agents, $SKILL_COUNT skills and $STYLE_COUNT output styles into ${HOME}/.claude"
-if [ "$STYLE_COUNT" -gt 0 ] && [ -z "$UPDATING" ]; then
-  say "Want a coworker with a sense of humor? Type /output-style coworker in Claude Code; /output-style default turns it off."
+# One-time hints, on the run that made the clone only (#229, #231).
+if [ -n "$FIRST_INSTALL" ]; then
+  [ "$STYLE_COUNT" -eq 0 ] || say "Want a coworker with a sense of humor? Type /output-style coworker in Claude Code; /output-style default turns it off."
+  # Anthropic's own plugins join the team when installed (TEAM_WORKFLOW §8); never installed for you.
+  say "Optional: Anthropic's design, engineering and frontend-design plugins join the team. How to add them: https://github.com/BojanKocijan/bk-charterline#installation"
 fi
 [ -z "$SKIPPED" ] || warn "Skipped, because your own file or link already uses the name:$SKIPPED"
 
