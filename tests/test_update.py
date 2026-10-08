@@ -532,6 +532,40 @@ class InstallScriptTests(unittest.TestCase):
                 if name == "breaks":
                     self.assertIn("no data yet", result.stdout)
 
+    def test_output_styles_are_linked_and_never_switched_on(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fx = Fixture(os.path.realpath(tmp))
+            fx.write("output-styles/coworker.md", "---\nname: Coworker\n---\n")
+            fx.write("output-styles/mine.md", "theirs\n")
+            fx.release("2.0.0")
+            fx.make_clone(at="v2.0.0")
+            styles = os.path.join(fx.home, ".claude", "output-styles")
+            os.makedirs(styles)
+            with open(os.path.join(styles, "mine.md"), "w") as f:
+                f.write("my own style\n")
+            first = self.install(fx, update=False).stdout
+            self.assertEqual(os.readlink(os.path.join(styles, "coworker.md")),
+                             os.path.join(fx.clone, "output-styles", "coworker.md"))
+            with open(os.path.join(styles, "mine.md")) as f:
+                self.assertEqual(f.read(), "my own style\n")  # a user's own file is never overwritten
+            self.assertIn("mine.md", first)
+            self.assertIn("/output-style coworker", first)
+            with open(os.path.join(fx.home, ".claude", "settings.json")) as f:
+                self.assertNotIn("outputStyle", json.load(f))
+            again = self.install(fx).stdout  # an update keeps the link and doesn't repeat the hint
+            self.assertTrue(os.path.islink(os.path.join(styles, "coworker.md")))
+            self.assertNotIn("/output-style coworker", again)
+
+    def test_the_coworker_style_stays_opt_in(self) -> None:
+        with open(os.path.join(REPO, "output-styles", "coworker.md")) as f:
+            text = f.read()
+        head = text.split("---")[1]
+        self.assertIn("name: Coworker", head)
+        self.assertIn("keep-coding-instructions: true", head)
+        self.assertNotIn("force-for-plugin", head)  # never on unless the user picks it
+        self.assertIn("/output-style default", text)
+        self.assertIn("Commits, PR bodies, issues", text)
+
     def test_otherwise_the_clone_stays_where_it_is(self) -> None:
         cases = {
             "main ahead of the tag": lambda fx: fx.release("2.1.0", tag=None),

@@ -2,6 +2,14 @@
 
 ---
 
+## Unreleased
+
+### A coworker with a sense of humor ([#229](https://github.com/BojanKocijan/bk-charterline/issues/229))
+- **New optional output style, Coworker** (`output-styles/coworker.md`): the same rules and coding (`keep-coding-instructions: true`), with a dry, warm sense of humor that plays along with the rules. Jokes stay in chat, never in commits, PRs, issues or docs, and stop during incidents or when you're frustrated. Once per session it says how to turn it off.
+- **Off by default:** turn it on with `/output-style coworker`, off with `/output-style default`. The plugin ships it in `output-styles/`; `install.sh` links it into `~/.claude/output-styles/` (never over a file of yours with the same name), prints a one-line hint on a fresh install, and never sets `outputStyle`.
+
+---
+
 ## v3.3.0 — October 8, 2026
 
 Your own private dashboard: what the rules did for you, which tools Claude can reach and how risky each is, and how your pull requests go, built on your machine and never sent anywhere.
