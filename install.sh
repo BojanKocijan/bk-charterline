@@ -504,6 +504,16 @@ else
   warn "Update manually with: git -C $LOCAL_DIR fetch --tags && git -C $LOCAL_DIR checkout --detach <newest vX.Y.Z tag>"
 fi
 
+# 7b. Build the private dashboard (#120): what the rules did for you, in
+# $LOCAL_DIR/dashboard/ (gitignored, never sent). It never fails the install.
+if [ -f "$LOCAL_DIR/scripts/my_metrics.py" ]; then
+  if DASH_OUT=$(python3 "$LOCAL_DIR/scripts/my_metrics.py" 2>&1); then
+    ok "Built your dashboard: $LOCAL_DIR/dashboard/index.html"
+  else
+    warn "Couldn't build your dashboard this time; type 'my metrics' in Claude Code to try again. ($(printf '%s\n' "$DASH_OUT" | tail -n 1))"
+  fi
+fi
+
 # 8. Done (the update function prints its own one-line summary instead)
 [ -n "$UPDATING" ] && exit 0
 

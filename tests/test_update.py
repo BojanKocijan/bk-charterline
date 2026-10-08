@@ -515,6 +515,23 @@ class InstallScriptTests(unittest.TestCase):
                 self.assertIn("On release v2.0.0.", self.install(fx, update).stdout)
                 self.assertEqual((fx.head(), fx.branch()), (tag, ""))
 
+    def test_the_install_builds_the_dashboard_and_never_fails_on_it(self) -> None:
+        cases = {
+            "builds": ('import os; open(os.path.expanduser("~/built"), "w").write("x")', "Built your dashboard"),
+            "breaks": ('raise SystemExit("no data yet")', "Couldn't build your dashboard this time"),
+        }
+        for name, (script, message) in cases.items():
+            with self.subTest(name), tempfile.TemporaryDirectory() as tmp:
+                fx = Fixture(os.path.realpath(tmp))
+                fx.write("scripts/my_metrics.py", script + "\n")
+                fx.release("2.0.0")
+                fx.make_clone(at="v2.0.0")
+                result = self.install(fx)  # asserts exit 0, also when the build breaks
+                self.assertIn(message, result.stdout)
+                self.assertEqual(os.path.exists(os.path.join(fx.home, "built")), name == "builds")
+                if name == "breaks":
+                    self.assertIn("no data yet", result.stdout)
+
     def test_otherwise_the_clone_stays_where_it_is(self) -> None:
         cases = {
             "main ahead of the tag": lambda fx: fx.release("2.1.0", tag=None),

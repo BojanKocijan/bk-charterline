@@ -57,3 +57,6 @@ ai-inventory*
 
 # Per-session Law 38 tier 3 approvals the hook records (#138) — local to each machine.
 ai-approvals*
+
+# The private dashboard each user's install builds (#120)
+/dashboard/
