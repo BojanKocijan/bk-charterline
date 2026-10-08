@@ -2,6 +2,13 @@
 
 ---
 
+## Unreleased
+
+### A private dashboard for every user ([#120](https://github.com/BojanKocijan/bk-charterline/issues/120))
+- **The hook log names the tool behind each MCP prompt** (`tool`, for example `mcp__gmail__send_message`), so the dashboard can show which tool was asked about on which call. Only a well-formed tool name is kept; a tool's inputs are never logged.
+
+---
+
 ## v3.2.1 — October 7, 2026
 
 ### A navy and lime palette for the page ([#215](https://github.com/BojanKocijan/bk-charterline/issues/215))

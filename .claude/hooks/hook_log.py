@@ -23,6 +23,7 @@ import contextlib
 import hashlib
 import json
 import os
+import re
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -93,10 +94,15 @@ def append_record(record: dict) -> bool:
     return True
 
 
+TOOL_NAME_RE = re.compile(r"mcp__[A-Za-z0-9_.-]{1,200}")
+
+
 def append_block(law: int | None, check: str, cwd: str, branch: str | None, command: str,
-                 record_type: str = "block") -> bool:
-    """record_type is "block", or "ask" when the user got a permission prompt (#117)."""
-    return append_record({
+                 record_type: str = "block", tool: str | None = None) -> bool:
+    """record_type is "block", or "ask" when the user got a permission prompt (#117).
+    `tool` is an MCP tool's name, for the dashboard's "which tool, on which call"
+    (#120). Only a well-formed `mcp__…` name is kept, never a tool's inputs."""
+    record = {
         "ts": utc_now(),
         "type": record_type if record_type in ("block", "ask") else "block",
         "law": law,
@@ -104,7 +110,10 @@ def append_block(law: int | None, check: str, cwd: str, branch: str | None, comm
         "cwd": cwd,
         "branch": branch,
         "command_sha256": hashlib.sha256(command.encode()).hexdigest(),
-    })
+    }
+    if isinstance(tool, str) and TOOL_NAME_RE.fullmatch(tool):
+        record["tool"] = tool
+    return append_record(record)
 
 
 def read_records() -> list[dict]:
