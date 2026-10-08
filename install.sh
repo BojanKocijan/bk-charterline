@@ -6,7 +6,8 @@
 #   1. Clones the rules repo locally and wires it into Claude's global memory
 #      (~/.claude/CLAUDE.md) so every Claude Code session auto-loads them.
 #   2. Registers the Law 32 guardrail hook in ~/.claude/settings.json.
-#   3. Links the agents and skills into ~/.claude/agents and ~/.claude/skills
+#   3. Links the agents, skills and output styles into ~/.claude/agents, ~/.claude/skills
+#      and ~/.claude/output-styles (a style stays off until the user picks it)
 #      so Claude Code registers them.
 #   4. Installs `charterline-update` as a shell function that moves the clone to
 #      the newest release tag and re-runs this installer. Every step is safe to re-run.
@@ -255,6 +256,7 @@ fi
 #    user's own agents and skills with the same name are left alone.
 AGENTS_DIR="${HOME}/.claude/agents"
 SKILLS_DIR="${HOME}/.claude/skills"
+STYLES_DIR="${HOME}/.claude/output-styles"
 SKIPPED=""
 
 link_into() {
@@ -271,7 +273,7 @@ link_into() {
   ln -s "$src" "$dest"
 }
 
-# Remove links into the clone whose agent or skill was deleted upstream.
+# Remove links into the clone whose agent, skill or style was deleted upstream.
 prune_dangling() {
   local link
   for link in "$1"/*; do
@@ -283,9 +285,10 @@ prune_dangling() {
   done
 }
 
-mkdir -p "$AGENTS_DIR" "$SKILLS_DIR"
+mkdir -p "$AGENTS_DIR" "$SKILLS_DIR" "$STYLES_DIR"
 prune_dangling "$AGENTS_DIR"
 prune_dangling "$SKILLS_DIR"
+prune_dangling "$STYLES_DIR"
 
 AGENT_COUNT=0
 for src in "$LOCAL_DIR"/agents/*.md; do
@@ -303,7 +306,19 @@ for src in "$LOCAL_DIR"/skills/*; do
   fi
 done
 
-ok "Linked $AGENT_COUNT agents and $SKILL_COUNT skills into ${HOME}/.claude"
+# Output styles (#229): linked, never switched on. The user picks one with /output-style.
+STYLE_COUNT=0
+for src in "$LOCAL_DIR"/output-styles/*.md; do
+  [ -f "$src" ] || continue
+  if link_into "$src" "$STYLES_DIR/$(basename "$src")"; then
+    STYLE_COUNT=$((STYLE_COUNT + 1))
+  fi
+done
+
+ok "Linked $AGENT_COUNT agents, $SKILL_COUNT skills and $STYLE_COUNT output styles into ${HOME}/.claude"
+if [ "$STYLE_COUNT" -gt 0 ] && [ -z "$UPDATING" ]; then
+  say "Want a coworker with a sense of humor? Type /output-style coworker in Claude Code; /output-style default turns it off."
+fi
 [ -z "$SKIPPED" ] || warn "Skipped, because your own file or link already uses the name:$SKIPPED"
 
 # 7. Install charterline-update as a shell function

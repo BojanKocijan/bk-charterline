@@ -2,6 +2,8 @@
 
 Gate tier: Standard (an opt-in file; no law changes)
 
+Approved-by: BojanKocijan, 2026-10-08, chat
+
 ## Goal
 
 A Claude Code output style that makes Claude a knowledgeable coworker with a sense of humor: dry, a little sarcastic, playing along with the rules ("I know I can't merge, just joking 🙂"). It's off until the user turns it on, and it now and then says how to turn it off.

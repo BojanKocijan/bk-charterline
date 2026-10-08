@@ -31,6 +31,7 @@ It's not only for developers. BK Charterline carries the full product craft, fro
 
 - [Why BK Charterline](#why-bk-charterline)
 - [Your private dashboard](#your-private-dashboard)
+- [A coworker with a sense of humor](#a-coworker-with-a-sense-of-humor)
 - [Quick start](#quick-start)
 - [Installation](#installation)
 - [Architecture](#architecture)
@@ -69,6 +70,17 @@ Every install builds a private dashboard of what the rules do for you: what the 
 - **Where:** `~/.bk-charterline/dashboard/index.html`. Open it straight from the file; it needs no server.
 - **When it's rebuilt:** on every `update rules`, after every pull request you merge and every pull of `main`, quietly at session start when something changed, and whenever you type `my metrics`.
 - **Private:** it's built on your machine from your own files and your own `gh` login. Nothing is committed or sent anywhere.
+
+---
+
+## A coworker with a sense of humor
+
+BK Charterline ships an optional **Coworker** output style: the same rules and the same coding, with a knowledgeable teammate's dry sense of humor. It plays along with the rules ("I'd love to merge it, but Law 7 and I have an agreement 🙂") and teases the situation, never you.
+
+- **On:** type `/output-style coworker` in Claude Code. In the desktop app, set `"outputStyle": "Coworker"` in `.claude/settings.local.json` or `~/.claude/settings.json`.
+- **Off:** `/output-style default`. It reminds you once per session.
+- **Where jokes never go:** commits, PRs, issues, release notes, docs and code comments stay plain. It goes quiet during incidents, failed deploys or red CI, and when you're frustrated.
+- **Off by default.** Nothing switches it on for you, and it adds nothing to the rules' size when it's off.
 
 ---
 
@@ -352,6 +364,7 @@ bk-charterline/
 ├── install.sh                   # One-line installer
 ├── projects.example.yaml        # Project registry template
 ├── .claude-plugin/              # Claude Code plugin manifest
+├── output-styles/               # Optional voices, off by default (coworker.md)
 ├── agents/                      # 9 persona definitions
 │   ├── frontend.md
 │   ├── backend.md
