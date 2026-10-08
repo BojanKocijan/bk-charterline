@@ -2,7 +2,7 @@
 
 Spec: [spec.md](spec.md) · Gate tier: Significant · Branches: `docs/issue-120-spec`, then `feat/my-metrics-1-hook` … `feat/my-metrics-5-checks` · Issue: #120
 Work pile: judgment-heavy (a new feature that runs on every install), built in this session
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-08, chat
 
 ## Six PRs, merged in order
 
