@@ -1,6 +1,6 @@
 ---
 name: ux-writing
-description: UX writing and microcopy for product UI surfaces — applies the 10 UX writing rules (sentence case, active voice, action-first buttons, specific over generic, no jargon, empty states with next action, error messages naming problem + fix, confirmation dialogs using action label, specific loading states, supplementary tooltips), with tone by moment, onboarding steps, alternatives and notes for translators. Invoke when the user asks to write, review, or improve any product UI copy (labels, buttons, error messages, empty states, onboarding, tooltips).
+description: "UX writing and microcopy with the 10 rules (sentence case, active voice, action-first, specific, no jargon, empty states with a next action, errors with problem and fix, action-labeled confirmations, specific loading, supplementary tooltips), tone by moment, onboarding, alternatives and translator notes. Invoke to write, review or improve any UI copy: labels, buttons, errors, empty states, onboarding, tooltips."
 license: GPL-3.0-only
 ---
 
