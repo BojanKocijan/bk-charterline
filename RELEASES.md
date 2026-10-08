@@ -2,13 +2,20 @@
 
 ---
 
-## Unreleased
+## v3.3.0 — October 8, 2026
+
+Your own private dashboard: what the rules did for you, which tools Claude can reach and how risky each is, and how your pull requests go, built on your machine and never sent anywhere.
 
 ### A private dashboard for every user ([#120](https://github.com/BojanKocijan/bk-charterline/issues/120))
 - **The hook log names the tool behind each MCP prompt** (`tool`, for example `mcp__gmail__send_message`), so the dashboard can show which tool was asked about on which call. Only a well-formed tool name is kept; a tool's inputs are never logged.
 - **New `scripts/my_metrics_data.py`** gathers the dashboard's data from local files only: what the hook blocked and asked, which tool was asked about on which call, every tool's severity and the ones not rated yet, and, through the user's own `gh` login, pull request numbers for each project in `projects.yaml`, fetched only since the last run. A missing or broken source shows a message in its own section and never stops the rest.
 - **New `scripts/my_metrics.py`** builds the two pages in `~/.bk-charterline/dashboard/`: an overview (headline numbers, tools by severity, the latest calls, what the hook did) and Tools and calls (a card per tool with what it can do, every High and Critical call, pull requests per project). Commands get a Copy command button; nothing points to another site.
 - **It builds itself:** at the end of every `update rules` (a full build; a failure prints one warning and never fails the update), quietly at session start (local files only, skipped when nothing changed), and on `my metrics`. The session-start confirmation shows `Dashboard: ~/.bk-charterline/dashboard/index.html`. The folder is gitignored.
+- **It refreshes after every merge and every pull of `main`** (Laws 5, 9 and 25): Claude rebuilds it in the background right after the pull, so the pull request numbers include what you just merged. It never blocks or fails the cleanup.
+- **Checked like the page:** a new Playwright check builds the dashboard from example data and runs axe (WCAG 2.2 AA) on both pages at phone and desktop width in light and dark, plus the Copy command button and no requests to other sites. It found two fixes: the severity dots now carry hidden text instead of an `aria-label` on a plain `<span>`, and the scrolling tables are keyboard-reachable regions with a name.
+- **README:** a "Your private dashboard" section, and the screenshots at the top retaken from the final code, still with example data.
+- **Rules: 31,035 tokens** (estimate).
+- The Laws, `plugin.json` and `marketplace.json` are at 3.3.0.
 
 ---
 
