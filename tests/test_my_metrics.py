@@ -8,6 +8,11 @@ sys.path.insert(0, SCRIPTS)
 sys.dont_write_bytecode = True
 import my_metrics  # noqa: E402
 
+def read(path: str) -> str:
+    with open(path, encoding="utf-8") as f:
+        return f.read()
+
+
 NOW = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
@@ -42,11 +47,31 @@ class MyMetricsTests(unittest.TestCase):
         with open(os.path.join(self.home, "dashboard", name)) as f:
             return f.read()
 
-    def test_both_pages_and_their_files_are_built(self) -> None:
+    def test_both_pages_are_built_and_nothing_else(self) -> None:
         self.busy_user()
         self.assertTrue(self.build().endswith(os.path.join("dashboard", "index.html")))
-        for name in ("index.html", "tools.html", "dashboard.css", "styles.css", "site.js", "charts.js"):
-            self.assertTrue(os.path.exists(os.path.join(self.home, "dashboard", name)), name)
+        self.assertEqual(sorted(os.listdir(os.path.join(self.home, "dashboard"))), ["fingerprint.json", "index.html", "tools.html"])
+
+    def test_each_page_carries_its_own_styles_and_scripts(self) -> None:
+        self.busy_user()
+        self.build()
+        for name in ("index.html", "tools.html"):
+            page = self.read(name)
+            self.assertNotRegex(page, r"<link[^>]*stylesheet")
+            self.assertNotIn("<script src=", page)
+            styles = re.findall(r"<style>(.*?)</style>", page, re.S)
+            self.assertEqual([s.strip() for s in styles], [read(p).strip() for p in my_metrics.CSS])
+            self.assertTrue(my_metrics.CSS[-1].endswith("dashboard.css"))
+            for path in my_metrics.JS:
+                self.assertIn(read(path), page)
+            self.assertLess(page.index("</main>"), page.index(read(my_metrics.JS[0])))
+
+    def test_a_closing_tag_inside_a_file_is_refused(self) -> None:
+        path = os.path.join(self.tmp.name, "bad.js")
+        with open(path, "w") as f:
+            f.write('var s = "</script>";\n')
+        with self.assertRaises(ValueError):
+            my_metrics.inline("script", [path])
 
     def test_every_tool_once_under_its_severity(self) -> None:
         self.busy_user()
