@@ -127,3 +127,108 @@
   color: var(--accent-ink);
   font-weight: 600;
 }
+
+.stage-skills .dt-note {
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* How they work together (#247): what each source brings, then real pairs. */
+.together {
+  display: grid;
+  gap: var(--gap);
+}
+
+.together h3 {
+  margin: 0;
+  font: 600 var(--step-2) / 1.2 var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.together-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--gap);
+}
+
+@media (min-width: 48rem) {
+  .together-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.together-card {
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: clamp(1rem, 0.8rem + 0.8vw, 1.4rem);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.together-card h4 {
+  margin: 0;
+  font: 600 var(--step-1) / 1.2 var(--font-display);
+}
+
+.together-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.together-card code {
+  white-space: nowrap;
+}
+
+.together-ours {
+  border-color: transparent;
+  background: var(--accent-soft);
+}
+
+.together-ours p {
+  color: var(--ink);
+}
+
+.together-plugin {
+  border-style: dashed;
+}
+
+.pairs {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pairs li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.6rem;
+  min-width: 0;
+  padding-block: 0.6rem;
+  border-top: 1px solid var(--line);
+}
+
+.pair-ours {
+  font-weight: 600;
+}
+
+.pair-plus {
+  color: var(--muted);
+}
+
+.pairs code {
+  overflow-wrap: break-word;
+}
+
+.pair-why {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: var(--small);
+}
+

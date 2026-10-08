@@ -1,6 +1,6 @@
 # Team Workflow — BK Charterline
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Last Updated:** 2026-10-08
 **Binding:** Yes — this file governs the agent **team pipeline** (triggers: `team` / `build feature`). It composes the existing personas into one collaborating team rather than mutually-exclusive modes.
 
@@ -120,11 +120,13 @@ BK Charterline doesn't compete with Claude's own skills: the team uses the right
 - **Ours goes first** for design critique, developer handoff, microcopy, research synthesis to a deck and the deploy steps you're handed (Law 35's literal SQL, check query and merge order; `engineering:deploy-checklist` only adds pre-deploy checks to it): they carry our standards (WCAG 2.2 AA, numbered findings, the tracking issue, PII redaction).
 - **Theirs goes first** for planning a research study (`design:user-research`), an accessibility-only audit (`design:accessibility-review`, against WCAG 2.2 AA), visual direction when there's no design to follow (`frontend-design:frontend-design`), code review (as Law 37 sets it) and a postmortem when you ask for one (`engineering:incident-response`, its postmortem part only: the Incident persona stays read-only and never posts status updates or opens incidents).
 - **Our standards still apply** to their output: the design you're given (Law 19) and the project's chosen library and tokens (Law 30) beat any skill's own taste, an accessibility check uses WCAG 2.2 AA even where a skill names 2.1, and no skill's verdict replaces your merge (Law 7).
+- **Missing plugin: Claude asks.** When a job's "theirs goes first" skill isn't installed (it's missing from Claude's skill list), Claude says so once per session per plugin, gives the `/plugin` commands for you to run (README › Installation; on claude.ai web, where `/plugin` doesn't exist, it names the plugin to add in Claude Code), and does the job meanwhile with our own skill. Claude never installs a plugin itself, and after a "no" it doesn't ask again that session.
 
 ---
 
 ## Changelog
 
+- **1.3.0 (2026-10-08)** — §8: when a job's preferred Anthropic skill isn't installed, Claude asks once per session per plugin, gives the commands, and carries on with our own skill (#247).
 - **1.2.0 (2026-10-08)** — §8 *Which skill for which job*: the team's skills by stage, from BK Charterline, Claude Code and Anthropic's plugins (when installed), and which one goes first when two fit (#231).
 
 - **1.1.0 (2026-06-12)** — Removed the dedicated Docs role: documentation is a shared team duty (builders document their own change; the Lead enforces the §6 doc standards as a gate before review). Pipeline Stage column is now `planned → building → testing → in-review`.

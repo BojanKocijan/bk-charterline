@@ -64,7 +64,8 @@ test("the team shows 7 stages, each with skills, and ends with you merging", asy
   await expect(page.locator("#team .team-end .you")).toHaveText("You merge.");
   // Every skill named on the page is in the team's skill map, so the page never says more than the rules do.
   const map = fs.readFileSync(path.join(__dirname, "..", "knowledge", "TEAM_WORKFLOW.md"), "utf8").split("## 8. Which skill")[1].split("\n## ")[0];
-  const chips = await page.locator("#team .tags li").allTextContents();
+  await expect(page.locator("#team .together-card")).toHaveCount(3);
+  const chips = [...(await page.locator("#team .tags li").allTextContents()), ...(await page.locator("#team .pairs code").allTextContents())];
   const names = chips.filter((t) => /^\/?[a-z-]+(:[a-z-]+)?$/.test(t));
   expect(names.length).toBeGreaterThan(25);
   expect(names.filter((n) => !map.includes("`" + n) && !map.includes(" " + n))).toEqual([]);

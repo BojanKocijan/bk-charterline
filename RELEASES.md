@@ -2,6 +2,15 @@
 
 ---
 
+## Unreleased
+
+### BK Charterline first, and Claude asks before a plugin ([#247](https://github.com/BojanKocijan/bk-charterline/issues/247))
+- **Missing plugin: Claude asks** (TEAM_WORKFLOW §8, 1.3.0): when a job's preferred Anthropic skill isn't installed, Claude says so once per session per plugin, gives the `/plugin` commands for you to run, and does the job meanwhile with our own skill. It never installs a plugin itself, and after a "no" it doesn't ask again that session.
+- **The page puts BK Charterline first:** the team section says it's the core of the team, labels Anthropic's skills "joins when installed", and adds **How they work together**: what each source brings, and four real pairs (critique + accessibility audit, deploy steps + pre-deploy checks, research synthesis + study planning, review gates + `/code-review`). A check makes sure every skill named there is in §8.
+- **It works in every session:** CLAUDE.md's knowledge table sends Claude to §8 whenever a skill names an Anthropic plugin that isn't installed, not only in team work.
+
+---
+
 ## v3.4.0 — October 8, 2026
 
 One team: BK Charterline brings Claude Code's own skills and Anthropic's plugins into the team instead of competing with them, reviews every change with Claude's own code review, and gets an optional coworker with a sense of humor.
