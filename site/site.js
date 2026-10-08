@@ -47,7 +47,7 @@
     var source = document.getElementById(button.getAttribute("data-copy"));
     var status = document.getElementById(button.getAttribute("aria-describedby"));
     button.addEventListener("click", function () {
-      var done = function () { status.textContent = "Copied. Paste it into your terminal."; };
+      var done = function () { status.textContent = button.dataset.copied || "Copied. Paste it into your terminal."; };
       var fallback = function () {
         var range = document.createRange();
         range.selectNodeContents(source);

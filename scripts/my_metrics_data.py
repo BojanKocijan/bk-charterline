@@ -171,7 +171,7 @@ def pull_requests(home: str, gh: str, now: datetime.datetime, network: bool) -> 
             "name": project["name"], "repo": repo, "error": error, "merged": len(recent),
             "median_lines": round(statistics.median(lines)) if lines else None,
             "within_400": round(100 * sum(1 for n in lines if n <= 400) / len(lines)) if lines else None,
-            "median_hours": round(statistics.median(hours), 1) if hours else None,
+            "median_hours": round(statistics.median(hours), 2) if hours else None,
             "reverts": sum(1 for p in recent if p["revert"]),
             "claude_share": round(100 * sum(1 for p in recent if p["claude"]) / len(recent)) if recent else None,
             "sizes": lines,
