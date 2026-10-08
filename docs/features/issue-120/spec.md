@@ -2,7 +2,7 @@
 
 Intent: [#120](https://github.com/BojanKocijan/bk-charterline/issues/120), as the owner extended it on 2026-10-08 ([comment](https://github.com/BojanKocijan/bk-charterline/issues/120#issuecomment-6055156189))
 Design: the owner-reviewed prototype from 2026-10-08 (overview plus a "Tools and calls" page, in the site's navy and lime design)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-08, chat (all three decisions as recommended)
 
 ## Owner decisions (chat, 2026-10-07 and 2026-10-08)
 
