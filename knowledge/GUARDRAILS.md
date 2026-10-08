@@ -1,6 +1,6 @@
 # Guardrails — BK Charterline
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Last Updated:** 2026-10-08
 **Binding:** Yes — the detail behind Law 32 (the hook) and the hook's part in Law 38. Read on demand when a block or a permission prompt needs explaining, when changing the hook, or when the user asks what the hook does.
 
@@ -50,6 +50,17 @@
 
 ---
 
+## 2. Why the hook, and Law 38's limits
+
+**Why the hook exists.** Every other law in this document relies on Claude reading and following instructions — reliable most of the time, but not deterministic. Law 32 backstops the handful of laws where "Claude might forget" has real teeth: merging its own PR, writing directly to the default branch, a malformed commit message, a secret slipping into a staged diff.
+
+**Law 38, known limits (accepted, owner decision 2026-10-05).** Because the project entry wins, a repo that commits a `.claude/ai-tools.json` can lower a tool's tier, including below your personal tier, while Claude works in that repo; the hook asks before Claude writes that file or moves a folder onto `.claude`, but not when it arrives through `git clone`, `checkout` or `pull`. Check a new repo's `.claude/ai-tools.json` before working in it. And if the hook itself crashes or times out on a tier 3 call, the call runs and counts as that session's approval.
+
+**Sources:** the Classify phase of Xensam's *Out of the Shadows* handbook; OWASP Top 10 for Agentic Applications 2026 (ASI02 tool misuse, ASI03 identity and privilege abuse); NIST AI RMF MAP 4 and GOVERN 6.
+
+---
+
 ## Changelog
 
+- **1.1.0 (2026-10-08)** — §2: why the hook exists, Law 38's known limits and sources, moved from the laws (#239).
 - **1.0.0 (2026-10-08)** — Law 32's mechanism, the blocks and asks tables, the block log and where the hook lives, moved from `CLAUDE_LAWS.md` (#239).
