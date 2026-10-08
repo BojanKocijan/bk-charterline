@@ -18,7 +18,7 @@ function watch(page) {
 }
 
 for (const colorScheme of ["light", "dark"]) {
-  for (const width of [390, 1280]) {
+  for (const width of [320, 390, 1280]) {
     test(`no axe violations at ${width}px in ${colorScheme}`, async ({ page }) => {
       const problems = watch(page);
       await page.emulateMedia({ colorScheme, reducedMotion: "reduce" });
