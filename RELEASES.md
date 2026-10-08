@@ -2,6 +2,15 @@
 
 ---
 
+## Unreleased
+
+### The page says up front why to add BK Charterline ([#249](https://github.com/BojanKocijan/bk-charterline/issues/249))
+- **New hero:** "Get the most out of Claude Code and its plugins". BK Charterline gives Claude Code and Anthropic's skills a way of working: when each skill runs, what standard it meets, and when to stop for your yes.
+- **New "Why add it" strip** under the hero, with a Why link in the header: Claude Code, Anthropic's plugins, built-in tools and safety, each on its own and with BK Charterline. A page check counts the four rows; axe in light and dark at 320, 390 and 1280px covers it.
+- **Fresh numbers:** the rules' tokens per session (31,531), merged PRs, releases, tests and median PR size, from `scripts/site_metrics.py`.
+
+---
+
 ## v3.4.0 — October 8, 2026
 
 One team: BK Charterline brings Claude Code's own skills and Anthropic's plugins into the team instead of competing with them, reviews every change with Claude's own code review, and gets an optional coworker with a sense of humor.
