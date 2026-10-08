@@ -177,7 +177,7 @@ BK Charterline has three layers:
 │  knowledge/ — 13 binding guides                  │
 │  (loaded on demand per task scope)              │
 ├─────────────────────────────────────────────────┤
-│  skills/ — 18 reusable skill definitions        │
+│  skills/ — 20 reusable skill definitions        │
 │  (auto-discovered by Claude Code)               │
 └─────────────────────────────────────────────────┘
 ```
@@ -404,7 +404,7 @@ bk-charterline/
 │   ├── GUARDRAILS.md
 │   ├── PATTERNS.example.md
 │   └── PATTERNS.md              # gitignored — your copy of the example above
-├── skills/                      # 18 reusable skill definitions
+├── skills/                      # 20 reusable skill definitions
 ├── docs/                        # Additional documentation
 └── .github/
     └── workflows/
