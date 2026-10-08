@@ -98,3 +98,22 @@ One function, `collect(home, *, network)`, returns a plain dict. Each source is 
 - **Calling GitHub at session start:** a session must never wait on the network.
 - **Storing tool inputs** to say more about each call: privacy (Law 32's log rule).
 - **A JavaScript framework:** the site's plain HTML and chart script already do it.
+
+## Amendment 1: refresh after every merge and every pull of main
+
+Approved-by: BojanKocijan, 2026-10-08, chat
+
+The owner asked for the dashboard to be rebuilt **after every PR they merge and every pull of the default branch**, the moments its pull request numbers change. It's a rules change.
+
+- **Law 9** (cleanup after a merge): a fifth step after pulling the default branch: rebuild the dashboard in the background (`python3 ~/.bk-charterline/scripts/my_metrics.py`, a full build with the projects' pull requests). It never blocks or fails the cleanup.
+- **Law 5** (pull before new work) and **Law 25** (session start): the same background rebuild right after each pull of the default branch.
+- **Limit:** a merge you make in GitHub is seen when Claude next pulls (the cleanup after you say it's merged, or the next new work), not the second it happens; nothing polls GitHub.
+- **Cost:** about 15 seconds of background work per pull; the session never waits for it.
+- **Ships with v3.3.0**, with a test that the rules name the rebuild in Laws 5, 9 and 25.
+
+## Deviations after approval
+
+- **Two accessibility fixes found by the new dashboard check (PR 5):** the severity dots in the latest-calls list had an `aria-label` on a plain `<span>` (now hidden text), and the scrolling tables weren't reachable by keyboard (now focusable regions with a name).
+- **The README images came early:** the owner asked for them at the top of the README before the release (#225, captioned "new in v3.3.0"); PR 5 retakes them from the final code, still with example data.
+- **A renamed repo:** GitHub's search ignores a repo's old name, so a project registered under it showed 0 pull requests; the owner's `projects.yaml` now has the new name.
+- **PR 5 became two PRs:** the checks and fixes (PR 5) and the release with Amendment 1 (PR 6), so neither touches more than 10 files (Law 31).

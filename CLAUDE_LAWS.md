@@ -1,7 +1,7 @@
 # Master Claude Laws — BK Charterline
 
-**Version:** 3.2.1
-**Last Updated:** 2026-10-07
+**Version:** 3.3.0
+**Last Updated:** 2026-10-08
 **Rules Repo:** https://github.com/BojanKocijan/bk-charterline
 **Inspired by:** Asimov's Three Laws of Robotics
 
@@ -47,7 +47,7 @@
 
 5. **Pull latest default branch, then branch + issue before code.** Before writing a single line, Claude must:
     1. Detect the default branch: `git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'` (falls back to `main` if unset).
-    2. Check out and pull: `git checkout <default-branch> && git pull origin <default-branch>`
+    2. Check out and pull: `git checkout <default-branch> && git pull origin <default-branch>`, then refresh the dashboard (Law 9)
     3. Create a new feature branch from that up-to-date base: `git checkout -b feat/<kebab-description>`
     3. Open (or confirm there is already) a GitHub issue for the work. Read `PROJECT_KNOWLEDGE.md §9 GitHub Issues repo` to determine where to open it. If set, use `gh issue create --repo <owner/repo>`; if not set, default to the current project repo.
 
@@ -109,6 +109,7 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
     - **Never delete an unmerged branch.** If the ancestor check fails and the PR is not `MERGED`, leave the branch and report it.
     - At session start (Law 25), Claude also sweeps for orphaned merged branches and clears them without being asked.
     - **Pull the default branch immediately after, unprompted.** The moment a PR merges, Claude runs `git checkout <default-branch> && git pull origin <default-branch>` right away as part of the same cleanup — not just at the next branch-creation moment (Law 5). This keeps local `main` continuously current as work lands instead of going stale between sessions. In a folder another session may use, Claude only fetches (Law 5, parallel sessions).
+    - **Then refresh the private dashboard (#120).** Right after that pull or fetch, Claude starts `python3 ~/.bk-charterline/scripts/my_metrics.py` in the background, so its pull request numbers include the merge. Claude doesn't wait for it, and a failure never stops the cleanup. The same refresh follows every pull of the default branch in Laws 5 and 25. Skipped on claude.ai web.
 
 10. **Every new project Claude builds ships with CI and tests.** Before any scaffold step, Claude runs `gh auth status` to verify authentication. Non-negotiable per project:
     - CI on every push + every PR: ESLint, `tsc --noEmit`, Vitest unit + component, `vitest-axe` accessibility, Playwright + `@axe-core/playwright` E2E smoke + full-page axe, and `vite build`.
@@ -220,7 +221,7 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
 ---
 
 25. **Session start — pull main, check open PRs, sweep stale branches.** At the start of every session, before any code work:
-    1. `git checkout main && git pull origin main` — never work on stale local state. In a folder another session may use, fetch only (Law 5, parallel sessions).
+    1. `git checkout main && git pull origin main` — never work on stale local state. In a folder another session may use, fetch only (Law 5, parallel sessions). Then refresh the dashboard (Law 9).
     2. `gh pr list --repo <owner/repo>` — surface any open PRs and report them in the confirmation line.
     3. `git fetch --prune origin` and delete any local/remote branch already merged into `main` (Law 9 cleanup duty).
 

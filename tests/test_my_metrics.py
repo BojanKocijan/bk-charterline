@@ -100,3 +100,12 @@ class MyMetricsTests(unittest.TestCase):
             f.write(json.dumps({"ts": NOW, "type": "block", "law": 5, "check": "commit-on-default"}) + "\n")
         self.assertNotEqual(self.build(if_changed=True), "unchanged")
         self.assertIn("Commit on main", self.read("index.html"))
+
+    def test_the_rules_refresh_it_after_every_merge_and_pull(self) -> None:
+        with open(os.path.join(os.path.dirname(SCRIPTS), "CLAUDE_LAWS.md")) as f:
+            laws = f.read()
+        law = lambda n: re.search(rf"^\s*{n}\. \*\*.*?(?=^\s*{n + 1}\. \*\*)", laws, re.S | re.M).group(0)  # noqa: E731
+        self.assertIn("scripts/my_metrics.py` in the background", law(9))
+        self.assertIn("refresh the dashboard (Law 9)", law(5))
+        self.assertIn("refresh the dashboard (Law 9)", law(25))
+
