@@ -4,6 +4,14 @@
   "use strict";
   var root = document.documentElement;
 
+  // Keep section links clear of the sticky header at any width (#230).
+  var header = document.querySelector(".top");
+  if (header && window.ResizeObserver) {
+    new ResizeObserver(function () {
+      root.style.setProperty("--header-h", header.offsetHeight + "px");
+    }).observe(header);
+  }
+
   // The one place that reads the reduced-motion setting (Animation Guide §2.1).
   // Everything that moves checks data-motion, so a settings toggle can be
   // added later without touching the rest.

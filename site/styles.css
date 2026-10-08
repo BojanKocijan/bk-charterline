@@ -84,7 +84,8 @@
 }
 
 html {
-  scroll-padding-top: 5rem; /* section links stop below the sticky header */
+  /* Section links stop below the sticky header; site.js sets --header-h to its real height, which grows when the nav wraps. */
+  scroll-padding-top: calc(var(--header-h, 4.25rem) + 0.75rem);
 }
 
 body {

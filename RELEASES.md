@@ -21,6 +21,9 @@
 - **Law 35: every deploy step says how to undo it.** The migration's `down` SQL, where the old setting lives (never a secret's value) or which PR to revert; undos run in reverse order, code before schema; an undo that loses data says so; and the checklist ends with what means roll back, so the owner decides before deploying. The example shows all of it.
 - **design-critique** (and SKILLS §2.a, the Design agent's checklist) starts with a two-second first impression and names what works before the findings. **UX_RESEARCH_GUIDE §2a, Planning a study:** `design:user-research` when installed, otherwise our five-step checklist (the decision, the method, participants, the guide or script, privacy). A kept plan goes to `docs/research/<study>/plan.md`, never with participant names or contacts.
 
+### The whole team, on the page ([#230](https://github.com/BojanKocijan/bk-charterline/issues/230))
+- **New section "Every skill your team needs, in one place"** after "What it does", with a Team link in the header: the 7 stages from plan to ship and run, who leads each and the skills it uses, labeled BK Charterline, Claude Code or Anthropic plugin, ending with "You merge." It matches TEAM_WORKFLOW §8; the page checks (axe in light and dark at phone and desktop width) cover it, plus a check for the 7 stages and that every skill shown is in §8. Section links now stop below the sticky header at any width, also when the nav wraps.
+
 ---
 
 ## v3.3.1 — October 8, 2026

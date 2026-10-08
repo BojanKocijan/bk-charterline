@@ -1,9 +1,10 @@
 // Checks for the BK Charterline page (#177): WCAG 2.2 AA with axe at phone and
 // desktop width in light and dark, the tabs by keyboard, the real numbers,
-// the page without JavaScript, and no requests to other sites.
+// the page without JavaScript, the team's stages, and no requests to other sites.
 // Run: cd site && npx playwright test
 const { test, expect } = require("@playwright/test");
 const { AxeBuilder } = require("@axe-core/playwright");
+const fs = require("fs");
 const path = require("path");
 
 const PAGE = "file://" + path.join(__dirname, "index.html");
@@ -51,6 +52,22 @@ test("the tabs work with the keyboard", async ({ page }) => {
   await expect(page.getByRole("tab", { name: "Usage" })).toBeFocused();
   await page.keyboard.press("Home");
   await expect(page.getByRole("tab", { name: "Governance" })).toHaveAttribute("aria-selected", "true");
+});
+
+test("the team shows 7 stages, each with skills, and ends with you merging", async ({ page }) => {
+  await page.goto(PAGE);
+  const stages = page.locator("#team .stage");
+  await expect(stages).toHaveCount(7);
+  for (const stage of await stages.all()) {
+    expect(await stage.locator(".tags li").count()).toBeGreaterThan(0);
+  }
+  await expect(page.locator("#team .team-end .you")).toHaveText("You merge.");
+  // Every skill named on the page is in the team's skill map, so the page never says more than the rules do.
+  const map = fs.readFileSync(path.join(__dirname, "..", "knowledge", "TEAM_WORKFLOW.md"), "utf8").split("## 8. Which skill")[1].split("\n## ")[0];
+  const chips = await page.locator("#team .tags li").allTextContents();
+  const names = chips.filter((t) => /^\/?[a-z-]+(:[a-z-]+)?$/.test(t));
+  expect(names.length).toBeGreaterThan(25);
+  expect(names.filter((n) => !map.includes("`" + n) && !map.includes(" " + n))).toEqual([]);
 });
 
 test("every real number matches data.js and shows its date", async ({ page }) => {
