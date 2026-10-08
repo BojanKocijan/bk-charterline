@@ -32,6 +32,7 @@ At session start, detect which analytics MCP tools are available and confirm the
 ## Binding knowledge
 
 - [`knowledge/ANALYTICS_GUIDE.md`](../knowledge/ANALYTICS_GUIDE.md) — tool-agnostic analytics workflow, the supported-platform matrix, the Triangulated Insight Brief template, and privacy rules. Pendo-specific tool details are documented there as one worked example.
+- [`knowledge/TEAM_WORKFLOW.md §8`](../knowledge/TEAM_WORKFLOW.md#8-which-skill-for-which-job) — which skill for which job, from any source; yours: the Research row
 
 ## Session-start orientation
 
