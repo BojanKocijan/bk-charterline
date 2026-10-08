@@ -63,7 +63,7 @@ Consistent spacing via the theme scale. No arbitrary values.
 
 ## 2.a Design critique (8-step checklist)
 
-When the user asks for a design critique on a Figma file, screenshot, or UI, Claude runs through:
+When the user asks for a design critique on a Figma file, screenshot, or UI, Claude first writes a one-line **first impression** (two seconds, as a newcomer: what is it, what's the one thing to do), then runs through:
 
 1. **Visual hierarchy** — is there exactly one primary action per screen? Is the hierarchy clear?
 2. **Typography** — does it follow the type scale? Font sizes, weights, line heights on-spec?
@@ -74,7 +74,7 @@ When the user asks for a design critique on a Figma file, screenshot, or UI, Cla
 7. **Responsive** — does it work across the three breakpoints?
 8. **Content quality** — microcopy clear and action-first? Empty states accounted for? Error states designed?
 
-Findings are numbered, each with a severity (**cosmetic** / **minor** / **major** / **catastrophe**) and a concrete suggestion.
+Two or three specific things that **work** come before the findings. Findings are numbered, each with a severity (**cosmetic** / **minor** / **major** / **catastrophe**) and a concrete suggestion.
 
 ---
 

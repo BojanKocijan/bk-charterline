@@ -15,6 +15,8 @@ User shares a Figma link, screenshot, or design for evaluation. Trigger phrases:
 
 Work through all 8 steps in order. Don't skip any. Findings are numbered across all steps.
 
+**Before step 1, the first impression (2 seconds).** Look at the screen as a newcomer would, for about two seconds: what is it, what's the one thing to do, and where does the eye land first? Write that down in one line. If the answer is unclear, that is usually the first finding in step 1.
+
 ### Step 1 — Visual hierarchy
 
 - Is there exactly **one primary action** per screen?
@@ -88,6 +90,12 @@ Work through all 8 steps in order. Don't skip any. Findings are numbered across 
 ```
 ## Design critique: <screen name>
 
+**First impression:** A project list; the eye lands on three equal buttons, so the next step isn't obvious.
+
+### What works
+- The table scans well: consistent row height and right-aligned numbers.
+- Empty and loading states already exist and name the next action.
+
 ### Finding 1 [Major] — Visual hierarchy: no clear primary action
 The screen has three buttons of equal visual weight. Users can't tell which to click first.
 Suggestion: Make "Create project" the primary button (filled), demote "Import" to outlined, and move "Cancel" to a text link.
@@ -103,3 +111,5 @@ Suggestion: Change to "Last modified" to match the pattern.
 ---
 **Summary:** 1 catastrophe, 1 major, 1 cosmetic. Block on Finding 2 before testing with users.
 ```
+
+Always name two or three things that work before the findings: specific ones, so the designer knows what to keep.
