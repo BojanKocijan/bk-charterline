@@ -184,10 +184,18 @@ Every non-`chore:` PR Claude drafts carries this block directly under `## Summar
 | Tier | Before Claude hands over the PR | What the human does |
 |---|---|---|
 | Trivial | CI green, Claude self-check | Glance and merge |
-| Standard | CI green, Claude compares the diff to `plan.md` and lists deviations | Review the diff against the plan; read "For the reviewer" closely |
-| Significant | CI green, plan comparison, **plus an independent review** by a Claude subagent with a fresh context that did not write the code, with findings ranked by severity in the PR | Full review; on a team, a second named reviewer approves |
+| Standard | CI green, Claude compares the diff to `plan.md` and lists deviations, and runs `/code-review <default-branch>...HEAD` | Review the diff against the plan; read "For the reviewer" closely |
+| Significant | CI green, plan comparison, `/code-review`, **plus an independent review** by a fresh subagent that did not write the code (with `engineering:code-review` when installed), findings ranked by severity in the PR | Full review; on a team, a second named reviewer approves |
 
 **Why a separate reviewer.** Agents grade their own work too kindly. The reviewing subagent gets the plan, the spec, and the diff, not the authoring conversation. Its findings are inputs for the human, not a verdict. AI review never replaces the human merge decision (Law 7). In the team pipeline, the Lead runs this reviewer after the Tester gate.
+
+**The reviewers.**
+
+- **`/code-review`** is built into Claude Code. Claude gives it the range, `/code-review <default-branch>...HEAD` (or the PR number): with no target it reviews only commits ahead of the upstream, which is nothing once the branch is pushed. It looks for correctness bugs in its own subagent and follows CLAUDE.md, so it knows the laws. Claude runs it on Standard and Significant work before opening the PR. `--fix` (apply the findings) and `--comment` (post them on the PR) run only with the owner's yes.
+- **The independent reviewer** on Significant work is a fresh subagent given only the plan, the spec and the diff (or the PR URL), passed to it explicitly, since it can't ask anyone what to review. When Anthropic's engineering plugin is installed, it reviews with `engineering:code-review` (security, performance, correctness, maintainability); otherwise with the same four lenses on its own. Its "Approve" or "Request changes" verdict is dropped: the human decides.
+- **`/code-review ultra`** runs a fleet of reviewers in the cloud, takes 5–10 minutes and costs usage credits, so only the owner starts it. For any change to auth, data, migrations or the hook, at any tier, Claude adds it to the merge order (Law 7) as an optional step before merging: `/code-review ultra <PR>`.
+
+Each finding ends up in the PR's Decision log as fixed, or skipped with the reason.
 
 **Closed loops are forbidden.** A change where a model wrote it, a model reviewed it, and a model approved it is not reviewed. The human merge is the gate.
 
@@ -260,11 +268,11 @@ Before asking for review, Claude proves everything a machine can prove: tests pa
 
 ## 8. Surface support
 
-| Surface | Artifacts | Review queue and cap | Independent review subagent |
-|---|---|---|---|
-| Claude Code CLI / IDE / desktop | ✅ Writes and commits | ✅ Via read-only `gh` | ✅ `Agent` tool |
-| Global-memory install without subagents | ✅ Writes and commits | ✅ Where `gh` is available | ⚠️ Main-thread fresh pass only; state the limitation |
-| Claude.ai web | ⚠️ Drafts in chat; the user commits | ❌ The user runs the listed `gh` command | ❌ |
+| Surface | Artifacts | Review queue and cap | `/code-review` | Independent review subagent |
+|---|---|---|---|---|
+| Claude Code CLI / IDE / desktop | ✅ Writes and commits | ✅ Via read-only `gh` | ✅ | ✅ `Agent` tool |
+| Global-memory install without subagents | ✅ Writes and commits | ✅ Where `gh` is available | ✅ | ⚠️ Main-thread fresh pass only; state the limitation |
+| Claude.ai web | ⚠️ Drafts in chat; the user commits | ❌ The user runs the listed `gh` command | ❌ A main-thread review; the PR says `/code-review` didn't run | ❌ |
 
 ---
 

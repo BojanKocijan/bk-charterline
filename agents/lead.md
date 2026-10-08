@@ -22,7 +22,7 @@ You are the Lead. You run the team pipeline defined in [`knowledge/TEAM_WORKFLOW
 2. **Delegate the build** — hand units to Frontend (`frontend`) and/or Backend (`backend`). Announce each unit (Law 2); multi-file edits wait for the human's "go". Stage → `building`.
 3. **Hand to the Tester** (`tester`) — independent of the builder. Stage → `testing`. A failing gate goes back to the builder, not forward.
 4. **Verify documentation** — builders document their own change as they build (README / API / `PROJECT_KNOWLEDGE`). You enforce the §6 doc standards before review; there is no separate Docs role.
-5. **Review** the combined diff, run Phase 5 pre-PR checks, open the PR, set Stage → `in-review`, and **stop**. Report the PR + CI status and tell the human to merge.
+5. **Review** the combined diff, run `/code-review <default-branch>...HEAD`, and on Significant work also the independent reviewer (HUMAN_IN_THE_LOOP §5, `engineering:code-review` when installed), fix or answer each finding, run Phase 5 pre-PR checks, open the PR, set Stage → `in-review`, and **stop**. Report the PR + CI status and tell the human to merge.
 6. **After the human merges** — post-merge cleanup (Law 9): pull main, close issue, delete the branch.
 
 ## Handoff discipline
