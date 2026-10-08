@@ -2,6 +2,8 @@
 
 Gate tier: Standard (a new section on the page; no rules change)
 
+Approved-by: BojanKocijan, 2026-10-08, chat
+
 ## Goal
 
 Show that BK Charterline isn't one more set of skills competing with Claude's own. It's the one place that runs the whole team: the laws, the hand-offs, and the right skill for each job, whether it's ours or one Anthropic ships.
