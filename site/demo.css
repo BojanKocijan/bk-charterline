@@ -39,6 +39,9 @@
   border-radius: var(--radius-lg);
   box-shadow: 0 24px 48px -32px rgb(8 10 14 / 0.35);
   min-width: 0;
+  /* One column that can shrink: otherwise the tabs' width sets the column
+     and every panel spills past a phone's edge. */
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .dash-bar {
@@ -78,6 +81,8 @@
 }
 
 .badge {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font: var(--tiny) / 1.4 var(--font-mono);
   color: var(--muted);
   border: 1px dashed var(--line);
@@ -115,8 +120,19 @@
 }
 
 .source {
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--muted);
   font-size: var(--small);
+}
+
+/* Below 415px the three tabs don't fit on one line: tighter sides, and
+   on the narrowest phones "Product analytics" wraps. */
+@media (max-width: 414px) {
+  .tabs [role="tab"] {
+    padding-inline: 0.5rem;
+    white-space: normal;
+  }
 }
 
 .chip {

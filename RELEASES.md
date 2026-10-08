@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+### The page fits a 320px phone ([#243](https://github.com/BojanKocijan/bk-charterline/issues/243))
+- **No more sideways scroll below 390px.** The analytics demo's three tabs set the width of its one grid column, so every panel spilled past the screen at 320–389px, and at 390–414px ran into the frame's right padding. The column now shrinks (`minmax(0, 1fr)`), the badge and the "In your project" line wrap, and below 415px the tabs get tighter sides, with "Product analytics" on two lines on the narrowest phones. At 768px and wider the demo looks exactly as before.
+- **Checked:** the Playwright + axe check now also runs at 320px, in light and dark, and fails without this fix.
+
 ### A coworker with a sense of humor ([#229](https://github.com/BojanKocijan/bk-charterline/issues/229))
 - **New optional output style, Coworker** (`output-styles/coworker.md`): the same rules and coding (`keep-coding-instructions: true`), with a dry, warm sense of humor that plays along with the rules. Jokes stay in chat, never in commits, PRs, issues or docs, and stop during incidents or when you're frustrated. Once per session it says how to turn it off.
 - **Off by default:** turn it on with `/output-style coworker`, off with `/output-style default`. The plugin ships it in `output-styles/`; `install.sh` links it into `~/.claude/output-styles/` (never over a file of yours with the same name), prints a one-line hint on a fresh install, and never sets `outputStyle`.
