@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>BK Charterline</title>
-  <meta name="description" content="Binding rules, skills and agents that make Claude Code work like a senior teammate, with analytics running alongside.">
+  <meta name="description" content="Get the most out of Claude Code and Anthropic's plugins: binding rules, a team of agents and hand-offs that make every skill work together.">
   <script>
     // Apply a saved theme before the page draws, so it never flashes; site.js owns the switcher.
     try { var t = localStorage.getItem("df-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
@@ -24,6 +24,7 @@
     <div class="page top-inner">
       <a class="brand" href="#top">BK Charterline</a>
       <nav aria-label="Sections">
+        <a href="#why">Why</a>
         <a href="#what">What it does</a>
         <a href="#team">Team</a>
         <a href="#analytics">Analytics</a>
@@ -44,9 +45,9 @@
     <main id="top">
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="eyebrow">For Claude Code</p>
-          <h1 id="hero-title">Claude Code that works like a senior teammate</h1>
-          <p class="lede">BK Charterline packages the working knowledge of a UX manager, a full-stack designer and a senior developer as binding rules, skills and agents. Every session follows them, in every project.</p>
+          <p class="eyebrow">For Claude Code and Anthropic's plugins</p>
+          <h1 id="hero-title">Get the most out of Claude Code and its plugins</h1>
+          <p class="lede">Claude Code and Anthropic's skills give you powerful tools. BK Charterline gives them a way of working: binding rules, a team of agents and hand-offs that decide when each skill runs, what standard it meets, and when to stop for your yes.</p>
           <div class="install">
             <code id="install-hero" tabindex="0">curl -fsSL https://raw.githubusercontent.com/BojanKocijan/bk-charterline/main/install.sh | bash</code>
             <button type="button" data-copy="install-hero" aria-describedby="copy-hero">Copy</button>
@@ -61,6 +62,35 @@
 <span class="prompt">$</span> git commit -m "update stuff"
 <span class="blocked">Blocked (Law 13):</span> commit message doesn't follow Conventional Commits (`type(scope): description`). Got: 'update stuff'</pre>
         </figure>
+      </section>
+
+      <section class="section why" id="why" aria-labelledby="why-title">
+        <div class="section-head">
+          <p class="eyebrow">Why add it</p>
+          <h2 id="why-title">It doesn't replace your tools. It makes them work together.</h2>
+        </div>
+        <ul class="why-rows" role="list"> <!-- role keeps list semantics in Safari despite list-style: none -->
+          <li class="why-row">
+            <h3>Claude Code</h3>
+            <p class="why-before"><span class="why-label">On its own</span> It can do almost anything, so each session picks its own way of working.</p>
+            <p class="why-after"><span class="why-label">With BK Charterline</span> Every session follows the same <span data-metric="laws">38</span> laws, in every project.</p>
+          </li>
+          <li class="why-row">
+            <h3>Anthropic's plugins</h3>
+            <p class="why-before"><span class="why-label">On its own</span> Each skill does one job well, but nothing says when to use it.</p>
+            <p class="why-after"><span class="why-label">With BK Charterline</span> Each stage of the team calls the right skill, and Claude tells you when a useful plugin is missing.</p>
+          </li>
+          <li class="why-row">
+            <h3>Built-in tools</h3>
+            <p class="why-before"><span class="why-label">On its own</span> <code>/code-review</code>, plan mode and worktrees help only if you remember them.</p>
+            <p class="why-after"><span class="why-label">With BK Charterline</span> The rules run them for you: a review before every pull request, a worktree for every parallel session.</p>
+          </li>
+          <li class="why-row">
+            <h3>Safety</h3>
+            <p class="why-before"><span class="why-label">On its own</span> Good intentions, and an agent that sometimes forgets them.</p>
+            <p class="why-after"><span class="why-label">With BK Charterline</span> A hook that blocks merges, pushes to <code>main</code> and secrets before they happen.</p>
+          </li>
+        </ul>
       </section>
 
       <section class="section" id="what" aria-labelledby="what-title">
@@ -436,18 +466,18 @@
         <dl class="stats">
           <div class="stat">
             <dt>Releases shipped</dt>
-            <dd><span data-metric="releases">24</span></dd>
-            <dd class="stat-date"><time data-metric-date="releases" datetime="2026-10-07">Oct 7, 2026</time></dd>
+            <dd><span data-metric="releases">29</span></dd>
+            <dd class="stat-date"><time data-metric-date="releases" datetime="2026-10-08">Oct 8, 2026</time></dd>
           </div>
           <div class="stat">
             <dt>Pull requests merged</dt>
-            <dd><span data-metric="prs_merged">128</span></dd>
-            <dd class="stat-date"><time data-metric-date="prs_merged" datetime="2026-10-07">Oct 7, 2026</time></dd>
+            <dd><span data-metric="prs_merged">158</span></dd>
+            <dd class="stat-date"><time data-metric-date="prs_merged" datetime="2026-10-08">Oct 8, 2026</time></dd>
           </div>
           <div class="stat">
             <dt>Tests</dt>
-            <dd><span data-metric="tests">218</span></dd>
-            <dd class="stat-date"><time data-metric-date="tests" datetime="2026-10-07">Oct 7, 2026</time></dd>
+            <dd><span data-metric="tests">242</span></dd>
+            <dd class="stat-date"><time data-metric-date="tests" datetime="2026-10-08">Oct 8, 2026</time></dd>
           </div>
         </dl>
         <div class="gauges">
@@ -458,16 +488,16 @@
             <time data-metric-date="prs_within_400" datetime="2026-10-07">Oct 7, 2026</time>
           </div>
           <div class="gauge" data-gauge="median_pr_lines" data-max="400">
-            <p class="gauge-value"><span data-metric="median_pr_lines">163</span> <span class="unit">lines</span></p>
+            <p class="gauge-value"><span data-metric="median_pr_lines">160</span> <span class="unit">lines</span></p>
             <p class="gauge-label">changed in the median pull request, against the 400-line ceiling</p>
             <div class="track" aria-hidden="true"><div class="fill"></div></div>
-            <time data-metric-date="median_pr_lines" datetime="2026-10-07">Oct 7, 2026</time>
+            <time data-metric-date="median_pr_lines" datetime="2026-10-08">Oct 8, 2026</time>
           </div>
           <div class="gauge" data-gauge="rules_tokens" data-max="33000">
-            <p class="gauge-value"><span data-metric="rules_tokens">30,418</span> <span class="unit">tokens</span></p>
+            <p class="gauge-value"><span data-metric="rules_tokens">31,531</span> <span class="unit">tokens</span></p>
             <p class="gauge-label">the rules add to each session, against the 33,000-token budget CI checks</p>
             <div class="track" aria-hidden="true"><div class="fill"></div></div>
-            <time data-metric-date="rules_tokens" datetime="2026-10-07">Oct 7, 2026</time>
+            <time data-metric-date="rules_tokens" datetime="2026-10-08">Oct 8, 2026</time>
           </div>
         </div>
         <p class="footnote">Counted from the repository and GitHub by <code>scripts/site_metrics.py</code>. Each date is when that number last changed.</p>

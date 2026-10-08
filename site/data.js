@@ -3,11 +3,11 @@ window.DF_METRICS = {"numbers": {
   "agents": {"as_of": "2026-10-07", "value": 9},
   "guides": {"as_of": "2026-10-07", "value": 12},
   "laws": {"as_of": "2026-10-07", "value": 38},
-  "median_pr_lines": {"as_of": "2026-10-07", "value": 163},
-  "prs_merged": {"as_of": "2026-10-07", "value": 128},
+  "median_pr_lines": {"as_of": "2026-10-08", "value": 160},
+  "prs_merged": {"as_of": "2026-10-08", "value": 158},
   "prs_within_400": {"as_of": "2026-10-07", "value": 84},
-  "releases": {"as_of": "2026-10-07", "value": 24},
-  "rules_tokens": {"as_of": "2026-10-07", "value": 30418},
+  "releases": {"as_of": "2026-10-08", "value": 29},
+  "rules_tokens": {"as_of": "2026-10-08", "value": 31531},
   "skills": {"as_of": "2026-10-07", "value": 18},
-  "tests": {"as_of": "2026-10-07", "value": 218}
+  "tests": {"as_of": "2026-10-08", "value": 242}
 }};

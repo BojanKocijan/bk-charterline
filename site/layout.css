@@ -179,6 +179,60 @@
   gap: 0.6rem;
 }
 
+/* Why add it: each tool on its own, then with BK Charterline */
+.why-rows {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.why-row {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: clamp(1.1rem, 0.8rem + 1vw, 1.6rem);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.why-before,
+.why-after {
+  padding-left: 0.85rem;
+  border-left: 3px solid var(--line);
+}
+
+.why-before {
+  color: var(--muted);
+}
+
+.why-after {
+  border-left-color: var(--accent);
+}
+
+.why-label {
+  display: block;
+  margin-bottom: 0.2rem;
+  font: var(--tiny) / 1.4 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.why-after .why-label {
+  color: var(--accent);
+}
+
+@media (max-width: 760px) {
+  .why-rows {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* What it does: tiles that show the real thing, not a description of it */
 .bento {
   display: grid;
