@@ -73,7 +73,17 @@ Nothing reaches users until the last PR. `dforge-update` installs the newest rel
 4. Check: the session starts with `Rules loaded: BK CHARTERLINE v3.0.0`; `ls -la ~ | grep -e charterline -e design-forge` shows the new folder and the old name as a link.
 5. If you use the plugin install: remove `design-forge`, then add `bk-charterline`.
 6. Optional: rename your local checkout folder. If you do, move Claude's project memory folder too (I'll give the exact command then).
-7. Before the page launches: a trademark search for "BK Charterline" (USPTO, EUIPO, BOIP).
+7. ~~Before the page launches: a trademark search for "BK Charterline" (USPTO, EUIPO, BOIP)~~ (done, 2026-10-08, #221; see below).
+
+## Trademark search (2026-10-08)
+
+**Verdict: keep "BK Charterline".** No live mark containing "Charterline" covers software or developer tools (classes 9 and 42) in any register searched.
+
+- **USPTO:** the only "Charterline" mark is a bank's (banking, class 36), cancelled in 2009. No live mark contains "Charterline" or "Charter Line". The live "Charter…" marks in classes 9 and 42 are in unrelated fields (cable, typefaces, IT services).
+- **TMview** (EUIPO, BOIP, the EU national offices, UK and others): 7 hits. The two live ones are German, owned by EMobG Services Germany, for vehicle rental and fleet services (classes 12, 35, 36, 37, 39). The rest are expired: the EU and UK copies of that mark, paints (UK), banking (US), an airline (Chile). BOIP: none.
+- **"BK" on its own** is crowded in class 9 (Burger King and others), so always use the full name; the distinctive part is "Charterline".
+- **Elsewhere:** the only GitHub repo named charterline is ours, npm has no such package, and `charterline.dev`, `charterline.io` and `bkcharterline.com` don't resolve.
+- **Not covered:** WIPO's Global Brand Database didn't load. This is a pre-launch check, not a legal clearance; before filing a mark, have an attorney run a full search.
 
 ## Proof
 
