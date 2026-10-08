@@ -8,6 +8,9 @@
 - **New optional output style, Coworker** (`output-styles/coworker.md`): the same rules and coding (`keep-coding-instructions: true`), with a dry, warm sense of humor that plays along with the rules. Jokes stay in chat, never in commits, PRs, issues or docs, and stop during incidents or when you're frustrated. Once per session it says how to turn it off.
 - **Off by default:** turn it on with `/output-style coworker`, off with `/output-style default`. The plugin ships it in `output-styles/`; `install.sh` links it into `~/.claude/output-styles/` (never over a file of yours with the same name), prints a one-line hint on a fresh install, and never sets `outputStyle`.
 
+### One team, using Claude's own skills ([#231](https://github.com/BojanKocijan/bk-charterline/issues/231))
+- **Law 37's review names its reviewers:** Claude Code's `/code-review` runs on Standard and Significant work before the PR; Significant work adds a fresh subagent that gets only the plan, the spec and the diff, using `engineering:code-review` when Anthropic's engineering plugin is installed. It reviews `<default-branch>...HEAD` explicitly, since a bare `/code-review` sees nothing once the branch is pushed. For any change to auth, data, migrations or the hook, the merge order offers `/code-review ultra <PR>`, which only the owner starts. A reviewer's "Approve" is dropped; `--fix` and `--comment` need the owner's yes. HUMAN_IN_THE_LOOP §5 (with a `/code-review` column in the surface table), FULLSTACK_WORKFLOW Phases 5 and 7, TEAM_WORKFLOW's pipeline and the Lead follow.
+
 ---
 
 ## v3.3.0 — October 8, 2026

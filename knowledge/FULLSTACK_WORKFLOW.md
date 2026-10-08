@@ -139,6 +139,7 @@ Most tests are unit; integration covers the seams; contract guards consumers; on
 
 Also:
 
+- Run `/code-review <default-branch>...HEAD` on Standard and Significant work, and fix or answer each finding (Law 37; HUMAN_IN_THE_LOOP §5).
 - Scan staged diff for secrets (Law 14).
 - Confirm no real PII in any mock/fixture files (Law 15).
 - Update `PROJECT_KNOWLEDGE.md` if a new component, architectural decision, or open question arose.
@@ -154,7 +155,7 @@ gh pr create \
 
 ### Phase 7 — Review
 
-Claude reviews its own diff once more and offers observations. The human reviews and requests changes if needed.
+The PR's Decision log lists each `/code-review` finding as fixed or skipped with the reason; Significant work adds the independent reviewer (HUMAN_IN_THE_LOOP §5). The human reviews and requests changes if needed.
 
 ### Phase 8 — Merge (human action — Law 7)
 

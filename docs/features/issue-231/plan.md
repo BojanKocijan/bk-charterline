@@ -77,3 +77,7 @@ They touch different files, except RELEASES (one line each, merged in order). Th
 - **`/code-review` finds nothing:** the PR says so; that's evidence too.
 - **A finding is wrong:** the Decision log says why it was skipped; the human decides.
 - **Cost:** `/code-review` uses the session's usage; ultra is never started by Claude.
+
+## Deviations after approval
+
+- **PR 1, the independent reviewer:** the docs call `/code-review` a *forked* subagent in a terminal, and a fork may start from the session's conversation. Rather than rely on it, Law 37 keeps the fresh subagent (only the plan, the spec and the diff) for Significant work, and that subagent uses `engineering:code-review`. `/code-review` runs on Standard and Significant work as the first pass. Nothing to test by hand any more.

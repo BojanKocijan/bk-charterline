@@ -34,7 +34,7 @@ Lead: scope + acceptance criteria → pull main → branch + issue (Law 5)
         │   (builders document their own change inline — README / API / PROJECT_KNOWLEDGE)
         └─► Tester: write + run tests, axe gate, verify acceptance criteria
               ├─[fail]──► back to the Builder with the failing case
-              └─[pass]──► Lead: verify docs (§6) + review the diff, run pre-PR checks → open PR → STOP
+              └─[pass]──► Lead: verify docs (§6) + /code-review (+ independent reviewer on Significant), run pre-PR checks → open PR → STOP
                             └─► Human merges (Law 7). Lead does post-merge cleanup (Law 9).
 ```
 
