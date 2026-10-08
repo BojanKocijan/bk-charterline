@@ -1,7 +1,7 @@
 # Fullstack Developer Workflow — BK Charterline
 
-**Version:** 1.6.0
-**Last Updated:** 2026-07-20
+**Version:** 1.7.0
+**Last Updated:** 2026-10-08
 **Binding:** Yes — this file is law. Claude must follow this runbook whenever the Fullstack persona is active (trigger: `fullstack mode`).
 
 > This is the canonical runbook for developers working on **existing** projects with the Fullstack persona. It is **not** about scaffolding new projects (see [`PROJECT_SCAFFOLD.md`](./PROJECT_SCAFFOLD.md) for that) — it's about how Claude pair-programs with the human dev to ship a PR in a repo that already exists.
@@ -443,8 +443,17 @@ These go in the component's `*.test.tsx` (RTL + `user-event`) and in the Playwri
 
 ---
 
+## Why small PRs and ordered deploy steps (Laws 31 and 35)
+
+Moved from `CLAUDE_LAWS.md` (#239); the rules stay in the laws.
+
+- **Law 31:** Research consistently shows review effectiveness drops sharply after 200–400 lines changed (SmartBear/Cisco), and median time-to-review doubles for every additional 100 lines (Google).
+- **Why this is binding.** Small PRs get reviewed faster, catch more defects per line, merge with fewer conflicts, revert cleanly, and keep the default branch's history readable. A 1000-line PR is not a feature — it's a review burden that hides bugs. Claude's job is to make the human reviewer's life easy, not to minimize the number of PRs.
+- **Law 35:** Law 7 already stops Claude from merging and hands the human a PR-ready summary. That's not enough on its own when the change isn't actually *done* once merged — a database migration to run by hand, an env var to set on a specific service, a second PR that only works after the first is both merged and its migration applied, a redeploy needed to pick up new config. Left implicit, the human is stuck guessing what's left and in what order, and a step skipped or done out of order (e.g. deploying code that depends on a column before the migration adding it has run) breaks production.
+
 ## Changelog
 
+- **1.7.0 (2026-10-08)** — *Why small PRs and ordered deploy steps*: the reasons behind Laws 31 and 35, moved from the laws (#239).
 - **1.6.0 (2026-07-20)** — Distilled a full multi-PR backend/security pass into knowledge. Extended §6.5 with four "beyond the basics" serverless patterns — server-authoritative narrow mutations (no full-entity payload for privileged writes), manual owner re-scoping whenever the service-role key bypasses RLS, HMAC-signed capability tokens with `timingSafeEqual` + fail-open/fail-safe split for unauthenticated action endpoints, and explicit column allowlists on public reads (no `select=*`) — plus an output-encoding rule for untrusted data in generated HTML/email. Added §6.7 Server-backed paginated reads (PostgREST/Supabase): `.range()` + `count:'exact'`, PostgREST filter-injection sanitization for `.or()`/`.ilike()`, defense-in-depth owner scoping, `AbortSignal` cancellation, and when to choose §6.7 vs the §6.6 offline-first cache. Added §7.6 Client-side security hygiene: CSP + hardening headers baseline, never caching private/side-effect API responses in the PWA service worker, and output encoding.
 
 - **1.5.0 (2026-07-20)** — Added §6.6 Offline-first data layer: localStorage cache + remote source of truth. Distilled from a real multi-PR hardening pass: per-user localStorage key scoping (+ legacy-key cleanup on sign-out), never wiping local data while a sync queue is pending, allowlisting every field sent to the remote table instead of spreading the local object, an optimistic-cache → direct-write → queue-on-failure write path, pull-and-reconcile after every write/flush, and overlaying still-queued ops on top of a fresh pull so unflushed offline edits survive a race. §6.4 updated to require the §6.6 checklist for any offline-first data layer.

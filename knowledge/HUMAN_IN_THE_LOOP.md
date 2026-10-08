@@ -1,7 +1,7 @@
 # Human in the loop — gates, artifacts, and review capacity
 
 **Binding for:** Law 37. **Loaded:** on demand, when Claude starts a Medium-or-higher change, drafts a PR, or the user types `review queue`, `approve <stage>`, or `review cap`.
-**Version:** 1.0.0 (2026-10-02)
+**Version:** 1.1.0 (2026-10-08)
 
 Agents now write code faster than people can check it. The slow, expensive part of delivery is the human judgment before the code (what to build, how) and after it (is it right, should it ship). This file organizes that judgment so it is spent once, on the right things, and leaves a record the next person or session can read.
 
@@ -278,6 +278,10 @@ Before asking for review, Claude proves everything a machine can prove: tests pa
 
 ## 9. Sources
 
+**Why Law 37 exists.** Agents produce code faster than people can check it, so the human judgment before the code (what and how) and after it (is it right, should it ship) is now the bottleneck. Laws 5, 7, and 32 protect the code. This law organizes the human time around it, so judgment is spent once, on the right things, and leaves a record.
+
+**Sources:** Anthropic's *AI-native SDLC playbook* and Addy Osmani's essays on the new SDLC, agentic code review, agentic code quality, conductors and orchestrators, the orchestration tax, agent harness engineering, and the factory model. (moved from Law 37, #239)
+
 - Anthropic, *The AI-native SDLC playbook* — staged artifacts (`intent.md`, `spec.md`, `plan.md`), owner per stage, plan mode by default, review effort concentrated on intent and risk.
 - Addy Osmani, *Agentic code review* — review tiered by blast radius, intake evidence before review, decision logs, small PRs, test changes under extra scrutiny, the human owns the merge.
 - Addy Osmani, *Agentic code quality* — quality gates as the main control, autonomy earned by risk and evidence, human attention spent on judgment.
@@ -290,3 +294,7 @@ Before asking for review, Claude proves everything a machine can prove: tests pa
 ## 10. Changelog
 
 - **1.0.0 (2026-10-02)** — Initial version for Law 37.
+
+## Changelog
+
+- **1.1.0 (2026-10-08)** — §9: why Law 37 exists and its sources, moved from the law (#239).

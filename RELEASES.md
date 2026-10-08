@@ -15,6 +15,7 @@
 - **Fresh numbers:** the rules' tokens per session (31,531), merged PRs, releases, tests and median PR size, from `scripts/site_metrics.py`.
 ### Lighter sessions ([#239](https://github.com/BojanKocijan/bk-charterline/issues/239))
 - **Law 32 is shorter:** it keeps what the hook guarantees (every block and every permission prompt, "a block always wins", "fails open") and Claude's behavior on a block; the tables, the mechanism, the block log and where the hook lives move to the new `knowledge/GUARDRAILS.md`, read on demand. Nothing was loosened, and the hook is unchanged. Rules: 31,571 → 28,749 tokens; the budget warning drops from 33,000 to 30,000.
+- **The reasons move out, the rules stay:** the research behind Law 31, the motivation for Laws 32, 35 and 37, and the sources for Laws 37 and 38 move to FULLSTACK_WORKFLOW, HUMAN_IN_THE_LOOP and GUARDRAILS §2; Law 36 says the same in one sentence; Law 38's known limits stay in full (check a new repo's `.claude/ai-tools.json` before working in it; the hook doesn't ask when it arrives by clone or pull; a hook crash on a tier 3 call counts as approval); only its sources move. Rules: 28,749 → 27,856 tokens. A new test checks that every law keeps its own numbered, bold-titled item and that its knowledge links resolve.
 
 ---
 
