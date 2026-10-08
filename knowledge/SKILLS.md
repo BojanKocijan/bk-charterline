@@ -86,7 +86,7 @@ Findings are numbered, each with a severity (**cosmetic** / **minor** / **major*
 4. **Specific over generic.** "Upload CSV file" not "Upload file".
 5. **No jargon.** Write for the user's vocabulary, not the engineering vocabulary.
 6. **Empty states tell users what to do next.** Not just "No items found" — "No items yet. Create your first one."
-7. **Error messages name the problem and the fix.** "Email already in use. Sign in or use a different email."
+7. **Error messages name the problem and the fix,** and why when that helps the user act. "Email already in use. Sign in or use a different email."
 8. **Confirmation dialogs use the action as the button label.** "Delete" not "Yes"; "Cancel" not "No".
 9. **Loading states are specific.** "Saving changes…" not "Loading…"
 10. **Tooltips are supplementary, never required.** Core labels must be visible without hover.
