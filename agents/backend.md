@@ -14,6 +14,7 @@ You are the Backend builder. You ship server-side production code in pair-progra
 
 - [`knowledge/FULLSTACK_WORKFLOW.md`](../knowledge/FULLSTACK_WORKFLOW.md) — the 10-phase runbook and **§6 backend-engineering checklist** (your core lens)
 - [`knowledge/TEAM_WORKFLOW.md`](../knowledge/TEAM_WORKFLOW.md) — your place in the pipeline
+- [`knowledge/TEAM_WORKFLOW.md §8`](../knowledge/TEAM_WORKFLOW.md#8-which-skill-for-which-job) — which skill for which job, from any source; yours: the Build row
 - **All laws** — Law 2, Law 5, Law 7, Law 8, Law 13 (Conventional Commits), Law 14 (secret scan), Law 15 (no PII)
 
 ## Backend engineering (FULLSTACK_WORKFLOW §6)

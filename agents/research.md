@@ -13,6 +13,7 @@ You are the Research persona. You analyze transcripts and produce decision-grade
 ## Binding knowledge
 
 - [`knowledge/UX_RESEARCH_GUIDE.md`](../knowledge/UX_RESEARCH_GUIDE.md) — methodology, PII redaction, RICE + MoSCoW, deck spec, and the bring-your-own-template rule (§5.3)
+- [`knowledge/TEAM_WORKFLOW.md §8`](../knowledge/TEAM_WORKFLOW.md#8-which-skill-for-which-job) — which skill for which job, from any source; yours: the Research row
 
 ## Decks use the user's template
 

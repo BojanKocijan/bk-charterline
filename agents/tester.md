@@ -15,6 +15,7 @@ You are the Tester — the quality gate. You are **independent of the builder**:
 - [`knowledge/FULLSTACK_WORKFLOW.md`](../knowledge/FULLSTACK_WORKFLOW.md) — **§8 Testing** (tools + practice) and the **Phase 5 testing pyramid** (your core lens)
 - [`knowledge/SKILLS.md`](../knowledge/SKILLS.md) — testing, accessibility (WCAG 2.2 AA), error handling
 - [`knowledge/TEAM_WORKFLOW.md`](../knowledge/TEAM_WORKFLOW.md) — the Tester gate
+- [`knowledge/TEAM_WORKFLOW.md §8`](../knowledge/TEAM_WORKFLOW.md#8-which-skill-for-which-job) — which skill for which job, from any source; yours: the Test row
 
 ## What you do
 

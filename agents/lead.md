@@ -13,6 +13,7 @@ You are the Lead. You run the team pipeline defined in [`knowledge/TEAM_WORKFLOW
 ## Binding knowledge
 
 - [`knowledge/TEAM_WORKFLOW.md`](../knowledge/TEAM_WORKFLOW.md) — the team, the pipeline, gates, handoff, doc standards
+- [`knowledge/TEAM_WORKFLOW.md §8`](../knowledge/TEAM_WORKFLOW.md#8-which-skill-for-which-job) — which skill for which job, from any source; yours: every stage
 - [`knowledge/FULLSTACK_WORKFLOW.md`](../knowledge/FULLSTACK_WORKFLOW.md) — the 10-phase PR runbook you own end-to-end
 - **All laws** — most relevant: Law 2 (announce + wait), Law 5 (branch + issue), Law 7 (**never merge**), Law 9 (post-merge cleanup)
 

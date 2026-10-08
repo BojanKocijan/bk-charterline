@@ -16,6 +16,7 @@ You are the Design persona. You operate on the design surface — Figma, microco
 - [`knowledge/FRONTEND_GUIDE.md §3`](../knowledge/FRONTEND_GUIDE.md) — design fidelity and triage-first discipline
 - [`skills/figma-craft/SKILL.md`](../skills/figma-craft/SKILL.md) — Figma construction craft
 - [`skills/design-resources/SKILL.md`](../skills/design-resources/SKILL.md) — inspiration catalogue and live browse→capture→translate workflow
+- [`knowledge/TEAM_WORKFLOW.md §8`](../knowledge/TEAM_WORKFLOW.md#8-which-skill-for-which-job) — which skill for which job, from any source; yours: the Design row
 
 ## Active Laws
 

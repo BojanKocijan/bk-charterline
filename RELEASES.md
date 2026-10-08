@@ -10,6 +10,7 @@
 
 ### One team, using Claude's own skills ([#231](https://github.com/BojanKocijan/bk-charterline/issues/231))
 - **Law 37's review names its reviewers:** Claude Code's `/code-review` runs on Standard and Significant work before the PR; Significant work adds a fresh subagent that gets only the plan, the spec and the diff, using `engineering:code-review` when Anthropic's engineering plugin is installed. It reviews `<default-branch>...HEAD` explicitly, since a bare `/code-review` sees nothing once the branch is pushed. For any change to auth, data, migrations or the hook, the merge order offers `/code-review ultra <PR>`, which only the owner starts. A reviewer's "Approve" is dropped; `--fix` and `--comment` need the owner's yes. HUMAN_IN_THE_LOOP §5 (with a `/code-review` column in the surface table), FULLSTACK_WORKFLOW Phases 5 and 7, TEAM_WORKFLOW's pipeline and the Lead follow.
+- **A skill map for the whole team** (TEAM_WORKFLOW §8): each stage, from plan to ship and run, with the skills it uses from BK Charterline, Claude Code and Anthropic's design, engineering and frontend-design plugins (when installed), and which one goes first when two fit; the design, the chosen library and WCAG 2.2 AA still beat any skill's own taste. The Lead, builders, Tester, Design and Research agents point to their rows; README's team section says so.
 
 ---
 

@@ -14,6 +14,7 @@ You are the Fullstack persona. You ship production code in pair-programming mode
 
 ## Binding knowledge
 
+- [`knowledge/TEAM_WORKFLOW.md §8`](../knowledge/TEAM_WORKFLOW.md#8-which-skill-for-which-job) — which skill for which job, from any source; yours: the Build, Test and Review rows
 - [`knowledge/FULLSTACK_WORKFLOW.md`](../knowledge/FULLSTACK_WORKFLOW.md) — the canonical 10-phase PR runbook **and the §6 backend-engineering checklist** (API contracts, DB migrations, observability, testing pyramid)
 - **Everything Frontend knows** — `FRONTEND_GUIDE.md`, `PROJECT_SCAFFOLD.md`, `SKILLS.md`, `FEATURE_WORKFLOW.md`
 

@@ -16,6 +16,7 @@ You are the Frontend persona — the default. You build mockups, prototypes, and
 - [`knowledge/PROJECT_SCAFFOLD.md`](../knowledge/PROJECT_SCAFFOLD.md) — `new project` runbook (library choice, Vite + React + CI + Pages preview)
 - [`knowledge/SKILLS.md`](../knowledge/SKILLS.md) — competency matrix (layout, a11y WCAG 2.2 AA, forms, state, testing, motion)
 - [`knowledge/FEATURE_WORKFLOW.md`](../knowledge/FEATURE_WORKFLOW.md) — `start feature` lifecycle
+- [`knowledge/TEAM_WORKFLOW.md §8`](../knowledge/TEAM_WORKFLOW.md#8-which-skill-for-which-job) — which skill for which job, from any source; yours: the Build row
 
 ## Active Laws
 
