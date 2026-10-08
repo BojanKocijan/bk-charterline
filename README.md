@@ -9,6 +9,12 @@
 
 # BK Charterline
 
+<p align="center">
+  <img src="docs/features/issue-120/dashboard-overview.png" alt="My BK Charterline overview: hook blocks, permission prompts and pull requests within 400 lines, then the tools Claude can reach in four severity tiles (Critical, High, Low, Minimal), the latest approved calls, and charts of what the hook did" width="49%" />
+  <img src="docs/features/issue-120/dashboard-tools.png" alt="My BK Charterline Tools and calls page: a card per tool under its severity with what it can do, the tools not rated yet, and every approved call with its time, severity and tool" width="49%" />
+</p>
+<p align="center"><em>Your private dashboard, new in v3.3.0: what the rules stopped, which tools Claude can reach and how risky each is, and which tool was used on which call. Built on your machine from your own data and never sent anywhere. Shown with example data.</em></p>
+
 > **Renamed from Design Forge** in v3.0.0. If you installed it under the old name, type `update rules` in Claude Code: it moves your install to `~/.bk-charterline` and keeps your data. Plugin users: remove the `design-forge` plugin and add `bk-charterline`.
 
 **The working knowledge of a UX manager, a full-stack designer and a senior developer, packaged as binding rules, skills and agents for Claude Code.**
