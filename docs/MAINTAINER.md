@@ -66,6 +66,28 @@ This repo uses Conventional Commits. Version bumps in `CLAUDE_LAWS.md` header:
 6. Open a PR with `Closes #<issue>` in the body.
 7. Merge via the GitHub UI after CI passes.
 
+## Load the laws once in your development checkout
+
+On a machine with BK Charterline installed, a session in a checkout of this repo loads the laws twice: once through the global import (`~/.claude/CLAUDE.md` → `~/.bk-charterline/CLAUDE.md`) and once through the checkout's own `CLAUDE.md`. That's about 27,000 extra tokens per session (#269). To load only the installed copy, add your checkout's paths to `claudeMdExcludes` in your personal `~/.claude/settings.json`:
+
+```json
+{
+  "claudeMdExcludes": [
+    "/path/to/bk-charterline/CLAUDE.md",
+    "/path/to/bk-charterline/AGENTS.md",
+    "/path/to/bk-charterline/.claude/worktrees/*/CLAUDE.md",
+    "/path/to/bk-charterline/.claude/worktrees/*/AGENTS.md"
+  ]
+}
+```
+
+- Use absolute paths. Excluding a `CLAUDE.md` also skips what it imports, so the checkout's `CLAUDE_LAWS.md` drops out too.
+- Sessions in the checkout then follow the **released** laws. A law you edit on a branch applies after it's released and installed (`update rules`).
+- Don't put this in the repo's `.claude/settings.json`, and don't exclude `~/.bk-charterline` itself. `~/.bk-charterline` is a clone of this repo, so a session started there would load no laws at all.
+- You add this yourself; Claude doesn't change which instructions it loads.
+
+Measured on Haiku 4.5 (2026-10-09): 59,193 tokens per session in a worktree before, 31,872 after.
+
 ## Adding a new skill
 
 1. Create `skills/<skill-name>/SKILL.md`.
