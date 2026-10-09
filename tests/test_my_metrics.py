@@ -120,7 +120,8 @@ class MyMetricsTests(unittest.TestCase):
         self.assertIn("<dt>Sessions</dt><dd><span>1</span>", page)
         self.assertRegex(page, r"Sessions per persona</figcaption>.*?<th scope=\"row\">Tester</th><td>1</td>")
         self.assertRegex(page, r"Skill runs</figcaption>.*?<th scope=\"row\">ux-writing</th><td>1</td>")
-        self.assertIn("Tokens per session, weekly median", page)
+        self.assertIn("Tokens per session, weekly median, in millions", page)
+        self.assertRegex(page, r"weekly median, in millions</figcaption>.*?<td>2\.4</td>")  # one unit, no "M"
 
     def test_the_unrated_note_and_its_copy_button(self) -> None:
         self.busy_user()

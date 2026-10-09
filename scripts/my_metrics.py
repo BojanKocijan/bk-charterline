@@ -199,8 +199,8 @@ def overview(d: dict) -> str:
         cards += figure("bars", "Sessions per persona", ("Persona", "Sessions"), [(p["persona"], p["sessions"]) for p in ses["personas"]])
         if ses["skills"]:
             cards += figure("bars", "Skill runs", ("Skill", "Runs"), [(x["skill"], x["runs"]) for x in ses["skills"][:10]])
-        cards += figure("bars", "Tokens per session, weekly median", ("Week of", "Tokens"),
-                        [(datetime.date.fromisoformat(w["week"]).strftime("%b %-d"), millions(w["median"])) for w in ses["weekly"]])
+        cards += figure("bars", "Tokens per session, weekly median, in millions", ("Week of", "Million tokens"),  # one unit for every bar
+                        [(datetime.date.fromisoformat(w["week"]).strftime("%b %-d"), f'{w["median"] / 1e6:.1f}') for w in ses["weekly"]])
     usage += f'<div class="cards">{cards}</div>' if cards else ""
     if "error" not in ses:
         skipped = f' {ses["skipped"]} log files couldn&#x27;t be read.' if ses["skipped"] else ""
