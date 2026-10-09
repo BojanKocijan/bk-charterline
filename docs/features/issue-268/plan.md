@@ -3,7 +3,7 @@
 Spec: [#268](https://github.com/BojanKocijan/bk-charterline/issues/268), part of epic [#267](https://github.com/BojanKocijan/bk-charterline/issues/267) · Gate tier: Standard · Branch: `fix/hook-repo-fallback` · Issue: #268
 Work pile: delegable (one config file plus a test, checked by the machine), built in this session
 Skip gates: Significant → Standard at the owner's request (2026-10-09, chat). Reason: a narrow fix for a blocker, since cloud sessions in this repo can't run any tool
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-09, chat
 
 ## Why
 
