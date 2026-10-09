@@ -1,7 +1,7 @@
 # Intent — A SessionStart hook runs the session-start checks (#270)
 
 Issue: [#270](https://github.com/BojanKocijan/bk-charterline/issues/270), part of epic [#267](https://github.com/BojanKocijan/bk-charterline/issues/267) (sub-issue 3) · Gate tier: Significant (a new hook)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-09, chat
 
 ## Problem
 
