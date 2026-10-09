@@ -2,6 +2,13 @@
 
 ---
 
+## Unreleased
+
+### Law 35: the SQL and the steps are pasted in chat ([#265](https://github.com/BojanKocijan/bk-charterline/issues/265))
+- **Show it in chat, every time:** as soon as Claude writes SQL or a manual deploy step (spec, plan, migration or checklist), it pastes the complete SQL in a `sql` block and the numbered steps in the same reply. A link to a file never counts, and anything shortened is labelled `NOT TO RUN`.
+
+---
+
 ## v3.6.0 — October 9, 2026
 
 Your dashboard shows everything the page's Analytics section shows: blocks marked wrong, tools classified and per tier, what the rules cost per release and per session, sessions per persona and skill runs, from data already on your machine. On this update, `update rules` asks you to approve one hook change: the new persona log.
