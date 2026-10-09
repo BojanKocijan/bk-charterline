@@ -21,6 +21,7 @@ class MyMetricsTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.home = os.path.join(self.tmp.name, "home")
         os.makedirs(self.home)
+        os.environ["CLAUDE_CONFIG_DIR"] = os.path.join(self.tmp.name, "claude")  # never the real session logs
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
@@ -102,6 +103,25 @@ class MyMetricsTests(unittest.TestCase):
         page = self.read("index.html")
         self.assertRegex(page, r"<dt>Rules' share per session</dt><dd><span>[\d,]+</span>")
         self.assertIn("release history couldn&#x27;t be read", page)  # this home isn't a git clone
+        self.assertIn("session logs weren&#x27;t found on this machine", page)
+
+    def test_the_usage_section_shows_sessions_skills_and_personas(self) -> None:
+        logs = os.path.join(self.tmp.name, "claude", "projects", "-proj")
+        os.makedirs(logs)
+        when = time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime())
+        rows = [{"type": "user", "timestamp": when, "message": {"content": "tester mode"}},
+                {"type": "assistant", "timestamp": when, "message": {"id": "m1", "usage": {"input_tokens": 2_400_000},
+                 "content": [{"type": "tool_use", "name": "Skill", "input": {"skill": "ux-writing"}}]}}]
+        with open(os.path.join(logs, "s1.jsonl"), "w") as f:
+            f.write("".join(json.dumps(r, separators=(",", ":")) + "\n" for r in rows))
+        self.build()
+        page = self.read("index.html")
+        self.assertIn("<dt>Tokens per session</dt><dd><span>2.4M</span>", page)
+        self.assertIn("<dt>Sessions</dt><dd><span>1</span>", page)
+        self.assertRegex(page, r"Sessions per persona</figcaption>.*?<th scope=\"row\">Tester</th><td>1</td>")
+        self.assertRegex(page, r"Skill runs</figcaption>.*?<th scope=\"row\">ux-writing</th><td>1</td>")
+        self.assertIn("Tokens per session, weekly median, in millions", page)
+        self.assertRegex(page, r"weekly median, in millions</figcaption>.*?<td>2\.4</td>")  # one unit, no "M"
 
     def test_the_unrated_note_and_its_copy_button(self) -> None:
         self.busy_user()

@@ -1,0 +1,178 @@
+#!/usr/bin/env python3
+"""Sessions, skills and personas for a user's private dashboard (#256, #198).
+
+Reads Claude Code's own session logs on this machine
+(`~/.claude/projects/*/*.jsonl`, and each session's `subagents/` files) and
+keeps counts only: tokens, skill runs, subagent runs and the personas a
+session switched to. A prompt's text, a file name or a path is never stored.
+
+Incremental: `dashboard/sessions-state.json` keeps one summary per log file,
+keyed by path with its size and mtime, so a file is read again only when it
+changes. Only lines that can hold a count are parsed as JSON.
+
+Dependency-free stdlib only.
+"""
+from __future__ import annotations
+
+import datetime
+import glob
+import hashlib
+import json
+import os
+import statistics
+
+# The trigger phrases in CLAUDE.md, typed as the whole prompt.
+TRIGGERS = {"frontend mode": "Frontend", "fullstack mode": "Lead", "team": "Lead", "build feature": "Lead",
+            "backend mode": "Backend", "tester mode": "Tester", "research mode": "Research",
+            "research mode full": "Research", "analyst mode": "Analyst", "incident mode": "Incident"}
+# The persona subagents in agents/.
+SUBAGENTS = {"frontend": "Frontend", "fullstack": "Lead", "lead": "Lead", "backend": "Backend", "tester": "Tester",
+             "design": "Design", "research": "Research", "analyst": "Analyst", "incident": "Incident"}
+DEFAULT_PERSONA = "Frontend"
+STATE_VERSION = 1  # bump when summarize() changes, so every log is read again
+WANTED = ('"usage"', '"tool_use"', '"type":"user"')
+
+
+def logs_dir() -> str:
+    return os.path.join(os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~/.claude"), "projects")
+
+
+def prompt_text(content) -> str | None:
+    """The text a person typed, or None for tool results and attachments."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list) and all(isinstance(c, dict) and c.get("type") == "text" for c in content):
+        return "".join(c.get("text", "") for c in content)
+    return None
+
+
+def summarize(path: str) -> dict:
+    """Counts for one log file. Each reply's usage is logged once per content
+    block, so it is counted once, by message id."""
+    usage, skills, subagents, personas, first, last = {}, {}, {}, set(), None, None
+    with open(path, errors="replace") as f:
+        for line in f:
+            if not any(k in line for k in WANTED):
+                continue
+            try:
+                d = json.loads(line)
+            except ValueError:
+                continue
+            if not isinstance(d, dict):
+                continue
+            ts = d.get("timestamp")
+            if isinstance(ts, str):
+                first, last = first or ts, ts
+            m = d.get("message")
+            if not isinstance(m, dict):
+                continue
+            if d.get("type") == "assistant":
+                u = m.get("usage")
+                if isinstance(u, dict):
+                    usage[m.get("id") or len(usage)] = sum(v for k, v in u.items() if k.endswith("_tokens") and isinstance(v, int))
+                for c in m.get("content") if isinstance(m.get("content"), list) else []:
+                    if not isinstance(c, dict) or c.get("type") != "tool_use" or not isinstance(c.get("input"), dict):
+                        continue
+                    if c.get("name") == "Skill" and isinstance(c["input"].get("skill"), str):
+                        skills[c["input"]["skill"]] = skills.get(c["input"]["skill"], 0) + 1
+                    elif c.get("name") in ("Agent", "Task") and isinstance(c["input"].get("subagent_type"), str):
+                        subagents[c["input"]["subagent_type"]] = subagents.get(c["input"]["subagent_type"], 0) + 1
+            elif d.get("type") == "user":
+                text = prompt_text(m.get("content"))
+                persona = TRIGGERS.get(" ".join(text.split()).casefold()) if text else None
+                if persona:
+                    personas.add(persona)
+    return {"first": first, "last": last, "tokens": sum(usage.values()), "skills": skills,
+            "subagents": subagents, "personas": sorted(personas)}
+
+
+def session_of(path: str, root: str) -> str:
+    """A main log is <project>/<session>.jsonl; a subagent's is <project>/<session>/subagents/<agent>.jsonl."""
+    parts = os.path.relpath(path, root).split(os.sep)
+    return parts[1] if len(parts) > 2 else parts[-1][:-len(".jsonl")]
+
+
+def parse(ts: str) -> datetime.datetime:
+    when = datetime.datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    return when if when.tzinfo else when.replace(tzinfo=datetime.timezone.utc)
+
+
+def sessions(home: str, now: datetime.datetime, since: datetime.datetime, root: str | None = None) -> dict:
+    root = root or logs_dir()
+    if not os.path.isdir(root):
+        raise FileNotFoundError(root)
+    state_path = os.path.join(home, "dashboard", "sessions-state.json")
+    try:
+        with open(state_path) as f:
+            saved = json.load(f)
+        state = saved["files"] if saved.get("version") == STATE_VERSION else {}
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        state = {}
+    files, skipped = {}, 0  # keyed by a hash of the path, so no folder name is stored
+    for path in glob.glob(os.path.join(root, "*", "*.jsonl")) + glob.glob(os.path.join(root, "*", "*", "subagents", "*.jsonl")):
+        try:
+            st = os.stat(path)
+        except OSError:
+            continue
+        if st.st_mtime < since.timestamp():
+            continue
+        key = hashlib.sha256(path.encode("utf-8")).hexdigest()[:24]
+        known = state.get(key)
+        if known and known.get("size") == st.st_size and known.get("mtime") == int(st.st_mtime):
+            files[key] = {**known, "session": session_of(path, root)}
+            continue
+        try:
+            files[key] = {"size": st.st_size, "mtime": int(st.st_mtime), "session": session_of(path, root), "summary": summarize(path)}
+        except (OSError, UnicodeError):
+            skipped += 1
+    os.makedirs(os.path.dirname(state_path), exist_ok=True)
+    tmp = f"{state_path}.{os.getpid()}.tmp"
+    with open(tmp, "w") as f:
+        json.dump({"version": STATE_VERSION, "files": files}, f, sort_keys=True)  # files gone from disk or the window drop out
+    os.replace(tmp, state_path)
+
+    merged = {}
+    for entry in files.values():
+        s, m = entry["summary"], merged.setdefault(entry["session"], {"tokens": 0, "skills": {}, "subagents": {}, "personas": set(), "first": None, "last": None})
+        m["tokens"] += s["tokens"]
+        for key in ("skills", "subagents"):
+            for name, n in s[key].items():
+                m[key][name] = m[key].get(name, 0) + n
+        m["personas"].update(s["personas"])
+        if s["first"] and (m["first"] is None or s["first"] < m["first"]):
+            m["first"] = s["first"]
+        if s["last"] and (m["last"] is None or s["last"] > m["last"]):
+            m["last"] = s["last"]
+    out = []
+    for m in merged.values():
+        try:
+            if m["first"] is None or parse(m["last"]) < since:
+                continue
+            m["week_of"] = max(parse(m["first"]), since)  # a session that began before the window counts from its start
+        except (ValueError, TypeError):
+            continue
+        # Plugin installs namespace their agents, e.g. bk-charterline:tester.
+        m["personas"].update(SUBAGENTS[a.rsplit(":", 1)[-1]] for a in m["subagents"] if a.rsplit(":", 1)[-1] in SUBAGENTS)
+        out.append(m)
+    return summary(out, skipped)
+
+
+def summary(found: list[dict], skipped: int) -> dict:
+    personas, skills, weeks = {}, {}, {}
+    for m in found:
+        for p in m["personas"] or {DEFAULT_PERSONA}:
+            personas[p] = personas.get(p, 0) + 1
+        for name, n in m["skills"].items():
+            skills[name] = skills.get(name, 0) + n
+        start = m["week_of"].date()
+        week = (start - datetime.timedelta(days=start.weekday())).isoformat()
+        weeks.setdefault(week, []).append(m["tokens"])
+    tokens = [m["tokens"] for m in found]
+    return {
+        "sessions": len(found),
+        "median_tokens": round(statistics.median(tokens)) if tokens else None,
+        "weekly": [{"week": w, "median": round(statistics.median(t))} for w, t in sorted(weeks.items())],
+        "personas": [{"persona": p, "sessions": n} for p, n in sorted(personas.items(), key=lambda kv: (-kv[1], kv[0]))],
+        "skills": [{"skill": s, "runs": n} for s, n in sorted(skills.items(), key=lambda kv: (-kv[1], kv[0]))],
+        "skipped": skipped,
+    }
