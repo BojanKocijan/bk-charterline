@@ -25,6 +25,7 @@ CSS = [os.path.join(REPO, "site", f) for f in ("styles.css", "layout.css", "numb
     + [os.path.join(ASSETS, "dashboard.css")]
 JS = [os.path.join(REPO, "site", f) for f in ("site.js", "charts.js")]
 SOURCES = ("hook-log.jsonl", "ai-approvals.jsonl", "ai-tools.json", "ai-inventory.json", "projects.yaml")
+TIERS = {1: "1 · Local", 2: "2 · Reads", 3: "3 · Writes", 4: "4 · Production"}  # the site's names (#256)
 SEV = {4: ("Critical", "critical", "Asks you every time"), 3: ("High", "high", "Asks you once per session"),
        2: ("Low", "low", "Reads only; no question"), 1: ("Minimal", "minimal", "Stays on your machine; no question")}
 with open(os.path.join(ASSETS, "actions.json")) as f:
@@ -119,10 +120,15 @@ def overview(d: dict) -> str:
     act, tools, prs = d["activity"], d["tools"], d["pull_requests"]
     sizes = [n for p in prs.get("projects", []) for n in p["sizes"]]
     within = f"{round(100 * sum(1 for n in sizes if n <= 400) / len(sizes))}%" if sizes else "–"
+    blocks, wrong = sum(x["count"] for x in act.get("blocks", [])), act.get("false_positives", 0)
+    marked = f"{wrong} ({round(100 * wrong / blocks)}%)" if blocks and wrong else str(wrong) if "error" not in act else "–"
+    rated = f'{tools["classified"]} of {tools["known"]}' if "error" not in tools else "–"
     stats = "".join(f'<div class="stat"><dt>{a}</dt><dd><span>{b}</span></dd><dd class="stat-date">{c}</dd></div>' for a, b, c in (
-        ("Hook blocks", sum(x["count"] for x in act.get("blocks", [])), "stopped before they happened"),
+        ("Hook blocks", blocks, "stopped before they happened"),
+        ("Blocks marked wrong", marked, "with hook_log.py --false-positive"),
         ("Permission prompts", sum(x["count"] for x in act.get("asks", [])), "you decided"),
-        ("Pull requests within 400 lines", within, f"{len(sizes)} merged")))
+        ("AI tools classified", rated, "with ai classify"),
+        ("Pull requests within 400 lines", within, f"{len(sizes)} merged · all registered projects")))
     main = section(f"Private · last {d['window_days']} days", "Your rules at work", f'<dl class="stats">{stats}</dl>')
     if "error" in tools:
         tiles = empty(tools)
@@ -134,6 +140,11 @@ def overview(d: dict) -> str:
             tiles += (f'<a class="sev sev-{cls}" href="tools.html#{cls}"><div class="sev-head"><span class="sev-name">{name}</span>'
                       f'<span class="sev-num">{len(names)}</span></div><span class="sev-rule">{rule}</span><ul class="chips">{chips}</ul></a>')
         tiles = f'<div class="sev-grid">{tiles}</div>'
+        per_tier = {name: 0 for name in [*TIERS.values(), "Unclassified"]}
+        for t in tools["tools"]:  # the tool's own tier, so each tool counts once
+            per_tier[TIERS.get(t["tier"], "Unclassified")] += 1
+        per_tier["Unclassified"] += len(tools["unrated"])
+        tiles += '<div class="cards">' + figure("bars", "AI tools per Law 38 tier", ("Tier", "Tools"), list(per_tier.items())) + "</div>"
         if tools["unrated"]:
             tiles += (f'<div class="unrated"><div class="unrated-text"><strong>{len(tools["unrated"])} new tools not rated yet</strong>'
                       '<span>Treated as High until you rate them. <a href="tools.html#unrated">See them</a></span></div>'

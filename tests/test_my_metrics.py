@@ -84,6 +84,19 @@ class MyMetricsTests(unittest.TestCase):
         self.assertIn("Inline visuals", sections["minimal"])
         self.assertEqual(sections["high"].count("<h3>Gmail</h3>"), 1)
 
+    def test_the_governance_numbers_match_the_site(self) -> None:
+        self.busy_user()
+        with open(os.path.join(self.home, "hook-log.jsonl"), "a") as f:
+            f.write(json.dumps({"ts": NOW, "type": "false_positive", "ref_ts": NOW, "check": "commit-message"}) + "\n")
+        self.build()
+        page = self.read("index.html")
+        self.assertIn("<dt>Blocks marked wrong</dt><dd><span>1 (100%)</span>", page)
+        self.assertIn("<dt>AI tools classified</dt><dd><span>3 of 4</span>", page)
+        self.assertIn("all registered projects", page)
+        tiers = re.search(r"AI tools per Law 38 tier</figcaption>(.*?)</figure>", page, re.S).group(1)
+        self.assertEqual(re.findall(r'<th scope="row">(.*?)</th><td>(\d+)</td>', tiers), [
+            ("1 · Local", "1"), ("2 · Reads", "0"), ("3 · Writes", "1"), ("4 · Production", "1"), ("Unclassified", "1")])
+
     def test_the_unrated_note_and_its_copy_button(self) -> None:
         self.busy_user()
         self.build()
