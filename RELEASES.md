@@ -2,6 +2,15 @@
 
 ---
 
+## Unreleased
+
+### Cloud sessions in this repo can run tools again ([#268](https://github.com/BojanKocijan/bk-charterline/issues/268))
+- **The hook falls back to the repo copy:** this repo's `.claude/settings.json` runs the installed hook in `~/.bk-charterline` when there is one, else the repo's own `.claude/hooks/enforce-laws.py`. A cloud session has no install, so the old fixed path made `python3` exit 2, which blocked every Bash, Edit and MCP call.
+- **No copy at all:** the call is allowed, and the app shows a one-line warning that the Law 32 checks are off for it, the same fail-open the hook already uses.
+- Local sessions don't change: the installed copy still runs, and its updates still wait for your approval (Law 28).
+
+---
+
 ## v3.6.0 — October 9, 2026
 
 Your dashboard shows everything the page's Analytics section shows: blocks marked wrong, tools classified and per tier, what the rules cost per release and per session, sessions per persona and skill runs, from data already on your machine. On this update, `update rules` asks you to approve one hook change: the new persona log.
