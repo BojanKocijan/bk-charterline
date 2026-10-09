@@ -9,6 +9,7 @@
 - **What the rules cost:** a new Usage section shows the **rules' share per session** (the tokens loaded before your first message) and **tokens per release** for the last 12 releases, each measured from what that release's `CLAUDE.md` imports. A release is measured once and kept in `dashboard/rules-cost.json`.
 - **Sessions, skills and personas** ([#198](https://github.com/BojanKocijan/bk-charterline/issues/198)): from Claude Code's session logs on your machine, the dashboard shows **tokens per session** (median, and per week), **sessions per persona** and **skill runs**. A session counts for a persona when you type its mode command or Claude runs its subagent; otherwise it counts as Frontend. Only counts are kept, never a prompt; each log file is read once until it changes (`dashboard/sessions-state.json`).
 - **Personas that last:** a new `UserPromptSubmit` hook, `persona_log.py`, logs a mode command (only the time, session id and persona; never the prompt) to `~/.bk-charterline/persona-log.jsonl`, so sessions per persona still count after Claude Code removes old session logs. `install.sh` registers it; `update rules` adds it on your next update.
+- **The page says it's built:** the Analytics section drops its three "Planned" chips (pull request size, sessions per persona, skill runs) and points Governance and Usage at `my metrics`.
 - **Correct counts:** a block you marked as a false positive no longer counts as a second block, and two kinds of prompt with one label ("Edit to a guardrail") show as one row.
 
 ---
