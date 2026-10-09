@@ -97,6 +97,12 @@ class MyMetricsTests(unittest.TestCase):
         self.assertEqual(re.findall(r'<th scope="row">(.*?)</th><td>(\d+)</td>', tiers), [
             ("1 · Local", "1"), ("2 · Reads", "0"), ("3 · Writes", "1"), ("4 · Production", "1"), ("Unclassified", "1")])
 
+    def test_the_usage_section_shows_the_rules_cost(self) -> None:
+        self.build()
+        page = self.read("index.html")
+        self.assertRegex(page, r"<dt>Rules' share per session</dt><dd><span>[\d,]+</span>")
+        self.assertIn("release history couldn&#x27;t be read", page)  # this home isn't a git clone
+
     def test_the_unrated_note_and_its_copy_button(self) -> None:
         self.busy_user()
         self.build()
