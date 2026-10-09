@@ -15,6 +15,7 @@ from __future__ import annotations
 import datetime
 import json
 import os
+import re
 import statistics
 import subprocess
 import sys
@@ -206,6 +207,60 @@ def rules_tokens(repo_root: str) -> dict:
     return {"tokens": total}
 
 
+TAG_RE = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
+IMPORT_RE = re.compile(r"^@\./(\S+)$", re.MULTILINE)
+FENCE_RE = re.compile(r"^```.*?^```", re.MULTILINE | re.DOTALL)
+COST_VERSION = 1  # bump when the measure changes, so every tag is measured again
+
+
+def rules_cost(home: str, repo_root: str) -> dict:
+    """Tokens each release loads into every session (#256): its CLAUDE.md and the
+    files that imports, read at the release's own tag. Tags never move, so each is
+    measured once and kept in dashboard/rules-cost.json."""
+    def git(*args: str) -> subprocess.CompletedProcess:
+        return subprocess.run(["git", "-C", home, *args], capture_output=True, text=True, timeout=GH_TIMEOUT)
+
+    listed = git("tag", "-l", "v*")
+    if listed.returncode != 0:
+        raise FileNotFoundError(home)
+    tags = sorted((t for t in listed.stdout.split() if TAG_RE.match(t)), key=lambda t: tuple(map(int, TAG_RE.match(t).groups())))
+    cache_path = os.path.join(home, "dashboard", "rules-cost.json")
+    try:
+        with open(cache_path) as f:
+            saved = json.load(f)
+        cache = saved["tags"] if saved.get("version") == COST_VERSION else {}
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        cache = {}
+    sys.path.insert(0, os.path.join(repo_root, "scripts"))
+    import laws_cost
+
+    def tokens(tag: str, name: str, seen: set, depth: int) -> int:
+        """A file and, like Claude Code, what it imports outside code fences, up to 5 levels deep."""
+        if name in seen or depth > 5:
+            return 0
+        seen.add(name)
+        part = git("show", f"{tag}:{name}")
+        if part.returncode != 0:
+            return 0
+        size = len(part.stdout.encode("utf-8"))
+        own = laws_cost.estimate(name, size) if name in laws_cost.FILES else round(size / 2.7)
+        here = os.path.dirname(name)
+        return own + sum(tokens(tag, os.path.normpath(os.path.join(here, sub)), seen, depth + 1)
+                         for sub in IMPORT_RE.findall(FENCE_RE.sub("", part.stdout)))
+
+    for tag in tags:
+        if not isinstance(cache.get(tag), int):
+            total = tokens(tag, "CLAUDE.md", set(), 0)
+            if total:
+                cache[tag] = total
+    os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+    tmp = f"{cache_path}.{os.getpid()}.tmp"
+    with open(tmp, "w") as f:
+        json.dump({"version": COST_VERSION, "tags": cache}, f, indent=1, sort_keys=True)
+    os.replace(tmp, cache_path)
+    return {"releases": [{"tag": t, "tokens": cache[t]} for t in tags if t in cache]}
+
+
 def collect(home: str | None = None, *, network: bool = True, gh: str = "gh",
             now: datetime.datetime | None = None) -> dict:
     home = home or rules_home()
@@ -219,6 +274,7 @@ def collect(home: str | None = None, *, network: bool = True, gh: str = "gh",
         "pull_requests": section(pull_requests, home, gh, now, network,
                                  missing="Register a project in projects.yaml to see its pull requests here."),
         "rules": section(rules_tokens, os.path.dirname(HERE), missing="The rules' size couldn't be measured."),
+        "rules_cost": section(rules_cost, home, os.path.dirname(HERE), missing="The rules' release history couldn't be read."),
     }
 
 

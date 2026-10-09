@@ -6,6 +6,7 @@
 
 ### The dashboard shows every data point the page shows ([#256](https://github.com/BojanKocijan/bk-charterline/issues/256))
 - **The page's governance numbers:** **Blocks marked wrong** (and their share of blocks), **AI tools classified** (X of Y), and an **AI tools per Law 38 tier** chart with an Unclassified bar, using the page's tier names. The pull request numbers now say they cover all registered projects.
+- **What the rules cost:** a new Usage section shows the **rules' share per session** (the tokens loaded before your first message) and **tokens per release** for the last 12 releases, each measured from what that release's `CLAUDE.md` imports. A release is measured once and kept in `dashboard/rules-cost.json`.
 - **Correct counts:** a block you marked as a false positive no longer counts as a second block, and two kinds of prompt with one label ("Edit to a guardrail") show as one row.
 
 ---

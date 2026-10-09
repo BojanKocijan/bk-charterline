@@ -8,6 +8,7 @@ import datetime
 import json
 import os
 import stat
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -160,6 +161,36 @@ class MyMetricsDataTests(unittest.TestCase):
             self.assertIn("error", result[name], name)
         self.assertIn("first blocked or approved call", result["activity"]["error"])
         self.assertGreater(result["rules"]["tokens"], 0)
+        self.assertIn("release history couldn't be read", result["rules_cost"]["error"])
+
+    def test_rules_cost_per_release_reads_each_tag_once(self) -> None:
+        def git(*args: str) -> None:
+            subprocess.run(["git", "-C", self.home, *args], check=True, capture_output=True)
+        git("init", "-q")
+        git("config", "user.email", "alice@example.com")
+        git("config", "user.name", "Alice Chen")
+        main = "@./CLAUDE_LAWS.md\n@./knowledge/X.md\n```\n@./knowledge/fenced.md\n```\n"
+        for tag, laws in (("v1.0.0", "a" * 2772), ("v1.1.0", "a" * 5544)):
+            self.write("CLAUDE.md", main)
+            self.write("CLAUDE_LAWS.md", laws)
+            os.makedirs(os.path.join(self.home, "knowledge"), exist_ok=True)
+            self.write("knowledge/X.md", "b" * 261 + "\n@./Y.md\n")  # 270 bytes, and a nested import
+            self.write("knowledge/Y.md", "c" * 270)
+            self.write("knowledge/fenced.md", "d" * 27000)  # inside a code fence: never loaded
+            git("add", "-A")
+            git("commit", "-qm", tag)
+            git("tag", tag)
+        git("tag", "not-a-release")
+        releases = self.collect(network=False)["rules_cost"]["releases"]
+        base = round(len(main) / 2.423) + 100 + 100  # CLAUDE.md, then X.md and Y.md at 2.7
+        self.assertEqual(releases, [{"tag": "v1.0.0", "tokens": base + 1000}, {"tag": "v1.1.0", "tokens": base + 2000}])
+        cache = os.path.join(self.home, "dashboard", "rules-cost.json")
+        with open(cache, "w") as f:
+            json.dump({"version": data.COST_VERSION, "tags": {"v1.0.0": 7, "v1.1.0": 8}}, f)  # a measured tag is never read again
+        self.assertEqual([r["tokens"] for r in self.collect(network=False)["rules_cost"]["releases"]], [7, 8])
+        with open(cache, "w") as f:
+            json.dump({"v1.0.0": 7, "v1.1.0": 8}, f)  # an old cache shape is measured again
+        self.assertEqual(self.collect(network=False)["rules_cost"]["releases"][0]["tokens"], base + 1000)
 
     def test_a_broken_file_stays_in_its_section(self) -> None:
         self.busy_user()

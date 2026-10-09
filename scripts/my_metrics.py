@@ -175,7 +175,17 @@ def overview(d: dict) -> str:
         charts = '<div class="cards">' + (figure("bars", "Blocks per law", ("Law · check", "Blocks"), bars) if bars else "") + (
             figure("bars", "Prompts, by kind", ("Kind", "Prompts"), asks) if asks else "") + (
             figure("columns", "Pull request size", ("Lines changed", "Pull requests"), list(cols.items()), ' data-over="Over 400"') if sizes else "") + "</div>"
-    return page("My BK Charterline", main + section("Activity", "What the hook did", charts))
+    main += section("Activity", "What the hook did", charts)
+    rules, cost = d.get("rules", {}), d.get("rules_cost", {})
+    share = f'{rules["tokens"]:,}' if "tokens" in rules else "–"
+    usage = (f'<dl class="stats"><div class="stat"><dt>Rules\' share per session</dt><dd><span>{share}</span></dd>'
+             '<dd class="stat-date">tokens, loaded before your first message</dd></div></dl>')
+    if "error" in cost:
+        usage += empty(cost)
+    elif cost["releases"]:
+        usage += '<div class="cards">' + figure("columns", "Tokens the rules add to each session, per release", ("Release", "Tokens"),
+                                                [(r["tag"], f'{r["tokens"]:,}') for r in cost["releases"][-12:]]) + "</div>"
+    return page("My BK Charterline", main + section("Usage", "What the rules cost each session", usage))
 
 
 def tools_page(d: dict) -> str:
