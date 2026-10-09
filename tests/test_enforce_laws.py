@@ -1557,5 +1557,62 @@ class InstallNameTests(HookRunner, unittest.TestCase):
                 self.assertEqual(self.bash(command), "allow")
 
 
+class RepoRegistrationTests(unittest.TestCase):
+    """This repo's `.claude/settings.json` runs the installed hook, else the
+    repo's own copy (a cloud session has no install), else allows the call
+    with a warning, instead of failing closed (#268)."""
+
+    REPO = os.path.dirname(os.path.dirname(HOOKS_DIR))
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.home = os.path.join(self.tmp.name, "home")
+        self.empty = os.path.join(self.tmp.name, "empty")
+        os.makedirs(self.home)
+        os.makedirs(self.empty)
+        with open(os.path.join(self.REPO, ".claude", "settings.json")) as f:
+            hooks = json.load(f)["hooks"]
+        self.commands = [
+            h["command"]
+            for event in ("PreToolUse", "PostToolUse")
+            for entry in hooks[event]
+            for h in entry["hooks"]
+        ]
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def run_command(self, command: str, project: str, shell_command: str) -> subprocess.CompletedProcess:
+        payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": shell_command}})
+        env = {**os.environ, "HOME": self.home, "CLAUDE_PROJECT_DIR": project}
+        return subprocess.run(["sh", "-c", command], input=payload, capture_output=True, text=True, env=env)
+
+    def test_every_hook_entry_is_checked(self) -> None:
+        self.assertEqual(len(self.commands), 4)
+
+    def test_without_an_install_the_repo_copy_runs(self) -> None:
+        for command in self.commands:
+            blocked = self.run_command(command, self.REPO, "gh pr merge 1")
+            self.assertEqual(blocked.returncode, 2, command)
+            self.assertIn("Blocked (Law 7)", blocked.stderr, command)
+            allowed = self.run_command(command, self.REPO, "ls")
+            self.assertEqual((allowed.returncode, allowed.stdout), (0, ""), command)
+
+    def test_the_installed_copy_wins(self) -> None:
+        hooks = os.path.join(self.home, ".bk-charterline", ".claude", "hooks")
+        os.makedirs(hooks)
+        with open(os.path.join(hooks, "enforce-laws.py"), "w") as f:
+            f.write("print('installed')\n")
+        for command in self.commands:
+            done = self.run_command(command, self.REPO, "gh pr merge 1")
+            self.assertEqual((done.returncode, done.stdout), (0, "installed\n"), command)
+
+    def test_with_no_copy_the_call_is_allowed_with_a_warning(self) -> None:
+        for command in self.commands:
+            done = self.run_command(command, self.empty, "gh pr merge 1")
+            self.assertEqual(done.returncode, 0, command)
+            self.assertIn("Law 32 hook wasn't found", json.loads(done.stdout)["systemMessage"], command)
+
+
 if __name__ == "__main__":
     unittest.main()
