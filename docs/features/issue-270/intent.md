@@ -35,7 +35,7 @@ That makes 5 to 8 tool calls before any work starts, and each one costs a round 
 ## Constraints
 
 - **Never block or slow a session.** The hook fails open: any error leaves its line out and the session starts. A slow network call (`git ls-remote`, `gh`) gets a short timeout.
-- **Writes nothing remote.** Only reads (tags, auth, PR list). The branch sweep (Law 25) deletes branches, so it stays with Claude, or is left out (open question).
+- **Writes nothing remote.** Only reads (tags, auth, PR list). Its only local write is registering a new project in `projects.yaml` (Law 20). Deleting merged branches stays with Claude.
 - **Stays under the 10,000-character cap** on hook output, or Claude only gets a preview.
 - **Works without the hook.** Without it (claude.ai web, a plugin install from before this change), Claude still does the steps itself.
 - **Stdlib Python only, no new dependencies**, like the other hooks.
@@ -43,8 +43,10 @@ That makes 5 to 8 tool calls before any work starts, and each one costs a round 
 
 ## Open questions
 
-- [ ] **The branch sweep (Law 25 step 3) deletes branches.** Does it stay with Claude as a step, or does the hook only report merged branches for Claude to clean up? Owner: BojanKocijan
-- [ ] **The language question (Law 1, when the setting isn't set)** has to be Claude's whole first reply. Does the hook just report "language: not set" and Claude asks, as today? Owner: BojanKocijan
-- [ ] **Auto-registration (Law 20) writes `projects.yaml`.** Does the hook do it (a local file only), or report "not registered" for Claude? Owner: BojanKocijan
-- [ ] **An always-on slot for the laws.** A plugin's SessionStart hook can add context to every session (`additionalContext`), up to 10,000 characters. Once the laws are cut down (#275), could the binding core ship that way instead of through `CLAUDE.md`? This is out of scope here and goes to #275. Owner: BojanKocijan
-- [ ] **Which sources trigger it:** `startup` only, or also `resume`, `clear` and `compact` (after a compact, Claude has lost the earlier confirmation)? Owner: BojanKocijan
+Answered by the owner, 2026-10-09, chat:
+
+- [x] **Branch sweep (Law 25):** the hook lists the merged branches it finds, and Claude deletes them only when there are some. The hook never deletes anything.
+- [x] **Language (Law 1):** the hook reports `language: not set`, and Claude's first reply is the Law 1 question, as today.
+- [x] **Registration (Law 20):** the hook registers the project itself (a local `projects.yaml` edit, no network or git) and reports the port in its block.
+- [x] **Triggers:** `startup`, `clear` and `compact`. Resumes and forks keep their context, so they don't trigger it.
+- [ ] **An always-on slot for the laws** (a plugin hook's `additionalContext`, up to 10,000 characters) goes to #275, after the cut. Owner: BojanKocijan
