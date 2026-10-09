@@ -3,7 +3,7 @@
 Spec: [#256](https://github.com/BojanKocijan/bk-charterline/issues/256), plus #198 for skills and personas · Gate tier: Significant · Branches: `docs/dashboard-parity-plan`, then `fix/dashboard-counts` … `fix/site-planned-chips` · Issue: #256 (and #198)
 Work pile: judgment-heavy (a new data source and a hook change), built in this session
 Skip gates: separate `intent.md` and `spec.md` skipped at the owner's request (2026-10-09, chat: "one plan, approve once"); #256 and #198 serve as the intent
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-09, chat
 
 ## Why
 
