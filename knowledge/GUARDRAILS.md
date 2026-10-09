@@ -1,7 +1,7 @@
 # Guardrails — BK Charterline
 
-**Version:** 1.1.0
-**Last Updated:** 2026-10-08
+**Version:** 1.2.0
+**Last Updated:** 2026-10-09
 **Binding:** Yes — the detail behind Law 32 (the hook) and the hook's part in Law 38. Read on demand when a block or a permission prompt needs explaining, when changing the hook, or when the user asks what the hook does.
 
 > Moved here from `CLAUDE_LAWS.md` Law 32 in v3.5.0 (#239) so every session loads less; the law keeps what Claude must do. Nothing here was loosened.
@@ -46,6 +46,8 @@
 
 **Where it lives.** `.claude/hooks/enforce-laws.py` + a `PreToolUse` entry in `.claude/settings.json`, both committed in this repo as the canonical reference implementation. `install.sh` registers the same hook globally in `~/.claude/settings.json` (merging into whatever's already there, never overwriting it), pointing at `~/.bk-charterline/.claude/hooks/enforce-laws.py` — so the checks run in every repo a session touches, not just this one. Because the registered command points at that fixed path inside the clone, a `charterline-update` picks up any change to the script's *logic*, and `charterline-update` applies a hook change only after the user approves its diff, in their own terminal or in the app's prompt for `--approve` (Law 28). Since v2.18.0, `charterline-update` also re-runs `install.sh` after updating, so a newly added registration (such as a new hook entry) applies on the next update too. Changing or removing an existing entry still needs a manual edit of `~/.claude/settings.json`.
 
+**The persona log (#256).** A second, separate script, `.claude/hooks/persona_log.py`, runs as a `UserPromptSubmit` hook (registered by `install.sh` the same way). When the whole prompt is one of CLAUDE.md's mode commands, it appends the time, the session id and the persona to `~/.bk-charterline/persona-log.jsonl` (rotated to `persona-log.1.jsonl` at 1 MB, like the block log) for the private dashboard; the prompt's text is never written, and any other prompt writes nothing. It never blocks, never prints and ignores every error, so it can't stop a prompt.
+
 **Block log.** Every block appends one line to `~/.bk-charterline/hook-log.jsonl`: the time, law, a fixed check id (`commit-on-default`, `commit-message`, …), the repo and branch the hook judged, and a SHA-256 of the command. It never stores the command, the commit message or the block reason. The log rotates to `hook-log.1.jsonl` at 1 MB. Writes hold an exclusive lock on `hook-log.lock` for at most 200 ms, so concurrent sessions never interleave lines. The code lives in `.claude/hooks/hook_log.py`, which the hook imports in a guarded way: a missing module, an unwritable log or a busy lock skips the line and never changes the decision. The log stays local and gitignored. `hook log` runs `python3 ~/.bk-charterline/.claude/hooks/hook_log.py --summary` (blocks per law and check for the last 30 days, plus false positives and permission prompts). Asks are logged as type `ask`.
 
 ---
@@ -62,5 +64,6 @@
 
 ## Changelog
 
+- **1.2.0 (2026-10-09)** — §1: the `UserPromptSubmit` persona log for the dashboard (#256).
 - **1.1.0 (2026-10-08)** — §2: why the hook exists, Law 38's known limits and sources, moved from the laws (#239).
 - **1.0.0 (2026-10-08)** — Law 32's mechanism, the blocks and asks tables, the block log and where the hook lives, moved from `CLAUDE_LAWS.md` (#239).

@@ -24,7 +24,7 @@ ASSETS = os.path.join(HERE, "dashboard_assets")
 CSS = [os.path.join(REPO, "site", f) for f in ("styles.css", "layout.css", "numbers.css", "demo.css", "charts.css")] \
     + [os.path.join(ASSETS, "dashboard.css")]
 JS = [os.path.join(REPO, "site", f) for f in ("site.js", "charts.js")]
-SOURCES = ("hook-log.jsonl", "ai-approvals.jsonl", "ai-tools.json", "ai-inventory.json", "projects.yaml")
+SOURCES = ("hook-log.jsonl", "ai-approvals.jsonl", "ai-tools.json", "ai-inventory.json", "projects.yaml", "persona-log.jsonl")
 TIERS = {1: "1 · Local", 2: "2 · Reads", 3: "3 · Writes", 4: "4 · Production"}  # the site's names (#256)
 SEV = {4: ("Critical", "critical", "Asks you every time"), 3: ("High", "high", "Asks you once per session"),
        2: ("Low", "low", "Reads only; no question"), 1: ("Minimal", "minimal", "Stays on your machine; no question")}
@@ -195,12 +195,14 @@ def overview(d: dict) -> str:
                         [(r["tag"], f'{r["tokens"]:,}') for r in cost["releases"][-12:]])
     if "error" in ses:
         usage += empty(ses)
-    elif ses["sessions"]:
-        cards += figure("bars", "Sessions per persona", ("Persona", "Sessions"), [(p["persona"], p["sessions"]) for p in ses["personas"]])
+    else:  # personas can outlive the session logs (the persona log), so each figure stands on its own
+        if ses["personas"]:
+            cards += figure("bars", "Sessions per persona", ("Persona", "Sessions"), [(p["persona"], p["sessions"]) for p in ses["personas"]])
         if ses["skills"]:
             cards += figure("bars", "Skill runs", ("Skill", "Runs"), [(x["skill"], x["runs"]) for x in ses["skills"][:10]])
-        cards += figure("bars", "Tokens per session, weekly median, in millions", ("Week of", "Million tokens"),  # one unit for every bar
-                        [(datetime.date.fromisoformat(w["week"]).strftime("%b %-d"), f'{w["median"] / 1e6:.1f}') for w in ses["weekly"]])
+        if ses["weekly"]:
+            cards += figure("bars", "Tokens per session, weekly median, in millions", ("Week of", "Million tokens"),  # one unit for every bar
+                            [(datetime.date.fromisoformat(w["week"]).strftime("%b %-d"), f'{w["median"] / 1e6:.1f}') for w in ses["weekly"]])
     usage += f'<div class="cards">{cards}</div>' if cards else ""
     if "error" not in ses:
         skipped = f' {ses["skipped"]} log files couldn&#x27;t be read.' if ses["skipped"] else ""
