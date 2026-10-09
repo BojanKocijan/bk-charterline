@@ -24,7 +24,9 @@ import time
 sys.dont_write_bytecode = True
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), ".claude", "hooks"))
+sys.path.insert(0, HERE)
 from rules_home import rules_home  # noqa: E402  ~/.bk-charterline, or the old name (#199)
+import my_metrics_sessions  # noqa: E402  Claude Code's session logs (#256)
 
 WINDOW_DAYS = 30
 GH_TIMEOUT = 20  # seconds per gh call
@@ -264,6 +266,8 @@ def collect(home: str | None = None, *, network: bool = True, gh: str = "gh",
                                  missing="Register a project in projects.yaml to see its pull requests here."),
         "rules": section(rules_tokens, os.path.dirname(HERE), missing="The rules' size couldn't be measured."),
         "rules_cost": section(rules_cost, home, os.path.dirname(HERE), missing="The rules' release history couldn't be read."),
+        "sessions": section(my_metrics_sessions.sessions, home, now, since,
+                            missing="Claude Code's session logs weren't found on this machine."),
     }
 
 

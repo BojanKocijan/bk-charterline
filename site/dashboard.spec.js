@@ -25,7 +25,15 @@ write("ai-tools.json", { version: 1, tools: {
   "mcp:viz": { tier: 1, owner: "alice", label: "Inline visuals" },
 } });
 write("ai-inventory.json", { "mcp|session|db": {}, "mcp|session|chat": {} });
-execFileSync("python3", [path.join(__dirname, "..", "scripts", "my_metrics.py"), "--local-only"], { env: { ...process.env, HOME: home } });
+const logs = path.join(home, ".claude", "projects", "-proj");  // one session log, so the Usage figures are checked too (#256)
+fs.mkdirSync(logs, { recursive: true });
+fs.writeFileSync(path.join(logs, "s1.jsonl"), [
+  { type: "user", timestamp: now, message: { content: "tester mode" } },
+  { type: "assistant", timestamp: now, message: { id: "m1", usage: { input_tokens: 2400000 },
+    content: [{ type: "tool_use", name: "Skill", input: { skill: "ux-writing" } }] } },
+].map((r) => JSON.stringify(r)).join("\n") + "\n");
+const { CLAUDE_CONFIG_DIR, ...env } = process.env;
+execFileSync("python3", [path.join(__dirname, "..", "scripts", "my_metrics.py"), "--local-only"], { env: { ...env, HOME: home } });
 const PAGES = ["index.html", "tools.html"].map((p) => "file://" + path.join(rules, "dashboard", p));
 
 for (const colorScheme of ["light", "dark"]) {

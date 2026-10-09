@@ -49,6 +49,7 @@ class MyMetricsDataTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.home = os.path.join(self.tmp.name, "home")
         os.makedirs(self.home)
+        os.environ["CLAUDE_CONFIG_DIR"] = os.path.join(self.tmp.name, "claude")  # never the real session logs
         self.gh = os.path.join(self.tmp.name, "gh")
         with open(self.gh, "w") as f:
             f.write(FAKE_GH)

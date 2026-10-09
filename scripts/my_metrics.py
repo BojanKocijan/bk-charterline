@@ -85,6 +85,10 @@ def duration(hours: float | None) -> str:
     return f"{max(1, round(hours * 60))} min" if hours < 1 else f"{hours:.1f} h"
 
 
+def millions(n: int) -> str:
+    return f"{n / 1e6:.1f}M" if n >= 100_000 else f"{n:,}"
+
+
 def empty(part: dict) -> str:
     return f'<p class="empty">{e(part["error"])}</p>'
 
@@ -176,16 +180,33 @@ def overview(d: dict) -> str:
             figure("bars", "Prompts, by kind", ("Kind", "Prompts"), asks) if asks else "") + (
             figure("columns", "Pull request size", ("Lines changed", "Pull requests"), list(cols.items()), ' data-over="Over 400"') if sizes else "") + "</div>"
     main += section("Activity", "What the hook did", charts)
-    rules, cost = d.get("rules", {}), d.get("rules_cost", {})
+    rules, cost, ses = d.get("rules", {}), d.get("rules_cost", {}), d.get("sessions", {"error": "–"})
     share = f'{rules["tokens"]:,}' if "tokens" in rules else "–"
-    usage = (f'<dl class="stats"><div class="stat"><dt>Rules\' share per session</dt><dd><span>{share}</span></dd>'
-             '<dd class="stat-date">tokens, loaded before your first message</dd></div></dl>')
+    median = millions(ses["median_tokens"]) if ses.get("median_tokens") is not None else "–"
+    usage = '<dl class="stats">' + "".join(f'<div class="stat"><dt>{a}</dt><dd><span>{b}</span></dd><dd class="stat-date">{c}</dd></div>' for a, b, c in (
+        ("Rules' share per session", share, "tokens, loaded before your first message"),
+        ("Tokens per session", median, "median: input, cache and output"),
+        ("Sessions", ses.get("sessions", "–"), f"last {d['window_days']} days"))) + "</dl>"
+    cards = ""
     if "error" in cost:
         usage += empty(cost)
     elif cost["releases"]:
-        usage += '<div class="cards">' + figure("columns", "Tokens the rules add to each session, per release", ("Release", "Tokens"),
-                                                [(r["tag"], f'{r["tokens"]:,}') for r in cost["releases"][-12:]]) + "</div>"
-    return page("My BK Charterline", main + section("Usage", "What the rules cost each session", usage))
+        cards += figure("columns", "Tokens the rules add to each session, per release", ("Release", "Tokens"),
+                        [(r["tag"], f'{r["tokens"]:,}') for r in cost["releases"][-12:]])
+    if "error" in ses:
+        usage += empty(ses)
+    elif ses["sessions"]:
+        cards += figure("bars", "Sessions per persona", ("Persona", "Sessions"), [(p["persona"], p["sessions"]) for p in ses["personas"]])
+        if ses["skills"]:
+            cards += figure("bars", "Skill runs", ("Skill", "Runs"), [(x["skill"], x["runs"]) for x in ses["skills"][:10]])
+        cards += figure("bars", "Tokens per session, weekly median", ("Week of", "Tokens"),
+                        [(datetime.date.fromisoformat(w["week"]).strftime("%b %-d"), millions(w["median"])) for w in ses["weekly"]])
+    usage += f'<div class="cards">{cards}</div>' if cards else ""
+    if "error" not in ses:
+        skipped = f' {ses["skipped"]} log files couldn&#x27;t be read.' if ses["skipped"] else ""
+        usage += ('<p class="source">Sessions, skills and personas come from Claude Code&#x27;s session logs on this machine; only counts are kept. '
+                  f"A session with no mode command or persona subagent counts as Frontend.{skipped}</p>")
+    return page("My BK Charterline", main + section("Usage", "Sessions, skills and what they cost", usage))
 
 
 def tools_page(d: dict) -> str:
