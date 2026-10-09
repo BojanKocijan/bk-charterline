@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+### Cloud sessions in this repo can run tools again ([#268](https://github.com/BojanKocijan/bk-charterline/issues/268))
+- **The hook falls back to the repo copy:** this repo's `.claude/settings.json` runs the installed hook in `~/.bk-charterline` when there is one, else the repo's own `.claude/hooks/enforce-laws.py`. A cloud session has no install, so the old fixed path made `python3` exit 2, which blocked every Bash, Edit and MCP call.
+- **No copy at all:** the call is allowed, and the app shows a one-line warning that the Law 32 checks are off for it, the same fail-open the hook already uses.
+- Local sessions don't change: the installed copy still runs, and its updates still wait for your approval (Law 28).
+
 ### Law 35: the SQL and the steps are pasted in chat ([#265](https://github.com/BojanKocijan/bk-charterline/issues/265))
 - **Show it in chat, every time:** as soon as Claude writes SQL or a manual deploy step (spec, plan, migration or checklist), it pastes the complete SQL in a `sql` block and the numbered steps in the same reply. A link to a file never counts, and anything shortened is labelled `NOT TO RUN`.
 

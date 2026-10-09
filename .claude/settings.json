@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.bk-charterline/.claude/hooks/enforce-laws.py\""
+            "command": "f=\"$HOME/.bk-charterline/.claude/hooks/enforce-laws.py\"; [ -f \"$f\" ] || f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/enforce-laws.py\"; if [ -f \"$f\" ]; then exec python3 \"$f\"; fi; echo '{\"systemMessage\": \"BK Charterline: the Law 32 hook was not found, so its checks are off for this call.\"}'"
           }
         ]
       },
@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.bk-charterline/.claude/hooks/enforce-laws.py\""
+            "command": "f=\"$HOME/.bk-charterline/.claude/hooks/enforce-laws.py\"; [ -f \"$f\" ] || f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/enforce-laws.py\"; if [ -f \"$f\" ]; then exec python3 \"$f\"; fi; echo '{\"systemMessage\": \"BK Charterline: the Law 32 hook was not found, so its checks are off for this call.\"}'"
           }
         ]
       },
@@ -24,7 +24,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.bk-charterline/.claude/hooks/enforce-laws.py\""
+            "command": "f=\"$HOME/.bk-charterline/.claude/hooks/enforce-laws.py\"; [ -f \"$f\" ] || f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/enforce-laws.py\"; if [ -f \"$f\" ]; then exec python3 \"$f\"; fi; echo '{\"systemMessage\": \"BK Charterline: the Law 32 hook was not found, so its checks are off for this call.\"}'"
           }
         ]
       }
@@ -35,7 +35,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.bk-charterline/.claude/hooks/enforce-laws.py\""
+            "command": "f=\"$HOME/.bk-charterline/.claude/hooks/enforce-laws.py\"; [ -f \"$f\" ] || f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/enforce-laws.py\"; if [ -f \"$f\" ]; then exec python3 \"$f\"; fi; echo '{\"systemMessage\": \"BK Charterline: the Law 32 hook was not found, so its checks are off for this call.\"}'"
           }
         ]
       }
