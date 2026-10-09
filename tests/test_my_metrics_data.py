@@ -78,6 +78,7 @@ class MyMetricsDataTests(unittest.TestCase):
                {"ts": ts(2), "type": "ask", "law": 38, "check": "tier3-first-use", "tool": "mcp__mail__create_draft"},
                {"ts": ts(1), "type": "ask", "law": 32, "check": "guardrail-write"},
                {"ts": ts(1), "type": "false_positive", "ref_ts": ts(4), "check": "commit-message", "note": "x"},
+               {"ts": ts(0.5), "type": "false_positive", "ref_ts": ts(4), "check": "commit-message", "note": "again"},
                {"ts": ts(1), "type": "false_positive", "ref_ts": ts(40), "check": "merge", "note": "x"}]  # its block is outside
         self.write("hook-log.jsonl", "".join(json.dumps(r) + "\n" for r in log) + "{damaged\n")
         approvals = [{"session": "s", "tool": "mcp__mail__create_draft", "ts": ts(2)},  # the same call as the log's
