@@ -1,7 +1,7 @@
 # Spec — A SessionStart hook runs the session-start checks (#270)
 
 Intent: [intent.md](intent.md) · Gate tier: Significant · Issue: #270
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-09, chat
 
 ## Behavior
 
