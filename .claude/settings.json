@@ -45,7 +45,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.bk-charterline/.claude/hooks/persona_log.py\""
+            "command": "python3 \"$HOME/.bk-charterline/.claude/hooks/persona_log.py\" >/dev/null 2>&1 || true"
           }
         ]
       }

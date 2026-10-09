@@ -75,6 +75,17 @@ class PersonaLogTests(unittest.TestCase):
         self.assertEqual(r["personas"], [{"persona": "Backend", "sessions": 1}, {"persona": "Frontend", "sessions": 1}])
         self.assertEqual((r["sessions"], r["median_tokens"]), (1, 10))  # tokens only from logs still on disk
 
+    def test_the_registered_commands_never_block_a_prompt(self) -> None:
+        with open(os.path.join(REPO, ".claude", "settings.json")) as f:
+            [entry] = json.load(f)["hooks"]["UserPromptSubmit"]
+        with open(os.path.join(REPO, "install.sh")) as f:
+            installed = re.search(r'^PERSONA_COMMAND="(.*)"$', f.read(), re.M).group(1).replace('\\"', '"')
+        for command in (entry["hooks"][0]["command"], installed.replace("${LOCAL_DIR}", "$HOME/.bk-charterline")):
+            # The script is missing here, as on an install from before #256: python3 exits 2, which would erase the prompt.
+            done = subprocess.run(["sh", "-c", command], input='{"prompt": "tester mode"}', capture_output=True,
+                                  text=True, env={**os.environ, "HOME": self.home})
+            self.assertEqual((done.returncode, done.stdout, done.stderr), (0, "", ""), command)
+
     def test_install_registers_it_once(self) -> None:
         with open(os.path.join(REPO, "install.sh")) as f:
             script = next(b for b in re.findall(r"<<'PYEOF'\n(.*?)\nPYEOF\n", f.read(), re.S) if "wanted = [" in b)
