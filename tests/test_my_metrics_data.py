@@ -76,7 +76,8 @@ class MyMetricsDataTests(unittest.TestCase):
                {"ts": ts(3), "type": "ask", "law": 38, "check": "tier4-unapproved", "tool": "mcp__db__execute_sql"},
                {"ts": ts(2), "type": "ask", "law": 38, "check": "tier3-first-use", "tool": "mcp__mail__create_draft"},
                {"ts": ts(1), "type": "ask", "law": 32, "check": "guardrail-write"},
-               {"ts": ts(1), "type": "false_positive", "check": "commit-message", "note": "x"}]  # marks a block
+               {"ts": ts(1), "type": "false_positive", "ref_ts": ts(4), "check": "commit-message", "note": "x"},
+               {"ts": ts(1), "type": "false_positive", "ref_ts": ts(40), "check": "merge", "note": "x"}]  # its block is outside
         self.write("hook-log.jsonl", "".join(json.dumps(r) + "\n" for r in log) + "{damaged\n")
         approvals = [{"session": "s", "tool": "mcp__mail__create_draft", "ts": ts(2)},  # the same call as the log's
                      {"session": "s", "tool": "mcp__docs__edit", "ts": ts(6)}]  # before the hook named tools
@@ -116,6 +117,13 @@ class MyMetricsDataTests(unittest.TestCase):
         t = self.collect(network=False)["tools"]
         self.assertEqual([(x["label"], x["tier"]) for x in t["tools"]], [("Database", 4), ("Mail", 3)])
         self.assertEqual(t["unrated"], ["chat", "notes@synced"])  # a skill is never rated
+        self.assertEqual((t["classified"], t["known"]), (2, 4))
+
+    def test_false_positives_are_counted_apart(self) -> None:
+        self.busy_user()
+        a = self.collect(network=False)["activity"]
+        self.assertEqual(a["false_positives"], 1)
+        self.assertEqual(sum(b["count"] for b in a["blocks"]), 2)
 
     def test_pull_requests_per_project(self) -> None:
         self.busy_user()

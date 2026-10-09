@@ -58,14 +58,22 @@ def section(fn, *args, missing: str):
 
 
 def hook_activity(home: str, since: datetime.datetime) -> dict:
-    blocks, asks, days, calls = {}, {}, {}, []
+    blocks, asks, days, calls, false_positives = {}, {}, {}, [], 0
     for r in read_jsonl(os.path.join(home, "hook-log.jsonl")):
         try:
             ts = parse_ts(r["ts"])
         except (KeyError, ValueError, TypeError):
             continue
-        if ts < since or r.get("type") not in ("block", "ask"):
-            continue  # a false_positive row marks a block; it isn't one
+        if r.get("type") == "false_positive":  # marks a block; it isn't one
+            try:  # counted with the block it marks, so the share stays within 100%
+                false_positives += parse_ts(r["ref_ts"]) >= since
+            except (KeyError, ValueError, TypeError):
+                pass
+            continue
+        if ts < since:
+            continue
+        if r.get("type") not in ("block", "ask"):
+            continue
         days[ts.strftime("%Y-%m-%d")] = days.get(ts.strftime("%Y-%m-%d"), 0) + 1
         if r.get("type") == "ask":
             asks[r.get("check")] = asks.get(r.get("check"), 0) + 1
@@ -89,6 +97,7 @@ def hook_activity(home: str, since: datetime.datetime) -> dict:
         "asks": [{"check": k, "count": n} for k, n in sorted(asks.items(), key=lambda kv: -kv[1])],
         "days": [{"day": d, "count": n} for d, n in sorted(days.items())],
         "calls": sorted(calls, key=lambda c: c["ts"], reverse=True),
+        "false_positives": false_positives,
     }
 
 
@@ -106,7 +115,8 @@ def tools(home: str) -> dict:
                     unrated.append(name)
     except FileNotFoundError:
         pass
-    return {"tools": listed, "unrated": sorted(set(unrated))}
+    unrated = sorted(set(unrated))
+    return {"tools": listed, "unrated": unrated, "classified": len(listed), "known": len(listed) + len(unrated)}
 
 
 def registered_projects(home: str) -> list[dict]:
