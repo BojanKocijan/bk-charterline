@@ -24,7 +24,7 @@ ASSETS = os.path.join(HERE, "dashboard_assets")
 CSS = [os.path.join(REPO, "site", f) for f in ("styles.css", "layout.css", "numbers.css", "demo.css", "charts.css")] \
     + [os.path.join(ASSETS, "dashboard.css")]
 JS = [os.path.join(REPO, "site", f) for f in ("site.js", "charts.js")]
-SOURCES = ("hook-log.jsonl", "ai-approvals.jsonl", "ai-tools.json", "ai-inventory.json", "projects.yaml")
+SOURCES = ("hook-log.jsonl", "ai-approvals.jsonl", "ai-tools.json", "ai-inventory.json", "projects.yaml", "persona-log.jsonl")
 TIERS = {1: "1 · Local", 2: "2 · Reads", 3: "3 · Writes", 4: "4 · Production"}  # the site's names (#256)
 SEV = {4: ("Critical", "critical", "Asks you every time"), 3: ("High", "high", "Asks you once per session"),
        2: ("Low", "low", "Reads only; no question"), 1: ("Minimal", "minimal", "Stays on your machine; no question")}

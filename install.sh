@@ -190,14 +190,15 @@ GLOBAL_SETTINGS="${HOME}/.claude/settings.json"
 HOOK_SCRIPT="${LOCAL_DIR}/.claude/hooks/enforce-laws.py"
 HOOK_COMMAND="python3 \"${HOOK_SCRIPT}\""
 OLD_HOOK_COMMAND="python3 \"${OLD_DIR}/.claude/hooks/enforce-laws.py\""
+PERSONA_COMMAND="python3 \"${LOCAL_DIR}/.claude/hooks/persona_log.py\""
 
 mkdir -p "$(dirname "$GLOBAL_SETTINGS")"
 [ -f "$GLOBAL_SETTINGS" ] || printf '{}\n' > "$GLOBAL_SETTINGS"
-if python3 - "$GLOBAL_SETTINGS" "$HOOK_COMMAND" "$OLD_HOOK_COMMAND" <<'PYEOF'
+if python3 - "$GLOBAL_SETTINGS" "$HOOK_COMMAND" "$OLD_HOOK_COMMAND" "$PERSONA_COMMAND" <<'PYEOF'
 import json
 import sys
 
-path, hook_command, old_command = sys.argv[1], sys.argv[2], sys.argv[3]
+path, hook_command, old_command, persona_command = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 
 with open(path) as f:
     original = f.read()
@@ -221,25 +222,27 @@ if moved:
 # Bash commands, the file-editing tools so the hook can guard the
 # guardrail files themselves (#117), and MCP tools for Law 38's tier 3
 # and 4 asks (#138). PostToolUse on MCP tools records tier 3 approvals.
-# Each entry is added once.
+# UserPromptSubmit logs mode commands for the dashboard (#256); it has no
+# matcher. Each entry is added once.
 wanted = [
-    ("PreToolUse", "Bash"),
-    ("PreToolUse", "Edit|Write|MultiEdit|NotebookEdit"),
-    ("PreToolUse", "mcp__.*"),
-    ("PostToolUse", "mcp__.*"),
+    ("PreToolUse", "Bash", hook_command),
+    ("PreToolUse", "Edit|Write|MultiEdit|NotebookEdit", hook_command),
+    ("PreToolUse", "mcp__.*", hook_command),
+    ("PostToolUse", "mcp__.*", hook_command),
+    ("UserPromptSubmit", None, persona_command),
 ]
-for event, matcher in wanted:
+for event, matcher, command in wanted:
     entries = hooks.setdefault(event, [])
     already = any(
         entry.get("matcher") == matcher
-        and any(h.get("command") == hook_command for h in entry.get("hooks", []))
+        and any(h.get("command") == command for h in entry.get("hooks", []))
         for entry in entries
     )
     if not already:
-        entries.append({
-            "matcher": matcher,
-            "hooks": [{"type": "command", "command": hook_command}],
-        })
+        entry = {"hooks": [{"type": "command", "command": command}]}
+        if matcher is not None:
+            entry = {"matcher": matcher, **entry}
+        entries.append(entry)
 
 text = json.dumps(settings, indent=2) + "\n"
 if text != original:  # a second run writes nothing
