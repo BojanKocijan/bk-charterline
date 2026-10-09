@@ -23,7 +23,7 @@ For each of the four `enforce-laws.py` entries in `.claude/settings.json` (three
 
 1. **Installed copy found** (`$HOME/.bk-charterline/.claude/hooks/enforce-laws.py`): it runs, as today. Local sessions don't change, and the installed copy is still the one whose updates you approve (Law 28).
 2. **No installed copy, repo copy found** (`$CLAUDE_PROJECT_DIR/.claude/hooks/enforce-laws.py`): the repo copy runs. This is the cloud case.
-3. **Neither found:** the call is allowed (exit 0), and the hook prints `{"systemMessage": "BK Charterline: the Law 32 hook wasn't found, so its checks are off for this call."}`, which the app shows to the user (owner decision 2026-10-09).
+3. **Neither found:** the call is allowed (exit 0), and the hook prints `{"systemMessage": "BK Charterline: the Law 32 hook was not found, so its checks are off for this call."}`, which the app shows to the user (owner decision 2026-10-09).
 
 The command (one line in the JSON; shown wrapped here):
 
@@ -31,7 +31,7 @@ The command (one line in the JSON; shown wrapped here):
 f="$HOME/.bk-charterline/.claude/hooks/enforce-laws.py";
 [ -f "$f" ] || f="$CLAUDE_PROJECT_DIR/.claude/hooks/enforce-laws.py";
 if [ -f "$f" ]; then exec python3 "$f"; fi;
-echo '{"systemMessage": "BK Charterline: the Law 32 hook wasn'"'"'t found, so its checks are off for this call."}'
+echo '{"systemMessage": "BK Charterline: the Law 32 hook was not found, so its checks are off for this call."}'
 ```
 
 `exec` keeps the script's own exit code and stdout, so blocks and asks still work. `install.sh` keeps writing its own fixed-path command to `~/.claude/settings.json`. That covers other projects, where the repo copy doesn't exist.

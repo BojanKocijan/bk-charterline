@@ -1577,14 +1577,18 @@ class RepoRegistrationTests(unittest.TestCase):
             for event in ("PreToolUse", "PostToolUse")
             for entry in hooks[event]
             for h in entry["hooks"]
+            if "enforce-laws.py" in h["command"]
         ]
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
 
-    def run_command(self, command: str, project: str, shell_command: str) -> subprocess.CompletedProcess:
+    def run_command(self, command: str, project: str | None, shell_command: str) -> subprocess.CompletedProcess:
         payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": shell_command}})
-        env = {**os.environ, "HOME": self.home, "CLAUDE_PROJECT_DIR": project}
+        env = {k: v for k, v in os.environ.items() if k != "CLAUDE_PROJECT_DIR"}
+        env["HOME"] = self.home
+        if project is not None:
+            env["CLAUDE_PROJECT_DIR"] = project
         return subprocess.run(["sh", "-c", command], input=payload, capture_output=True, text=True, env=env)
 
     def test_every_hook_entry_is_checked(self) -> None:
@@ -1608,10 +1612,11 @@ class RepoRegistrationTests(unittest.TestCase):
             self.assertEqual((done.returncode, done.stdout), (0, "installed\n"), command)
 
     def test_with_no_copy_the_call_is_allowed_with_a_warning(self) -> None:
-        for command in self.commands:
-            done = self.run_command(command, self.empty, "gh pr merge 1")
-            self.assertEqual(done.returncode, 0, command)
-            self.assertIn("Law 32 hook wasn't found", json.loads(done.stdout)["systemMessage"], command)
+        for project in (self.empty, None):  # None: CLAUDE_PROJECT_DIR isn't set
+            for command in self.commands:
+                done = self.run_command(command, project, "gh pr merge 1")
+                self.assertEqual(done.returncode, 0, command)
+                self.assertIn("Law 32 hook was not found", json.loads(done.stdout)["systemMessage"], command)
 
 
 if __name__ == "__main__":
