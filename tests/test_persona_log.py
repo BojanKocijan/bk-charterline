@@ -49,6 +49,34 @@ class PersonaLogTests(unittest.TestCase):
         self.assertEqual((row["session_id"], row["persona"]), ("s1", "Tester"))
         self.assertEqual(set(row), {"ts", "session_id", "persona"})
 
+    def test_the_log_rotates_at_1_mb_and_both_files_are_read(self) -> None:
+        old = {"ts": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "session_id": "s0", "persona": "Analyst"}
+        with open(os.path.join(self.rules, "persona-log.jsonl"), "w") as f:
+            f.write((json.dumps(old) + "\n") * 20000)  # over 1 MB
+        self.submit("backend mode")
+        self.assertEqual([r["persona"] for r in self.lines()], ["Backend"])
+        self.assertTrue(os.path.exists(os.path.join(self.rules, "persona-log.1.jsonl")))
+        now = datetime.datetime.now(datetime.timezone.utc)
+        self.assertEqual(sessions.persona_log(self.rules, now - datetime.timedelta(days=30)), {"s0": {"Analyst"}, "s1": {"Backend"}})
+
+    def test_personas_show_when_no_session_log_is_left(self) -> None:
+        self.submit("tester mode")
+        claude = os.path.join(self.tmp.name, "claude")
+        os.makedirs(os.path.join(claude, "projects", "-p"))
+        with open(os.path.join(claude, "projects", "-p", "s1.jsonl"), "w") as f:
+            f.write("{damaged\n")  # the session's own log is there but has no timestamps
+        now = datetime.datetime.now(datetime.timezone.utc)
+        r = sessions.sessions(self.rules, now, now - datetime.timedelta(days=30), os.path.join(claude, "projects"))
+        self.assertEqual((r["sessions"], r["personas"]), (0, [{"persona": "Tester", "sessions": 1}]))
+        import my_metrics
+        os.environ["CLAUDE_CONFIG_DIR"] = claude
+        self.addCleanup(os.environ.pop, "CLAUDE_CONFIG_DIR")
+        my_metrics.build(self.rules, network=False)
+        with open(os.path.join(self.rules, "dashboard", "index.html")) as f:
+            page = f.read()
+        self.assertRegex(page, r"Sessions per persona</figcaption>.*?<th scope=\"row\">Tester</th><td>1</td>")
+        self.assertNotIn("weekly median", page)  # no tokens, so no empty chart
+
     def test_any_other_prompt_writes_nothing(self) -> None:
         for prompt in ("tester mode please", "switch to tester mode", "", None, 42):
             self.assertEqual(self.submit(prompt).returncode, 0)

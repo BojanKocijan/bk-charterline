@@ -23,7 +23,7 @@ import statistics
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".claude", "hooks"))
-from persona_log import LOG_NAME, persona_of  # noqa: E402  the mode commands, shared with the hook
+from persona_log import LOG_NAME, ROTATED_NAME, persona_of  # noqa: E402  the mode commands, shared with the hook
 
 # The persona subagents in agents/.
 SUBAGENTS = {"frontend": "Frontend", "fullstack": "Lead", "lead": "Lead", "backend": "Backend", "tester": "Tester",
@@ -150,8 +150,13 @@ def sessions(home: str, now: datetime.datetime, since: datetime.datetime, root: 
         if m["tokens"] is None:
             out.append(m)
             continue
+        if m["first"] is None:  # a log with no timestamps: keep only what the persona log says
+            if sid in logged:
+                m["tokens"] = None
+                out.append(m)
+            continue
         try:
-            if m["first"] is None or parse(m["last"]) < since:
+            if parse(m["last"]) < since:
                 continue
             m["week_of"] = max(parse(m["first"]), since)  # a session that began before the window counts from its start
         except (ValueError, TypeError):
@@ -163,19 +168,20 @@ def sessions(home: str, now: datetime.datetime, since: datetime.datetime, root: 
 
 
 def persona_log(home: str, since: datetime.datetime) -> dict[str, set]:
-    """session id -> personas, from the hook's log (#256)."""
+    """session id -> personas, from the hook's log and its rotated file (#256)."""
     out = {}
-    try:
-        with open(os.path.join(home, LOG_NAME)) as f:
-            for line in f:
-                try:
-                    r = json.loads(line)
-                    if parse(r["ts"]) >= since and r.get("session_id") and r.get("persona"):
-                        out.setdefault(r["session_id"], set()).add(r["persona"])
-                except (ValueError, KeyError, TypeError, AttributeError):
-                    continue
-    except OSError:
-        pass
+    for name in (ROTATED_NAME, LOG_NAME):
+        try:
+            with open(os.path.join(home, name)) as f:
+                for line in f:
+                    try:
+                        r = json.loads(line)
+                        if parse(r["ts"]) >= since and r.get("session_id") and r.get("persona"):
+                            out.setdefault(r["session_id"], set()).add(r["persona"])
+                    except (ValueError, KeyError, TypeError, AttributeError):
+                        continue
+        except OSError:
+            continue
     return out
 
 
