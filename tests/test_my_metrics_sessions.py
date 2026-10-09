@@ -57,7 +57,7 @@ class SessionsTests(unittest.TestCase):
                                       *reply("m2", 3, 500, [("Skill", {"skill": "code-review"}), ("Bash", {"command": MARKER})])])
         self.log("-proj-a/s1/subagents/agent-x.jsonl", reply("m3", 3, 300, [("Skill", {"skill": "ux-writing"})]))
         self.log("-proj-b/s2.jsonl", [user(MARKER, 10), user([{"type": "tool_result", "content": "tester mode"}], 10),
-                                      *reply("m4", 10, 200, [("Agent", {"subagent_type": "tester", "prompt": MARKER})])])
+                                      *reply("m4", 10, 200, [("Agent", {"subagent_type": "bk-charterline:tester", "prompt": MARKER})])])
         self.log("-proj-b/s3.jsonl", [user("hello", 1), *reply("m5", 1, 4000)])
 
     def run_it(self) -> dict:
@@ -70,7 +70,7 @@ class SessionsTests(unittest.TestCase):
         self.assertEqual(r["median_tokens"], 1800)  # s1: 1000 + 500 + its subagent's 300, each reply once
         self.assertEqual(r["skills"], [{"skill": "code-review", "runs": 2}, {"skill": "ux-writing", "runs": 1}])
         self.assertEqual(r["personas"], [{"persona": "Frontend", "sessions": 1}, {"persona": "Lead", "sessions": 1},
-                                         {"persona": "Tester", "sessions": 1}])  # a tool result is never a mode command
+                                         {"persona": "Tester", "sessions": 1}])  # a plugin's agent counts; a tool result never does
         self.assertEqual(r["skipped"], 0)
 
     def test_a_session_outside_the_window_drops_out(self) -> None:
@@ -84,22 +84,34 @@ class SessionsTests(unittest.TestCase):
         state_path = os.path.join(self.home, "dashboard", "sessions-state.json")
         with open(state_path) as f:
             state = json.load(f)
-        path = os.path.join(self.root, "-proj-b/s3.jsonl")
-        state[path]["summary"]["tokens"] = 7  # an unchanged file is never read again
+        [s3] = [e for e in state["files"].values() if e["session"] == "s3"]
+        s3["summary"]["tokens"] = 7  # an unchanged file is never read again
         with open(state_path, "w") as f:
             json.dump(state, f)
         self.assertEqual(self.run_it()["median_tokens"], 200)  # 1800, 200 and 7, not 4000
-        os.remove(path)
+        with open(state_path, "w") as f:
+            json.dump(state["files"], f)  # an old cache shape is read again
+        self.assertEqual(self.run_it()["median_tokens"], 1800)
+        os.remove(os.path.join(self.root, "-proj-b/s3.jsonl"))
         self.run_it()
         with open(state_path) as f:
-            self.assertNotIn(path, json.load(f))
+            self.assertEqual(sorted(e["session"] for e in json.load(f)["files"].values()), ["s1", "s1", "s2"])
 
     def test_no_prompt_text_is_kept(self) -> None:
         self.busy_user()
         r = self.run_it()
         with open(os.path.join(self.home, "dashboard", "sessions-state.json")) as f:
-            self.assertNotIn("SECRET-PROMPT-MARKER", f.read())
+            text = f.read()
+        self.assertNotIn("SECRET-PROMPT-MARKER", text)
+        self.assertNotIn("proj-a", text)  # no folder names either
         self.assertNotIn("SECRET-PROMPT-MARKER", json.dumps(r))
+
+    def test_a_session_from_before_the_window_is_filed_inside_it(self) -> None:
+        self.log("-proj-a/long.jsonl", [user("x", 45), *reply("m1", 45, 100), user("y", 2), *reply("m2", 2, 100)])
+        self.log("-proj-a/naive.jsonl", [{"type": "user", "timestamp": "2026-10-08T10:00:00", "message": {"content": "x"}}])
+        weeks = self.run_it()["weekly"]  # a timestamp without a timezone doesn't stop the section
+        start = SINCE.date()
+        self.assertEqual(weeks[0]["week"], (start - datetime.timedelta(days=start.weekday())).isoformat())
 
     def test_no_logs_folder_says_so(self) -> None:
         with self.assertRaises(FileNotFoundError):

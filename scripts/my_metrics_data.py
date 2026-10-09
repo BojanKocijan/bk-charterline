@@ -61,15 +61,16 @@ def section(fn, *args, missing: str):
 
 
 def hook_activity(home: str, since: datetime.datetime) -> dict:
-    blocks, asks, days, calls, false_positives = {}, {}, {}, [], 0
+    blocks, asks, days, calls, false_positives = {}, {}, {}, [], set()
     for r in read_jsonl(os.path.join(home, "hook-log.jsonl")):
         try:
             ts = parse_ts(r["ts"])
         except (KeyError, ValueError, TypeError):
             continue
         if r.get("type") == "false_positive":  # marks a block; it isn't one
-            try:  # counted with the block it marks, so the share stays within 100%
-                false_positives += parse_ts(r["ref_ts"]) >= since
+            try:  # counted once, with the block it marks, so the share stays within 100%
+                if parse_ts(r["ref_ts"]) >= since:
+                    false_positives.add(r["ref_ts"])
             except (KeyError, ValueError, TypeError):
                 pass
             continue
@@ -100,7 +101,7 @@ def hook_activity(home: str, since: datetime.datetime) -> dict:
         "asks": [{"check": k, "count": n} for k, n in sorted(asks.items(), key=lambda kv: -kv[1])],
         "days": [{"day": d, "count": n} for d, n in sorted(days.items())],
         "calls": sorted(calls, key=lambda c: c["ts"], reverse=True),
-        "false_positives": false_positives,
+        "false_positives": len(false_positives),
     }
 
 
@@ -210,6 +211,8 @@ def rules_tokens(repo_root: str) -> dict:
 
 TAG_RE = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
 IMPORT_RE = re.compile(r"^@\./(\S+)$", re.MULTILINE)
+FENCE_RE = re.compile(r"^```.*?^```", re.MULTILINE | re.DOTALL)
+COST_VERSION = 1  # bump when the measure changes, so every tag is measured again
 
 
 def rules_cost(home: str, repo_root: str) -> dict:
@@ -226,28 +229,36 @@ def rules_cost(home: str, repo_root: str) -> dict:
     cache_path = os.path.join(home, "dashboard", "rules-cost.json")
     try:
         with open(cache_path) as f:
-            cache = json.load(f)
-    except (OSError, ValueError):
+            saved = json.load(f)
+        cache = saved["tags"] if saved.get("version") == COST_VERSION else {}
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
         cache = {}
     sys.path.insert(0, os.path.join(repo_root, "scripts"))
     import laws_cost
+
+    def tokens(tag: str, name: str, seen: set, depth: int) -> int:
+        """A file and, like Claude Code, what it imports outside code fences, up to 5 levels deep."""
+        if name in seen or depth > 5:
+            return 0
+        seen.add(name)
+        part = git("show", f"{tag}:{name}")
+        if part.returncode != 0:
+            return 0
+        size = len(part.stdout.encode("utf-8"))
+        own = laws_cost.estimate(name, size) if name in laws_cost.FILES else round(size / 2.7)
+        here = os.path.dirname(name)
+        return own + sum(tokens(tag, os.path.normpath(os.path.join(here, sub)), seen, depth + 1)
+                         for sub in IMPORT_RE.findall(FENCE_RE.sub("", part.stdout)))
+
     for tag in tags:
-        if isinstance(cache.get(tag), int):
-            continue
-        main = git("show", f"{tag}:CLAUDE.md")
-        if main.returncode != 0:
-            continue
-        total = laws_cost.estimate("CLAUDE.md", len(main.stdout.encode("utf-8")))
-        for name in IMPORT_RE.findall(main.stdout):
-            part = git("show", f"{tag}:{name}")
-            if part.returncode == 0:
-                size = len(part.stdout.encode("utf-8"))
-                total += laws_cost.estimate(name, size) if name in laws_cost.FILES else round(size / 2.7)
-        cache[tag] = total
+        if not isinstance(cache.get(tag), int):
+            total = tokens(tag, "CLAUDE.md", set(), 0)
+            if total:
+                cache[tag] = total
     os.makedirs(os.path.dirname(cache_path), exist_ok=True)
     tmp = f"{cache_path}.{os.getpid()}.tmp"
     with open(tmp, "w") as f:
-        json.dump(cache, f, indent=1, sort_keys=True)
+        json.dump({"version": COST_VERSION, "tags": cache}, f, indent=1, sort_keys=True)
     os.replace(tmp, cache_path)
     return {"releases": [{"tag": t, "tokens": cache[t]} for t in tags if t in cache]}
 

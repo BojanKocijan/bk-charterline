@@ -190,7 +190,9 @@ GLOBAL_SETTINGS="${HOME}/.claude/settings.json"
 HOOK_SCRIPT="${LOCAL_DIR}/.claude/hooks/enforce-laws.py"
 HOOK_COMMAND="python3 \"${HOOK_SCRIPT}\""
 OLD_HOOK_COMMAND="python3 \"${OLD_DIR}/.claude/hooks/enforce-laws.py\""
-PERSONA_COMMAND="python3 \"${LOCAL_DIR}/.claude/hooks/persona_log.py\""
+# Fails open: exit 2 from a UserPromptSubmit hook would erase the prompt, and
+# python3 exits 2 when the script is missing (#256).
+PERSONA_COMMAND="python3 \"${LOCAL_DIR}/.claude/hooks/persona_log.py\" >/dev/null 2>&1 || true"
 
 mkdir -p "$(dirname "$GLOBAL_SETTINGS")"
 [ -f "$GLOBAL_SETTINGS" ] || printf '{}\n' > "$GLOBAL_SETTINGS"

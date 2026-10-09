@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import datetime
 import glob
+import hashlib
 import json
 import os
 import statistics
@@ -28,6 +29,7 @@ from persona_log import LOG_NAME, persona_of  # noqa: E402  the mode commands, s
 SUBAGENTS = {"frontend": "Frontend", "fullstack": "Lead", "lead": "Lead", "backend": "Backend", "tester": "Tester",
              "design": "Design", "research": "Research", "analyst": "Analyst", "incident": "Incident"}
 DEFAULT_PERSONA = "Frontend"
+STATE_VERSION = 1  # bump when summarize() changes, so every log is read again
 WANTED = ('"usage"', '"tool_use"', '"type":"user"')
 
 
@@ -90,7 +92,8 @@ def session_of(path: str, root: str) -> str:
 
 
 def parse(ts: str) -> datetime.datetime:
-    return datetime.datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    when = datetime.datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    return when if when.tzinfo else when.replace(tzinfo=datetime.timezone.utc)
 
 
 def sessions(home: str, now: datetime.datetime, since: datetime.datetime, root: str | None = None) -> dict:
@@ -100,10 +103,11 @@ def sessions(home: str, now: datetime.datetime, since: datetime.datetime, root: 
     state_path = os.path.join(home, "dashboard", "sessions-state.json")
     try:
         with open(state_path) as f:
-            state = json.load(f)
-    except (OSError, ValueError):
+            saved = json.load(f)
+        state = saved["files"] if saved.get("version") == STATE_VERSION else {}
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
         state = {}
-    files, skipped = {}, 0
+    files, skipped = {}, 0  # keyed by a hash of the path, so no folder name is stored
     for path in glob.glob(os.path.join(root, "*", "*.jsonl")) + glob.glob(os.path.join(root, "*", "*", "subagents", "*.jsonl")):
         try:
             st = os.stat(path)
@@ -111,23 +115,24 @@ def sessions(home: str, now: datetime.datetime, since: datetime.datetime, root: 
             continue
         if st.st_mtime < since.timestamp():
             continue
-        known = state.get(path)
+        key = hashlib.sha256(path.encode("utf-8")).hexdigest()[:24]
+        known = state.get(key)
         if known and known.get("size") == st.st_size and known.get("mtime") == int(st.st_mtime):
-            files[path] = known
+            files[key] = {**known, "session": session_of(path, root)}
             continue
         try:
-            files[path] = {"size": st.st_size, "mtime": int(st.st_mtime), "summary": summarize(path)}
+            files[key] = {"size": st.st_size, "mtime": int(st.st_mtime), "session": session_of(path, root), "summary": summarize(path)}
         except (OSError, UnicodeError):
             skipped += 1
     os.makedirs(os.path.dirname(state_path), exist_ok=True)
     tmp = f"{state_path}.{os.getpid()}.tmp"
     with open(tmp, "w") as f:
-        json.dump(files, f, sort_keys=True)  # files gone from disk or the window drop out
+        json.dump({"version": STATE_VERSION, "files": files}, f, sort_keys=True)  # files gone from disk or the window drop out
     os.replace(tmp, state_path)
 
     merged = {}
-    for path, entry in files.items():
-        s, m = entry["summary"], merged.setdefault(session_of(path, root), {"tokens": 0, "skills": {}, "subagents": {}, "personas": set(), "first": None, "last": None})
+    for entry in files.values():
+        s, m = entry["summary"], merged.setdefault(entry["session"], {"tokens": 0, "skills": {}, "subagents": {}, "personas": set(), "first": None, "last": None})
         m["tokens"] += s["tokens"]
         for key in ("skills", "subagents"):
             for name, n in s[key].items():
@@ -148,9 +153,11 @@ def sessions(home: str, now: datetime.datetime, since: datetime.datetime, root: 
         try:
             if m["first"] is None or parse(m["last"]) < since:
                 continue
-        except ValueError:
+            m["week_of"] = max(parse(m["first"]), since)  # a session that began before the window counts from its start
+        except (ValueError, TypeError):
             continue
-        m["personas"].update(SUBAGENTS[a] for a in m["subagents"] if a in SUBAGENTS)
+        # Plugin installs namespace their agents, e.g. bk-charterline:tester.
+        m["personas"].update(SUBAGENTS[a.rsplit(":", 1)[-1]] for a in m["subagents"] if a.rsplit(":", 1)[-1] in SUBAGENTS)
         out.append(m)
     return summary(out, skipped)
 
@@ -181,7 +188,7 @@ def summary(found: list[dict], skipped: int) -> dict:
             continue
         for name, n in m["skills"].items():
             skills[name] = skills.get(name, 0) + n
-        start = parse(m["first"]).date()
+        start = m["week_of"].date()
         week = (start - datetime.timedelta(days=start.weekday())).isoformat()
         weeks.setdefault(week, []).append(m["tokens"])
     tokens = [m["tokens"] for m in found if m["tokens"] is not None]

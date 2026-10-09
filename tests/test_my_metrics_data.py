@@ -79,6 +79,7 @@ class MyMetricsDataTests(unittest.TestCase):
                {"ts": ts(2), "type": "ask", "law": 38, "check": "tier3-first-use", "tool": "mcp__mail__create_draft"},
                {"ts": ts(1), "type": "ask", "law": 32, "check": "guardrail-write"},
                {"ts": ts(1), "type": "false_positive", "ref_ts": ts(4), "check": "commit-message", "note": "x"},
+               {"ts": ts(0.5), "type": "false_positive", "ref_ts": ts(4), "check": "commit-message", "note": "again"},
                {"ts": ts(1), "type": "false_positive", "ref_ts": ts(40), "check": "merge", "note": "x"}]  # its block is outside
         self.write("hook-log.jsonl", "".join(json.dumps(r) + "\n" for r in log) + "{damaged\n")
         approvals = [{"session": "s", "tool": "mcp__mail__create_draft", "ts": ts(2)},  # the same call as the log's
@@ -169,22 +170,28 @@ class MyMetricsDataTests(unittest.TestCase):
         git("init", "-q")
         git("config", "user.email", "alice@example.com")
         git("config", "user.name", "Alice Chen")
+        main = "@./CLAUDE_LAWS.md\n@./knowledge/X.md\n```\n@./knowledge/fenced.md\n```\n"
         for tag, laws in (("v1.0.0", "a" * 2772), ("v1.1.0", "a" * 5544)):
-            self.write("CLAUDE.md", "@./CLAUDE_LAWS.md\n@./knowledge/X.md\n")
+            self.write("CLAUDE.md", main)
             self.write("CLAUDE_LAWS.md", laws)
             os.makedirs(os.path.join(self.home, "knowledge"), exist_ok=True)
-            self.write("knowledge/X.md", "b" * 270)
+            self.write("knowledge/X.md", "b" * 261 + "\n@./Y.md\n")  # 270 bytes, and a nested import
+            self.write("knowledge/Y.md", "c" * 270)
+            self.write("knowledge/fenced.md", "d" * 27000)  # inside a code fence: never loaded
             git("add", "-A")
             git("commit", "-qm", tag)
             git("tag", tag)
         git("tag", "not-a-release")
         releases = self.collect(network=False)["rules_cost"]["releases"]
-        base = round(len("@./CLAUDE_LAWS.md\n@./knowledge/X.md\n") / 2.423) + 100  # CLAUDE.md, then X.md at 2.7
+        base = round(len(main) / 2.423) + 100 + 100  # CLAUDE.md, then X.md and Y.md at 2.7
         self.assertEqual(releases, [{"tag": "v1.0.0", "tokens": base + 1000}, {"tag": "v1.1.0", "tokens": base + 2000}])
         cache = os.path.join(self.home, "dashboard", "rules-cost.json")
         with open(cache, "w") as f:
-            json.dump({"v1.0.0": 7, "v1.1.0": 8}, f)  # a measured tag is never read again
+            json.dump({"version": data.COST_VERSION, "tags": {"v1.0.0": 7, "v1.1.0": 8}}, f)  # a measured tag is never read again
         self.assertEqual([r["tokens"] for r in self.collect(network=False)["rules_cost"]["releases"]], [7, 8])
+        with open(cache, "w") as f:
+            json.dump({"v1.0.0": 7, "v1.1.0": 8}, f)  # an old cache shape is measured again
+        self.assertEqual(self.collect(network=False)["rules_cost"]["releases"][0]["tokens"], base + 1000)
 
     def test_a_broken_file_stays_in_its_section(self) -> None:
         self.busy_user()
