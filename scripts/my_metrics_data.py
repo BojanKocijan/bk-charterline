@@ -58,15 +58,16 @@ def section(fn, *args, missing: str):
 
 
 def hook_activity(home: str, since: datetime.datetime) -> dict:
-    blocks, asks, days, calls, false_positives = {}, {}, {}, [], 0
+    blocks, asks, days, calls, false_positives = {}, {}, {}, [], set()
     for r in read_jsonl(os.path.join(home, "hook-log.jsonl")):
         try:
             ts = parse_ts(r["ts"])
         except (KeyError, ValueError, TypeError):
             continue
         if r.get("type") == "false_positive":  # marks a block; it isn't one
-            try:  # counted with the block it marks, so the share stays within 100%
-                false_positives += parse_ts(r["ref_ts"]) >= since
+            try:  # counted once, with the block it marks, so the share stays within 100%
+                if parse_ts(r["ref_ts"]) >= since:
+                    false_positives.add(r["ref_ts"])
             except (KeyError, ValueError, TypeError):
                 pass
             continue
@@ -97,7 +98,7 @@ def hook_activity(home: str, since: datetime.datetime) -> dict:
         "asks": [{"check": k, "count": n} for k, n in sorted(asks.items(), key=lambda kv: -kv[1])],
         "days": [{"day": d, "count": n} for d, n in sorted(days.items())],
         "calls": sorted(calls, key=lambda c: c["ts"], reverse=True),
-        "false_positives": false_positives,
+        "false_positives": len(false_positives),
     }
 
 
