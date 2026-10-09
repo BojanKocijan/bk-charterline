@@ -2,7 +2,9 @@
 
 ---
 
-## Unreleased
+## v3.6.1 — October 9, 2026
+
+Cloud sessions in this repo can run tools again, Law 35 has Claude paste the SQL and the deploy steps in chat, and a development checkout can load the laws once. On this update, `update rules` asks you to approve one hook change: the repo's hook registration (`.claude/settings.json`).
 
 ### Cloud sessions in this repo can run tools again ([#268](https://github.com/BojanKocijan/bk-charterline/issues/268))
 - **The hook falls back to the repo copy:** this repo's `.claude/settings.json` runs the installed hook in `~/.bk-charterline` when there is one, else the repo's own `.claude/hooks/enforce-laws.py`. A cloud session has no install, so the old fixed path made `python3` exit 2, which blocked every Bash, Edit and MCP call.
@@ -11,6 +13,12 @@
 
 ### Law 35: the SQL and the steps are pasted in chat ([#265](https://github.com/BojanKocijan/bk-charterline/issues/265))
 - **Show it in chat, every time:** as soon as Claude writes SQL or a manual deploy step (spec, plan, migration or checklist), it pastes the complete SQL in a `sql` block and the numbered steps in the same reply. A link to a file never counts, and anything shortened is labelled `NOT TO RUN`.
+
+### Load the laws once in a development checkout ([#269](https://github.com/BojanKocijan/bk-charterline/issues/269))
+- **A personal setting, documented:** in a checkout of this repo, the laws loaded twice (the global import and the checkout's own `CLAUDE.md`). `docs/MAINTAINER.md` shows the `claudeMdExcludes` entry for your `~/.claude/settings.json` that loads only the installed copy: 59,193 → 31,872 tokens per session in a worktree (Haiku 4.5). It never goes in the repo's settings, because `~/.bk-charterline` is a clone of this repo.
+
+- **Rules: 27,262 tokens** (estimate; up 151 from v3.6.0, from the Law 35 change).
+- The Laws, `plugin.json` and `marketplace.json` are at 3.6.1.
 
 ---
 
