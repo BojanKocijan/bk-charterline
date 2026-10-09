@@ -102,6 +102,14 @@ class MyMetricsTests(unittest.TestCase):
         self.assertRegex(page, r"sev-critical.*?Supabase.*?execute_sql")
         self.assertRegex(page, r"sev-high.*?Gmail.*?Draft an email")
 
+    def test_checks_with_one_label_share_one_row(self) -> None:
+        log = [{"ts": NOW, "type": "ask", "law": 32, "check": c} for c in ("guardrail-write", "guardrail-edit", "guardrail-edit")]
+        self.write("hook-log.jsonl", "".join(json.dumps(r) + "\n" for r in log))
+        self.build()
+        page = self.read("index.html")
+        self.assertEqual(page.count('<th scope="row">Edit to a guardrail</th>'), 1)
+        self.assertIn('<th scope="row">Edit to a guardrail</th><td>3</td>', page)
+
     def test_a_new_user_gets_friendly_empty_states(self) -> None:
         self.build()
         page = self.read("index.html") + self.read("tools.html")
