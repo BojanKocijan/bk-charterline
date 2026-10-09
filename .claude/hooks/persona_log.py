@@ -3,7 +3,7 @@
 
 When the whole prompt is one of CLAUDE.md's mode commands (case and spacing
 ignored), it appends {"ts", "session_id", "persona"} to
-~/.bk-charterline/persona-log.jsonl, so the private dashboard can count
+~/.bk-charterline/persona-log.jsonl (rotated to persona-log.1.jsonl at 1 MB), so the private dashboard can count
 sessions per persona after Claude Code removes old session logs. The prompt's
 text is never written. Any other prompt writes nothing.
 
@@ -24,6 +24,8 @@ TRIGGERS = {"frontend mode": "Frontend", "fullstack mode": "Lead", "team": "Lead
             "backend mode": "Backend", "tester mode": "Tester", "research mode": "Research",
             "research mode full": "Research", "analyst mode": "Analyst", "incident mode": "Incident"}
 LOG_NAME = "persona-log.jsonl"
+ROTATED_NAME = "persona-log.1.jsonl"  # like hook-log.jsonl: one rotated file, so the log never grows past ~2 MB
+MAX_BYTES = 1_000_000
 
 
 def persona_of(prompt: object) -> str | None:
@@ -40,7 +42,10 @@ def main() -> None:
         from rules_home import rules_home
         record = {"ts": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                   "session_id": str(event.get("session_id") or "")[:100], "persona": persona}
-        with open(os.path.join(rules_home(), LOG_NAME), "a") as f:
+        path = os.path.join(rules_home(), LOG_NAME)
+        if os.path.exists(path) and os.path.getsize(path) > MAX_BYTES:
+            os.replace(path, os.path.join(rules_home(), ROTATED_NAME))
+        with open(path, "a") as f:
             f.write(json.dumps(record) + "\n")
     except Exception:  # noqa: BLE001  a log must never get in the way of a prompt
         pass
