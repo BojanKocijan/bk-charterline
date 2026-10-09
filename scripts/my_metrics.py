@@ -153,7 +153,11 @@ def overview(d: dict) -> str:
     else:
         checks = WORDS["checks"]
         bars = [(f"{b['law']} · {checks.get(b['check'], b['check'])}", b["count"]) for b in act["blocks"]]
-        asks = [(checks.get(a["check"], a["check"]), a["count"]) for a in act["asks"]]
+        asks = {}
+        for a in act["asks"]:  # two checks can share one label
+            label = checks.get(a["check"], a["check"])
+            asks[label] = asks.get(label, 0) + a["count"]
+        asks = sorted(asks.items(), key=lambda kv: -kv[1])
         cols = {k: 0 for k in ("0–100", "101–200", "201–300", "301–400", "Over 400")}
         for n in sizes:
             cols["Over 400" if n > 400 else list(cols)[min((max(n, 1) - 1) // 100, 3)]] += 1

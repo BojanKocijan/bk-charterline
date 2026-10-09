@@ -2,6 +2,13 @@
 
 ---
 
+## Unreleased
+
+### The dashboard shows every data point the page shows ([#256](https://github.com/BojanKocijan/bk-charterline/issues/256))
+- **Correct counts:** a block you marked as a false positive no longer counts as a second block, and two kinds of prompt with one label ("Edit to a guardrail") show as one row.
+
+---
+
 ## v3.5.0 — October 8, 2026
 
 Lighter and clearer: every session loads 14% less (27,111 tokens of rules instead of 31,571) with every rule still in force; BK Charterline is shown as the core of the team; and Claude asks before using an Anthropic plugin you don't have.

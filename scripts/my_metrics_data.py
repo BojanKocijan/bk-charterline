@@ -64,8 +64,8 @@ def hook_activity(home: str, since: datetime.datetime) -> dict:
             ts = parse_ts(r["ts"])
         except (KeyError, ValueError, TypeError):
             continue
-        if ts < since:
-            continue
+        if ts < since or r.get("type") not in ("block", "ask"):
+            continue  # a false_positive row marks a block; it isn't one
         days[ts.strftime("%Y-%m-%d")] = days.get(ts.strftime("%Y-%m-%d"), 0) + 1
         if r.get("type") == "ask":
             asks[r.get("check")] = asks.get(r.get("check"), 0) + 1
