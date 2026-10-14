@@ -6,7 +6,8 @@
 
 ### The session-start checks as a hook, part 1 ([#270](https://github.com/BojanKocijan/bk-charterline/issues/270))
 - **New `.claude/hooks/session_start.py`:** on a new session or `/clear`, it reads the rules version, the project, the language and port in `projects.yaml` and `PROJECT_KNOWLEDGE.md`, and gives Claude the confirmation to print plus the steps to take when code work starts. It only reads, and runs once per session.
-- **Not switched on yet:** nothing registers the hook in this release. Next come the network checks (release tag, GitHub login, open PRs), then the registration, then the rule text.
+- **The network checks:** the newest release tag, the GitHub login (`via connector` in a cloud session, `unknown` when GitHub is slow) and the open PRs, in parallel with a 3-second limit each. A check that fails or times out is left out, so a slow network never holds up the first reply.
+- **Not switched on yet:** nothing registers the hook in this release. Next come the registration, then the rule text.
 
 ### Every plan gets a plan page ([#285](https://github.com/BojanKocijan/bk-charterline/issues/285))
 - **See how a plan will work before you approve it:** each time Claude writes or changes a `plan.md` (Standard and Significant work, Law 37), it also publishes a private HTML Artifact: a summary, the user flow (or how it works) as a diagram, each step in plain language, how it's proven, the risks and what was ruled out.
