@@ -2,7 +2,7 @@
 
 Spec: [#285](https://github.com/BojanKocijan/bk-charterline/issues/285) (the issue answers every intent and spec field) · Gate tier: Standard (changes a knowledge file) · Branch: `feat/plan-html-page` · Issue: #285
 Work pile: judgment-heavy (rule wording), built in this session
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-14, chat
 
 ## The rule (new §2.6 in `knowledge/HUMAN_IN_THE_LOOP.md`)
 
