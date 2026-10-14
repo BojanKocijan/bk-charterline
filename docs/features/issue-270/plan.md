@@ -3,7 +3,7 @@
 Spec: [spec.md](./spec.md) · Gate tier: Significant · Branch: `feat/session-start-hook` (then `feat/session-start-hook-2-register`, `feat/session-start-hook-3-rules`) · Issue: #270
 Work pile: PR 1 is delegable (a script and its tests, checked by machine); PRs 2 and 3 are judgment-heavy (install paths, rule text). All built in this session.
 Plan page: https://claude.ai/artifact/3AugBiJ42e5kt8VeUYJR84
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-14, chat
 
 ## Shape: three stacked PRs
 
