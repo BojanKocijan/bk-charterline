@@ -1,7 +1,7 @@
 # Intent — A SessionStart hook runs the session-start checks (#270)
 
 Part of epic [#267](https://github.com/BojanKocijan/bk-charterline/issues/267) · Issue: [#270](https://github.com/BojanKocijan/bk-charterline/issues/270) · Gate tier: Significant (High: a new hook, `install.sh` and the plugin manifest)
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-14, chat (with Claude's proposals for the three owner questions)
 
 ## Problem
 
@@ -52,7 +52,7 @@ The checks also aren't reliable, because Claude has to remember to run them. On 
 
 ## Open questions
 
-- [ ] **Which steps move into the hook?** Only the read-only checks (version, project, language, port, knowledge, feature, GitHub login, open PRs)? Or also the steps that change things: pulling the default branch (Law 25), deleting merged branches, registering the project in `projects.yaml` (Law 20), creating the one-line local `CLAUDE.md` (Law 11), refreshing the dashboard? Proposal: read-only only, and the hook *reports* what Claude should do (for example "main is 3 commits behind", "not registered"). — owner: BojanKocijan
-- [ ] **Network time budget:** what's the longest the hook may wait for `ls-remote` and `gh pr list` before giving up on those lines? Proposal: 3 seconds each, run in parallel. — owner: BojanKocijan
+- [x] **Which steps move into the hook?** Decided 2026-10-14: read-only only; the hook reports, Claude acts. Only the read-only checks (version, project, language, port, knowledge, feature, GitHub login, open PRs)? Or also the steps that change things: pulling the default branch (Law 25), deleting merged branches, registering the project in `projects.yaml` (Law 20), creating the one-line local `CLAUDE.md` (Law 11), refreshing the dashboard? Proposal: read-only only, and the hook *reports* what Claude should do (for example "main is 3 commits behind", "not registered"). — owner: BojanKocijan
+- [x] **Network time budget:** Decided 2026-10-14: 3 seconds each, in parallel; a timed-out check is left out. what's the longest the hook may wait for `ls-remote` and `gh pr list` before giving up on those lines? Proposal: 3 seconds each, run in parallel. — owner: BojanKocijan
 - [ ] **Plugin delivery:** can a plugin's `hooks/hooks.json` register a `SessionStart` hook that adds context? And is there an always-on context slot a plugin can use instead of `CLAUDE.md` (the issue asks)? To be checked in the Claude Code docs before the spec. — owner: Claude
-- [ ] **GitHub line in cloud sessions,** where `gh` isn't logged in: print `GitHub: via connector` (or similar), not `unauthenticated`, so we don't block GitHub work that goes through the GitHub tools? — owner: BojanKocijan
+- [x] **GitHub line in cloud sessions,** Decided 2026-10-14: `GitHub: via connector`. where `gh` isn't logged in: print `GitHub: via connector` (or similar), not `unauthenticated`, so we don't block GitHub work that goes through the GitHub tools? — owner: BojanKocijan
