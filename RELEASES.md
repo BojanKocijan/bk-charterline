@@ -2,6 +2,15 @@
 
 ---
 
+## Unreleased
+
+### Every plan gets a plan page ([#285](https://github.com/BojanKocijan/bk-charterline/issues/285))
+- **See how a plan will work before you approve it:** each time Claude writes or changes a `plan.md` (Standard and Significant work, Law 37), it also publishes a private HTML Artifact: a summary, the user flow (or how it works) as a diagram, each step in plain language, how it's proven, the risks and what was ruled out.
+- **The plan stays the record:** the page explains `plan.md` and never adds to it; you still approve `plan.md`. The two link to each other, and the page is republished to the same link when the plan changes. Where there's no Artifact tool, Claude says so in one line.
+- **No cost per session:** the rule lives in `knowledge/HUMAN_IN_THE_LOOP.md` §2.6 (v1.2.0), read only when a plan is written.
+
+---
+
 ## v3.6.1 — October 9, 2026
 
 Cloud sessions in this repo can run tools again, Law 35 has Claude paste the SQL and the deploy steps in chat, and a development checkout can load the laws once. On this update, `update rules` asks you to approve one hook change: the repo's hook registration (`.claude/settings.json`).
