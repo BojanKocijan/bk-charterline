@@ -2,7 +2,7 @@
 
 Intent: [intent.md](./intent.md) (approved 2026-10-14)
 Design: none. No UI. The output is the existing session-start confirmation (`CLAUDE.md`, "Session-start behavior", step 6).
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-14, chat (with the two flagged points as proposed: the rule text changes in a second PR, and the temp-folder marker)
 
 ## What the Claude Code docs settle (checked 2026-10-14)
 
