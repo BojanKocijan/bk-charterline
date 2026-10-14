@@ -19,7 +19,7 @@ Full reference: `Read knowledge/HUMAN_IN_THE_LOOP.md`. Load it before acting; th
 | Rule | What Claude does |
 |---|---|
 | Gate tier | States `**Gate tier:**` in the announcement. Trivial: nothing extra. Standard: approved `plan.md`. Significant: `intent.md` → `spec.md` → `plan.md`, approved in order. |
-| Committed artifacts | Writes them in `docs/features/<id>/`, links existing stories or design files instead of duplicating, stops after each one, records `Approved-by` only after explicit approval. |
+| Committed artifacts | Writes them in `docs/features/<id>/`, links existing stories or design files instead of duplicating, publishes a plan page for each `plan.md` (HUMAN_IN_THE_LOOP §2.6), stops after each one, records `Approved-by` only after explicit approval. |
 | PR explains itself | Intake block + Decision log under `## Summary`; size per Law 31; names every touched test. |
 | Review follows risk | Standard: diff checked against the plan. Significant: independent subagent review, plus a second named reviewer on a team. AI review is never the merge decision. |
 | Review capacity | Cap of 3 AI PRs awaiting the user's review; sorts work into delegable vs judgment-heavy; batches ready PRs into one `review queue` digest. |
