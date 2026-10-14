@@ -47,16 +47,18 @@ def read(path: str) -> str | None:
         return None
 
 
-def first_marker(session_id: object) -> bool:
-    """True the first time this session runs the hook. A missing session id
-    runs every time: better a doubled block than none."""
+def claim(session_id: object, source: str) -> str | bool:
+    """The marker's path the first time this session and source run the hook,
+    False after that. It is claimed before the checks, so copies of the hook
+    that start together can't both answer. A missing session id runs every
+    time (True): better a doubled block than none."""
     safe = re.sub(r"[^A-Za-z0-9_-]", "", str(session_id or ""))[:100]
     if not safe:
         return True
-    path = os.path.join(tempfile.gettempdir(), f"bk-charterline-session-start-{safe}")
+    path = os.path.join(tempfile.gettempdir(), f"bk-charterline-session-start-{safe}-{source}")
     try:
         os.close(os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600))
-        return True
+        return path
     except FileExistsError:
         return False
     except OSError:
@@ -93,43 +95,49 @@ def project(cwd: str) -> tuple[str | None, str]:
 
 def projects_yaml(home: str) -> dict | None:
     """language and projects from projects.yaml without a YAML library.
-    None when the file is missing; {"broken": True} when it can't be read."""
+    None when the file is missing; {"broken": True} when it can't be read.
+    An empty or comment-only file is a file with nothing set yet."""
     path = os.path.join(home, "projects.yaml")
     if not os.path.exists(path):
         return None
     text = read(path)
     if text is None:
         return {"broken": True}
-    language, projects, section, keys, current = None, [], None, set(), None
+    language, projects, section, current = None, [], None, None
     for raw in text.splitlines():
         line = raw.split("#", 1)[0].rstrip()
         if not line.strip():
             continue
         if not line[0].isspace() and not line.startswith("-"):
             section = line.split(":", 1)[0].strip()
-            keys.add(section)
             continue
         item = line.strip()
         if section == "settings" and item.startswith("language:"):
             language = item.split(":", 1)[1].strip().strip("'\"")
-        elif section == "projects" and item.startswith("- name:"):
-            current = {"name": item.split(":", 1)[1].strip().strip("'\""), "port": None}
+            continue
+        if section != "projects":
+            continue
+        if item.startswith("-"):  # every list item is a new entry, whichever key comes first
+            current = {"name": None, "port": None}
             projects.append(current)
-        elif section == "projects" and current is not None and item.startswith("port:"):
+            item = item[1:].strip()
+        if current is not None and item.startswith("name:"):
+            current["name"] = item.split(":", 1)[1].strip().strip("'\"")
+        elif current is not None and item.startswith("port:"):
             try:
                 current["port"] = int(item.split(":", 1)[1].strip())
             except ValueError:
                 pass
-    if not keys & {"settings", "projects"}:
-        return {"broken": True}
     return {"language": language if language in ("english-only", "any") else None, "projects": projects}
 
 
 def section(text: str, prefix: str) -> list[str]:
     """The lines under the first heading that starts with prefix, to the next heading."""
-    lines, inside = [], False
+    lines, inside, fenced = [], False, False
     for line in text.splitlines():
-        if line.startswith("#"):
+        if line.startswith("```"):
+            fenced = not fenced
+        if line.startswith("#") and not fenced:
             if inside:
                 break
             inside = line.startswith(prefix)
@@ -143,7 +151,15 @@ def knowledge(root: str) -> tuple[str | None, str | None] | None:
     text = read(os.path.join(root, "PROJECT_KNOWLEDGE.md"))
     if text is None:
         return None
-    purpose = next((l.strip() for l in section(text, "## 1.") if l.strip() and not l.strip().startswith("<!--")), None)
+    purpose, comment = None, False
+    for line in (l.strip() for l in section(text, "## 1.")):
+        if line.startswith("<!--"):
+            comment = "-->" not in line
+        elif comment:
+            comment = "-->" not in line
+        elif line and not (line.startswith("<") and line.endswith(">")):  # skip an unfilled <placeholder>
+            purpose = line
+            break
     feature = None
     rows = [l for l in section(text, "## 11.") if l.strip().startswith("|")]
     for row in rows[2:3]:  # header, separator, then the active row
@@ -161,6 +177,7 @@ def short(text: str, limit: int) -> str:
 def build(cwd: str) -> str:
     dirs = rules_dirs()
     home = dirs[0]
+    shown_home = home.replace(os.path.expanduser("~"), "~", 1)
     root, name = project(cwd)
     where = root or cwd
     version, registry, known = rules_version(dirs), projects_yaml(home), knowledge(where)
@@ -172,14 +189,15 @@ def build(cwd: str) -> str:
     if known and known[1]:
         confirm.append(f"Feature: {short(known[1], 120)}")
     if os.path.exists(os.path.join(home, "dashboard", "index.html")):
-        confirm.append("Dashboard: ~/.bk-charterline/dashboard/index.html")
+        confirm.append(f"Dashboard: {shown_home}/dashboard/index.html")
     confirm.append("Ready.")
 
     before, settings, later = [], [], []
     broken = bool(registry and registry.get("broken"))
     if broken:
-        before.append("~/.bk-charterline/projects.yaml can't be read: tell the user, don't overwrite it, and don't "
-                      "start the preview until it's fixed (Law 20).")
+        before.append(f"{shown_home}/projects.yaml can't be read: tell the user, don't overwrite it, and don't "
+                      "start the preview until it's fixed (Law 20). Ask the Law 1 question and apply the answer "
+                      "for this session only.")
     elif not (registry and registry["language"]):
         before.append("Language not set: ask the Law 1 question as your whole first reply instead, "
                       "and print the confirmation in the next one.")
@@ -189,10 +207,12 @@ def build(cwd: str) -> str:
     if root and not broken:
         entries = (registry or {}).get("projects", [])
         mine = next((p for p in entries if p["name"] == name), None)
+        port = max([p["port"] for p in entries if p["port"]] + [FIRST_PORT - 1]) + 1
         if mine and mine["port"]:
             settings.append(f"Preview port: {mine['port']} (Law 18).")
+        elif mine:
+            later.append(f"Add port: {port} to {name}'s entry in projects.yaml (Laws 18, 20).")
         else:
-            port = max([p["port"] for p in entries if p["port"]] + [FIRST_PORT - 1]) + 1
             later.append(f"Register {name} in projects.yaml on port {port} (Law 20).")
     if root:
         missing = [what for f, what in (("PROJECT_KNOWLEDGE.md", "PROJECT_KNOWLEDGE.md from its template"),
@@ -224,10 +244,16 @@ def main() -> None:
         event = json.load(sys.stdin)
         if not isinstance(event, dict) or event.get("source", "startup") not in ("startup", "clear"):
             return
-        if not first_marker(event.get("session_id")):
+        marker = claim(event.get("session_id"), event.get("source", "startup"))
+        if not marker:
             return
-        cwd = event.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
-        context = build(cwd if os.path.isdir(cwd) else os.getcwd())
+        try:
+            cwd = event.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
+            context = build(cwd if os.path.isdir(cwd) else os.getcwd())
+        except Exception:  # noqa: BLE001  give the marker back, so another copy of the hook can answer
+            if isinstance(marker, str):
+                os.remove(marker)
+            raise
         print(json.dumps({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": context}}))
     except Exception:  # noqa: BLE001  a session start must never fail because of this hook
         pass
