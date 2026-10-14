@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """Tests for .claude/hooks/session_start.py (#270): the SessionStart hook runs
 the session-start checks, reads only, stays fast without a network, and gives
-Claude one block it never has to cut. The network checks and their tests
-come in part 1b."""
+Claude one block it never has to cut."""
 from __future__ import annotations
 
 import hashlib
 import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -19,6 +19,18 @@ sys.dont_write_bytecode = True
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOOK = os.path.join(REPO, ".claude", "hooks", "session_start.py")
 REAL_GIT = shutil.which("git") or "git"
+
+GH_STUB = """#!/bin/sh
+case "$GH_STUB_MODE" in hang) sleep 10;; fail) exit 1;; esac
+case "$1 $2" in
+  "api user") echo alice-example;;
+  "pr list") cat "$GH_STUB_PRS";;
+esac
+"""
+GIT_STUB = """#!/bin/sh
+if [ -n "$GIT_STUB_HANG" ] && [ "$3" = "ls-remote" ]; then sleep 10; fi
+exec "{git}" "$@"
+"""
 
 KNOWLEDGE = """# Project knowledge
 
@@ -48,14 +60,20 @@ class SessionStartTests(unittest.TestCase):
         self.rules = os.path.join(self.home, ".bk-charterline")
         self.tmpdir = os.path.join(root, "tmp")
         self.repo = os.path.join(root, "demo-app")
-        for d in (self.rules, self.tmpdir, self.repo):
+        self.bin = os.path.join(root, "bin")
+        for d in (self.rules, self.tmpdir, self.repo, self.bin):
             os.makedirs(d)
+        self.stub("gh", GH_STUB)
+        self.stub("git", GIT_STUB.format(git=REAL_GIT))
+        self.prs = os.path.join(root, "prs.json")
+        self.write_prs([{"number": 7, "title": "feat: add the demo chart"}])
         git(self.repo, "init", "-q", "-b", "main")
         self.write(self.repo, "README.md", "demo\n")
         git(self.repo, "add", "README.md")
         git(self.repo, "commit", "-q", "-m", "chore: start")
-        self.env = {**os.environ, "HOME": self.home, "TMPDIR": self.tmpdir}
-        for key in ("CLAUDE_PLUGIN_ROOT", "CLAUDE_PROJECT_DIR"):
+        self.env = {**os.environ, "HOME": self.home, "TMPDIR": self.tmpdir, "GH_STUB_PRS": self.prs,
+                    "PATH": self.bin + os.pathsep + os.environ.get("PATH", "")}
+        for key in ("CLAUDE_CODE_REMOTE", "CLAUDE_PLUGIN_ROOT", "CLAUDE_PROJECT_DIR", "GH_STUB_MODE", "GIT_STUB_HANG"):
             self.env.pop(key, None)
         self.session = 0
 
@@ -63,12 +81,22 @@ class SessionStartTests(unittest.TestCase):
         self.tmp.cleanup()
 
     # helpers
+    def stub(self, name: str, body: str) -> None:
+        path = os.path.join(self.bin, name)
+        with open(path, "w") as f:
+            f.write(body)
+        os.chmod(path, os.stat(path).st_mode | stat.S_IXUSR)
+
     def write(self, folder: str, name: str, text: str | bytes) -> str:
         path = os.path.join(folder, name)
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "wb" if isinstance(text, bytes) else "w") as f:
             f.write(text)
         return path
+
+    def write_prs(self, prs: list[dict]) -> None:
+        with open(self.prs, "w") as f:
+            json.dump(prs, f)
 
     def projects(self, language: str | None = "english-only", port: int | None = 5174, name: str = "demo-app") -> None:
         text = "settings:\n" + (f"  language: {language}\n" if language else "  # language: english-only\n")
@@ -105,6 +133,19 @@ class SessionStartTests(unittest.TestCase):
                     files[os.path.relpath(path, folder)] = hashlib.sha256(f.read()).hexdigest()
         return (files, git(folder, "status", "--porcelain"), git(folder, "for-each-ref"))
 
+    def installed_clone(self, tag: str) -> None:
+        """An installed rules clone whose origin (a local bare repo) has a release tag."""
+        origin = os.path.join(self.tmp.name, "origin.git")
+        git(self.tmp.name, "init", "-q", "--bare", origin)
+        self.write(self.rules, "CLAUDE_LAWS.md", "# Laws\n\n**Version:** 3.6.1\n")
+        git(self.rules, "init", "-q", "-b", "main")
+        git(self.rules, "add", "CLAUDE_LAWS.md")
+        git(self.rules, "commit", "-q", "-m", "chore: laws")
+        git(self.rules, "remote", "add", "origin", origin)
+        git(self.rules, "tag", tag)
+        git(self.rules, "push", "-q", "origin", "main", "--tags")
+
+    # the full block
     def test_full_confirmation(self) -> None:
         self.projects()
         self.write(self.repo, "PROJECT_KNOWLEDGE.md", KNOWLEDGE)
@@ -112,9 +153,9 @@ class SessionStartTests(unittest.TestCase):
         self.write(self.rules, "dashboard/index.html", "<p>dashboard</p>")
         text = self.context()
         for line in ("Rules loaded: BK CHARTERLINE v", "Project: demo-app", "Persona: Frontend",
-                     "GitHub: unknown", "Knowledge: PROJECT_KNOWLEDGE.md — A demo dashboard for example data",
+                     "GitHub: alice-example", "Knowledge: PROJECT_KNOWLEDGE.md — A demo dashboard for example data",
                      "Feature: F-1 · Demo flow · in-progress", "Dashboard: ~/.bk-charterline/dashboard/index.html",
-                     "Ready.", "Reply language: english-only", "Preview port: 5174"):
+                     "Ready.", "#7 feat: add the demo chart", "Reply language: english-only", "Preview port: 5174"):
             self.assertIn(line, text)
         self.assertIn("make no tool calls", text)
         self.assertNotIn("Register demo-app", text)
@@ -161,6 +202,47 @@ class SessionStartTests(unittest.TestCase):
         with open(os.path.join(self.rules, "projects.yaml")) as f:
             self.assertNotIn("demo-app", f.read())
 
+    # the network
+    def test_update_available(self) -> None:
+        self.installed_clone("v9.9.9")
+        self.assertIn("BK Charterline update available: v3.6.1 → v9.9.9", self.context())
+
+    def test_no_update_line_when_current(self) -> None:
+        self.installed_clone("v3.6.1")
+        self.assertNotIn("update available", self.context())
+
+    def test_hanging_network_stays_under_five_seconds(self) -> None:
+        self.installed_clone("v9.9.9")
+        self.env.update(GH_STUB_MODE="hang", GIT_STUB_HANG="1")
+        done, elapsed = self.run_hook()
+        self.assertLess(elapsed, 5)
+        text = json.loads(done.stdout)["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("Ready.", text)
+        self.assertNotIn("update available", text)
+        self.assertNotIn("Open PRs", text)
+        self.assertIn("GitHub: unknown", text)  # slow, not logged out
+
+    def test_github_in_a_cloud_session(self) -> None:
+        self.env.update(GH_STUB_MODE="fail", CLAUDE_CODE_REMOTE="true")
+        text = self.context()
+        self.assertIn("GitHub: via connector", text)
+        self.assertNotIn("Open PRs", text)
+
+    def test_github_unauthenticated_locally(self) -> None:
+        self.env["GH_STUB_MODE"] = "fail"
+        self.assertIn("GitHub: unauthenticated", self.context())
+
+    def test_long_pr_list_is_never_cut(self) -> None:
+        self.write_prs([{"number": n, "title": "x" * 200} for n in range(1, 11)])
+        self.write(self.repo, "PROJECT_KNOWLEDGE.md", KNOWLEDGE)
+        self.write(self.repo, "SESSION_NOTE.md", "note\n")
+        text = self.context()
+        self.assertLess(len(text), 2000)
+        self.assertNotIn("x" * 61, text)
+        self.assertIn("#1 ", text)
+        self.assertTrue(text.rstrip().endswith("(Laws 5, 9, 25)."))  # the last step survives
+
+    # missing or odd files
     def test_language_not_set(self) -> None:
         self.projects(language=None)
         text = self.context()
