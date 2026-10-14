@@ -1,42 +1,65 @@
 #!/usr/bin/env python3
 """SessionStart hook (#270): run the session-start checks so Claude doesn't.
 
-On `startup` and `clear` it reads the rules version, the project, the
-language and port in projects.yaml and PROJECT_KNOWLEDGE.md, and gives Claude
-one block of context: the confirmation to print, and the steps to take when
-code work starts. The network checks (newest release, GitHub login, open PRs)
-come next (#270, part 1b); until then the GitHub line says `unknown`.
+On `startup` and `clear` it reads the rules version, the newest release tag,
+the project, the language and port in projects.yaml, PROJECT_KNOWLEDGE.md,
+the GitHub login and the open PRs, and gives Claude one block of context:
+the confirmation to print, and the steps to take when code work starts.
 
 It only reads. Its one write is a marker in the system temp folder, so a hook
 registered more than once (install.sh, the plugin, this repo) runs once per
-session. Any error means no output: a SessionStart hook never blocks, and
-CLAUDE.md has a fallback. Dependency-free stdlib only.
+session. The network checks run in parallel, 3 seconds each; one that fails
+or times out leaves its line out. Any error means no output: a SessionStart
+hook never blocks, and CLAUDE.md has a fallback. Dependency-free stdlib only.
 """
 from __future__ import annotations
 
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
 import tempfile
+from concurrent.futures import ThreadPoolExecutor
 
 sys.dont_write_bytecode = True
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_COPY = os.path.dirname(os.path.dirname(HERE))  # the rules repo this script ships in
+NETWORK_TIMEOUT = 3  # seconds per check (owner decision, #270)
+TIMED_OUT = "timed out"  # what run() returns when a command runs past its timeout
 MAX_CHARS = 1900  # Claude Code cuts additionalContext past 10,000; stay far below
+TITLE_CHARS = 60
 FIRST_PORT = 5173
 VERSION = re.compile(r"^\*\*Version:\*\*\s*(\d+\.\d+\.\d+)", re.M)
+TAG = re.compile(r"refs/tags/v(\d+)\.(\d+)\.(\d+)$")
+QUIET = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GH_PROMPT_DISABLED": "1"}  # never wait on a prompt
 
 
-def run(args: list[str], cwd: str | None = None) -> str | None:
-    """stdout of a local command, or None when it fails."""
+def run(args: list[str], cwd: str | None = None, timeout: float | None = None) -> str | None:
+    """stdout of a command, None when it fails, TIMED_OUT past the timeout.
+    The command gets its own process group, so a hung child (a `sleep` under
+    a shell) is killed with it; a pipe something else still holds is given up
+    after a second."""
     try:
-        done = subprocess.run(args, cwd=cwd, capture_output=True, text=True, stdin=subprocess.DEVNULL)
+        proc = subprocess.Popen(args, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                stdin=subprocess.DEVNULL, text=True, start_new_session=True, env=QUIET)
     except OSError:
         return None
-    return done.stdout if done.returncode == 0 else None
+    try:
+        out, _ = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except OSError:
+            proc.kill()
+        try:
+            proc.communicate(timeout=1)
+        except subprocess.TimeoutExpired:
+            pass
+        return TIMED_OUT
+    return out if proc.returncode == 0 else None
 
 
 def read(path: str) -> str | None:
@@ -81,6 +104,23 @@ def rules_version(dirs: list[str]) -> str | None:
         if match:
             return match.group(1)
     return None
+
+
+def newest_release(home: str) -> str | None:
+    """The newest vX.Y.Z tag on the installed clone's remote (Law 28)."""
+    if not os.path.isdir(os.path.join(home, ".git")):
+        return None
+    out = run(["git", "-C", home, "ls-remote", "--tags", "origin", "v*"], timeout=NETWORK_TIMEOUT)
+    lines = out.splitlines() if out and out != TIMED_OUT else []
+    tags = [tuple(int(n) for n in m.groups()) for m in (TAG.search(line) for line in lines) if m]
+    return ".".join(map(str, max(tags))) if tags else None
+
+
+def newer(remote: str | None, loaded: str | None) -> bool:
+    try:
+        return bool(remote and loaded) and tuple(map(int, remote.split("."))) > tuple(map(int, loaded.split(".")))
+    except ValueError:
+        return False
 
 
 def project(cwd: str) -> tuple[str | None, str]:
@@ -180,8 +220,21 @@ def build(cwd: str) -> str:
     shown_home = home.replace(os.path.expanduser("~"), "~", 1)
     root, name = project(cwd)
     where = root or cwd
-    version, registry, known = rules_version(dirs), projects_yaml(home), knowledge(where)
-    user = "unknown"  # the login check comes with the network checks (#270, part 1b)
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        release = pool.submit(newest_release, home)
+        login = pool.submit(run, ["gh", "api", "user", "-q", ".login"], where, NETWORK_TIMEOUT)
+        prs = pool.submit(run, ["gh", "pr", "list", "--json", "number,title", "--limit", "10"], where,
+                          NETWORK_TIMEOUT) if root else None
+        version, registry, known = rules_version(dirs), projects_yaml(home), knowledge(where)
+        remote, user = release.result(), login.result()
+        pr_out = prs.result() if prs else None
+
+    if user == TIMED_OUT:  # slow, not logged out: don't make Claude ask for a login (Law 16)
+        user, pr_out = "unknown", None
+    elif not (user or "").strip():
+        user, pr_out = ("via connector" if os.environ.get("CLAUDE_CODE_REMOTE") == "true"
+                        else "unauthenticated"), None
+    user = user.strip()
     confirm = [f"Rules loaded: BK CHARTERLINE v{version or 'unknown'}", f"Project: {name}", "Persona: Frontend",
                f"GitHub: {user}"]
     if known and known[0]:
@@ -193,6 +246,8 @@ def build(cwd: str) -> str:
     confirm.append("Ready.")
 
     before, settings, later = [], [], []
+    if newer(remote, version):
+        before.append(f"BK Charterline update available: v{version} → v{remote}. Run `update rules` to pull and reload.")
     broken = bool(registry and registry.get("broken"))
     if broken:
         before.append(f"{shown_home}/projects.yaml can't be read: tell the user, don't overwrite it, and don't "
@@ -225,18 +280,33 @@ def build(cwd: str) -> str:
     if os.path.exists(os.path.join(where, "SESSION_NOTE.md")):
         later.insert(0, "SESSION_NOTE.md exists: summarize it in one line and ask whether to resume (Law 33).")
 
-    def assemble() -> str:
+    pr_lines = []
+    try:
+        pr_lines = [f"- #{p['number']} {short(p['title'], TITLE_CHARS)}" for p in json.loads(pr_out or "[]")]
+    except (ValueError, TypeError, KeyError):
+        pass
+
+    def assemble(shown: list[str], hidden: int) -> str:
         parts = ["BK Charterline session start (from the SessionStart hook; these checks are done, "
                  "make no tool calls for them).", "Print this confirmation as your first reply:", "", *confirm]
         if before:
             parts += ["", "Before it:", *(f"- {b}" for b in before)]
         if settings:
             parts += ["", "Apply this session:", *(f"- {s}" for s in settings)]
-        if later:
-            parts += ["", "When code work starts (not before):", *(f"- {s}" for s in later)]
+        if later or shown:
+            parts += ["", "When code work starts (not before):"]
+        if shown:
+            parts += ["- Open PRs (Laws 5a, 25):", *(f"  {p}" for p in shown)]
+            parts += [f"  - …and {hidden} more"] if hidden else []
+        parts += [f"- {s}" for s in later]
         return "\n".join(parts)
 
-    return assemble()[:MAX_CHARS]
+    text = assemble(pr_lines, 0)
+    shown = list(pr_lines)
+    while len(text) > MAX_CHARS and shown:  # drop PR lines first, so the block is never cut
+        shown.pop()
+        text = assemble(shown, len(pr_lines) - len(shown))
+    return text[:MAX_CHARS]
 
 
 def main() -> None:
