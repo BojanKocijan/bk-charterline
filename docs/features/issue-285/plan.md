@@ -2,6 +2,7 @@
 
 Spec: [#285](https://github.com/BojanKocijan/bk-charterline/issues/285) (the issue answers every intent and spec field) · Gate tier: Standard (changes a knowledge file) · Branch: `feat/plan-html-page` · Issue: #285
 Work pile: judgment-heavy (rule wording), built in this session
+Plan page: not available: this plan was written before the rule it adds
 Approved-by: BojanKocijan, 2026-10-14, chat
 
 ## The rule (new §2.6 in `knowledge/HUMAN_IN_THE_LOOP.md`)
@@ -28,6 +29,7 @@ Approved-by: BojanKocijan, 2026-10-14, chat
 | File | Change |
 |---|---|
 | `knowledge/HUMAN_IN_THE_LOOP.md` | New §2.6 (the text above). `Plan page:` line added to the §2.4 template header. §2.5 first bullet: "commits it, publishes the plan page (§2.6), and stops". §8 table: a "Plan page" column. Version 1.1.0 → 1.2.0, and a changelog line. |
+| `skills/human-in-the-loop/SKILL.md` | The one-screen summary mentions the plan page (found in review) |
 | `RELEASES.md` | An `Unreleased` entry for #285 |
 | `docs/features/issue-285/plan.md` | This file |
 
