@@ -131,8 +131,9 @@ class SessionStartTests(unittest.TestCase):
             done, _ = self.run_hook(source=source)
             self.assertEqual((done.returncode, done.stdout), (0, ""), source)
 
-    def test_clear_runs_like_startup(self) -> None:
-        self.assertIn("Ready.", self.context(source="clear"))
+    def test_clear_runs_like_startup_also_in_the_same_session(self) -> None:
+        self.assertIn("Ready.", self.context(session="same"))
+        self.assertIn("Ready.", self.context(source="clear", session="same"))
 
     def test_runs_once_per_session(self) -> None:
         self.assertIn("Ready.", self.context(session="same"))
@@ -175,6 +176,25 @@ class SessionStartTests(unittest.TestCase):
         self.write(self.rules, "projects.yaml", b"\xff\xfe broken")
         text = self.context()
         self.assertIn("projects.yaml can't be read", text)
+        self.assertIn("Law 1 question", text)
+        self.assertNotIn("Register demo-app", text)
+
+    def test_projects_yaml_empty_is_not_broken(self) -> None:
+        self.write(self.rules, "projects.yaml", "# nothing yet\n")
+        text = self.context()
+        self.assertNotIn("can't be read", text)
+        self.assertIn("Language not set", text)
+        self.assertIn("Register demo-app in projects.yaml on port 5173", text)
+
+    def test_entries_in_any_key_order(self) -> None:
+        self.write(self.rules, "projects.yaml", "settings:\n  language: any\nprojects:\n"
+                   "  - name: other\n    port: 5173\n  - repo: alice/demo-app\n    name: demo-app\n    port: 5180\n")
+        self.assertIn("Preview port: 5180", self.context())
+
+    def test_entry_without_a_port(self) -> None:
+        self.write(self.rules, "projects.yaml", "projects:\n  - name: demo-app\n    repo: alice/demo-app\n")
+        text = self.context()
+        self.assertIn("Add port: 5173 to demo-app's entry", text)
         self.assertNotIn("Register demo-app", text)
 
     def test_next_free_port(self) -> None:
@@ -191,6 +211,11 @@ class SessionStartTests(unittest.TestCase):
         text = self.context()
         self.assertIn("Create PROJECT_KNOWLEDGE.md from its template (Law 11).", text)
         self.assertNotIn("local CLAUDE.md", text)
+
+    def test_placeholder_and_comments_are_not_the_purpose(self) -> None:
+        self.write(self.repo, "PROJECT_KNOWLEDGE.md", "## 1. Project purpose\n<!--\nFill this in\n-->\n"
+                   "<one-line description>\n")
+        self.assertNotIn("Knowledge:", self.context())
 
     def test_handed_off_feature_is_left_out(self) -> None:
         self.write(self.repo, "PROJECT_KNOWLEDGE.md", KNOWLEDGE.replace("in-progress", "handed-off"))
