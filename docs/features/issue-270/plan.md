@@ -3,7 +3,7 @@
 Spec: [spec.md](./spec.md) · Gate tier: Significant · Branches: `docs/session-start-hook-plan`, `feat/session-start-hook-1a-local`, `feat/session-start-hook-1b-network`, `feat/session-start-hook-2-register`, `feat/session-start-hook-3-rules` · Issue: #270
 Work pile: PRs 1a and 1b are delegable (a script and its tests, checked by machine); PRs 2 and 3 are judgment-heavy (install paths, rule text). All built in this session.
 Plan page: https://claude.ai/artifact/3AugBiJ42e5kt8VeUYJR84
-Approved-by: <pending> (re-approval after the split below; first approved BojanKocijan, 2026-10-14, chat)
+Approved-by: BojanKocijan, 2026-10-14, chat (re-approved after the split below)
 
 ## Change after approval (2026-10-14)
 
