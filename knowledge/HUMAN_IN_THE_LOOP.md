@@ -1,7 +1,7 @@
 # Human in the loop — gates, artifacts, and review capacity
 
 **Binding for:** Law 37. **Loaded:** on demand, when Claude starts a Medium-or-higher change, drafts a PR, or the user types `review queue`, `approve <stage>`, or `review cap`.
-**Version:** 1.2.0 (2026-10-14)
+**Version:** 1.3.0 (2026-10-19)
 
 Agents now write code faster than people can check it. The slow, expensive part of delivery is the human judgment before the code (what to build, how) and after it (is it right, should it ship). This file organizes that judgment so it is spent once, on the right things, and leaves a record the next person or session can read.
 
@@ -284,6 +284,64 @@ Before asking for review, Claude proves everything a machine can prove: tests pa
 
 ---
 
+## 7a. PR size and shape (Law 31)
+
+*Moved from Law 31 in `CLAUDE_LAWS.md` (#271). Binding when this file is in scope (Law 4); the law keeps its core rule.*
+
+Every PR Claude opens must be **small, focused, and independently shippable**. Claude treats the sizing rules below as hard constraints, not guidelines.
+
+**Sizing rules:**
+
+| Metric | Target | Hard ceiling |
+|---|---|---|
+| Lines changed (additions + deletions) | < 200 | 400 — if a PR exceeds this, Claude must split it before opening |
+| Files touched | < 5 | 10 |
+| Review time | Minutes, not hours | — |
+| Work unit | 30–60 min of focused work | Never exceed 4 hours of work in a single PR |
+
+**Splitting strategies — how Claude breaks work down:**
+
+1. **Separate by type.** Refactoring, bug fixes, new features, test additions, and documentation are **never mixed** in the same PR. A refactor that enables a feature ships as PR 1 (refactor) → PR 2 (feature).
+2. **Vertical slices over horizontal layers.** One complete slice of functionality (e.g., "add the CSV export button + handler + test") beats a horizontal layer ("add all buttons across the app").
+3. **Infrastructure first.** Types/interfaces, utility functions, config changes, and migrations ship in their own PR before the code that uses them.
+4. **Tests travel with their code.** Never isolate tests into a separate PR — the code and its tests are one atomic unit. Exception: adding tests to previously untested code (test-only PR is fine).
+5. **Sequential stacking when needed.** For large features, Claude plans a numbered sequence of PRs upfront (e.g., `feat/csv-export-1-types`, `feat/csv-export-2-ui`, `feat/csv-export-3-integration`) and announces the plan in the first PR's description. Each PR in the stack is independently mergeable and leaves the codebase in a valid, green state.
+
+**Every commit within a PR is atomic.** Each commit represents one logical change, passes all tests, and leaves the codebase buildable. No "WIP" commits, no commented-out code, no TODOs that break the build. Commits tell a clear story of how the change evolved — a reviewer reading commit-by-commit should understand the progression.
+
+**Pre-PR self-check (Claude runs this before `gh pr create`):**
+
+- [ ] Total diff is under 400 lines changed?
+- [ ] PR does one thing — can I describe it in one sentence without "and"?
+- [ ] Every commit passes CI independently?
+- [ ] No mixed concerns (refactor + feature, fix + new code)?
+- [ ] Could this be split further without losing coherence?
+
+If any check fails, Claude splits the work into multiple PRs and opens them sequentially, linking each to the tracking issue.
+
+**PR description discipline.** Every PR body includes:
+- **What** — one sentence, no "and"
+- **Why** — the motivation or issue link
+- **How to test** — specific steps a reviewer can follow
+- **Sequence** — if part of a stacked series: "PR 2/4 for #<issue>" with links to the others
+
+**Repository hygiene — keep the repo clean:**
+
+- **Delete merged branches immediately** (Law 9 already covers this via auto-delete settings).
+- **Squash-merge by default** — one atomic commit per PR on the default branch keeps `git log` scannable. Configure via repo settings: `Settings → General → Pull Requests → Allow squash merging` (default merge message: PR title + number).
+- **No stale branches.** Law 25 already sweeps merged branches when code work starts. Any branch with no activity for 14+ days and no open PR is flagged for deletion.
+- **No orphaned issues.** Every open issue must have either an active branch/PR or a comment explaining the delay. Claude flags orphaned issues when code work starts.
+- **Clean PR list.** Draft PRs older than 7 days without activity are flagged. Abandoned PRs are closed with a comment explaining why.
+
+**README and documentation standards:**
+
+- The project README must always reflect the **current** state of the project — not aspirational features, not stale install instructions.
+- Every PR that changes user-facing behavior, CLI commands, configuration, or install steps **must update the README in the same PR** — never in a follow-up.
+- README structure follows the professional standard: project title + one-line description, badges (CI status, version, license), table of contents, install/quickstart, usage, configuration, contributing, license. No empty sections. No broken links.
+- `RELEASES.md` / changelog is updated with every `feat:` and `fix:` PR — not batched.
+
+---
+
 ## 8. Surface support
 
 | Surface | Artifacts | Plan page (§2.6) | Review queue and cap | `/code-review` | Independent review subagent |
@@ -315,5 +373,6 @@ Before asking for review, Claude proves everything a machine can prove: tests pa
 
 ## Changelog
 
+- **1.3.0 (2026-10-19)** — §7a *PR size and shape*: Law 31's sizing table, splitting strategies, self-check, PR body and repo hygiene, moved from the laws (#271).
 - **1.2.0 (2026-10-14)** — §2.6: every `plan.md` gets a plan page, a private HTML Artifact that walks the owner through how the plan will work (#285).
 - **1.1.0 (2026-10-08)** — §9: why Law 37 exists and its sources, moved from the law (#239).

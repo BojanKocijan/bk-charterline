@@ -1,7 +1,7 @@
 # Fullstack Developer Workflow — BK Charterline
 
-**Version:** 1.7.0
-**Last Updated:** 2026-10-08
+**Version:** 1.8.0
+**Last Updated:** 2026-10-19
 **Binding:** Yes — this file is law. Claude must follow this runbook whenever the Fullstack persona is active (trigger: `fullstack mode`).
 
 > This is the canonical runbook for developers working on **existing** projects with the Fullstack persona. It is **not** about scaffolding new projects (see [`PROJECT_SCAFFOLD.md`](./PROJECT_SCAFFOLD.md) for that) — it's about how Claude pair-programs with the human dev to ship a PR in a repo that already exists.
@@ -443,9 +443,42 @@ These go in the component's `*.test.tsx` (RTL + `user-event`) and in the Playwri
 
 ---
 
+## 9. Ordered deploy steps (Law 35)
+
+*Moved from Law 35 in `CLAUDE_LAWS.md` (#271). Binding when this file is in scope (Law 4); the law keeps its core rule.*
+
+Law 7's merge is not the end when a change still needs a manual step; done out of order, it breaks production.
+
+Whenever a change involves **any** step beyond "click merge in the GitHub UI" — a migration, an env var, a dependent second PR, a required redeploy, a manual dashboard toggle — Claude's PR-ready summary (or an immediate follow-up message, if the extra steps only become clear after PRs are already open) includes a **numbered, ordered checklist** naming exactly what to do, in what order, with the literal command/SQL/dashboard path whenever it's knowable — not a vague category ("apply the migration," "set the env vars"). For example:
+
+```
+1. Merge PR #191 (API). Undo: revert #191.
+2. Run this SQL in the Supabase SQL editor (project: basketball):
+   alter table pageviews add column if not exists visitor_hash text;
+   Undo: none needed; the new column is unused once #356 is reverted.
+3. Merge PR #356 (UI) — depends on step 2 being done first. Undo: revert #356.
+4. Set PAGEVIEW_INGEST_SECRET to the same value on both Netlify sites.
+   Undo: set the old value back from your password manager.
+5. Redeploy both sites. Undo: publish the previous deploy in Netlify.
+Roll back if: the check query fails, or 5xx errors start after step 5.
+Undo in reverse order: 5, 4, 3, then 1.
+```
+
+The PR steps in this checklist follow Law 7's merge order.
+
+**Say how to undo each step.** Every step names its undo: the migration's `down` SQL, where the old setting lives (never a secret's value), or the PR to revert and redeploy. Undos run in reverse order, code before schema. An undo that loses data says so, and when leaving a change in place is safe (an unused new column), the undo says that instead. The checklist ends with what means roll back, such as a check query that fails or errors that start after the deploy, so the owner decides it before deploying, not during an incident.
+
+**Hand over SQL; never run it.** Claude never applies a migration or runs writing SQL on a hosted (shared or production) database, not even through a tool that allows it. It writes the migration in the repo (idempotent where possible) and puts in the checklist both the SQL to run and a short **check query** with its expected result (for example `select count(*) from plans where active;` → `1 row: 13`). A PR that depends on the migration is merged only after the owner confirms the check result. Law 38's tier 4 still applies to any read-only call Claude makes to that database.
+
+**Show it in chat, every time.** The moment Claude writes SQL or a manual deploy step (in a spec, a plan, a migration or a checklist), it pastes the complete SQL in a fenced `sql` block, plus the numbered steps, in that same chat reply. A link to a file that holds the SQL never counts as showing it. Only complete, paste-safe SQL is shown as runnable; anything shortened or illustrative is labelled `NOT TO RUN`.
+
+If a step genuinely can't be fully specified yet (the exact project/site isn't identified, a value needs to be generated first), Claude says so explicitly and offers to resolve it (e.g. "want me to generate this secret now?") rather than silently omitting the step. This checklist is not optional ceremony on top of the PR-ready summary — for a multi-step change it **is** the part the human actually needs, so it must be complete: every manual step across every repo involved in the change, not only the one Claude happens to be focused on at that moment. When new steps are discovered later (e.g. a follow-up PR's migration), Claude restates the full remaining sequence rather than mentioning only the new step in isolation, so the human never has to reconstruct order from scattered messages.
+
+---
+
 ## Why small PRs and ordered deploy steps (Laws 31 and 35)
 
-Moved from `CLAUDE_LAWS.md` (#239); the rules stay in the laws.
+Moved from `CLAUDE_LAWS.md` (#239). The rules themselves are in Law 31, [HUMAN_IN_THE_LOOP.md §7a](./HUMAN_IN_THE_LOOP.md) and §9 above (#271).
 
 - **Law 31:** Research consistently shows review effectiveness drops sharply after 200–400 lines changed (SmartBear/Cisco), and median time-to-review doubles for every additional 100 lines (Google).
 - **Why this is binding.** Small PRs get reviewed faster, catch more defects per line, merge with fewer conflicts, revert cleanly, and keep the default branch's history readable. A 1000-line PR is not a feature — it's a review burden that hides bugs. Claude's job is to make the human reviewer's life easy, not to minimize the number of PRs.
@@ -453,6 +486,7 @@ Moved from `CLAUDE_LAWS.md` (#239); the rules stay in the laws.
 
 ## Changelog
 
+- **1.8.0 (2026-10-19)** — §9 *Ordered deploy steps*: Law 35's checklist, SQL hand-over and example, moved from the laws (#271).
 - **1.7.0 (2026-10-08)** — *Why small PRs and ordered deploy steps*: the reasons behind Laws 31 and 35, moved from the laws (#239).
 - **1.6.0 (2026-07-20)** — Distilled a full multi-PR backend/security pass into knowledge. Extended §6.5 with four "beyond the basics" serverless patterns — server-authoritative narrow mutations (no full-entity payload for privileged writes), manual owner re-scoping whenever the service-role key bypasses RLS, HMAC-signed capability tokens with `timingSafeEqual` + fail-open/fail-safe split for unauthenticated action endpoints, and explicit column allowlists on public reads (no `select=*`) — plus an output-encoding rule for untrusted data in generated HTML/email. Added §6.7 Server-backed paginated reads (PostgREST/Supabase): `.range()` + `count:'exact'`, PostgREST filter-injection sanitization for `.or()`/`.ilike()`, defense-in-depth owner scoping, `AbortSignal` cancellation, and when to choose §6.7 vs the §6.6 offline-first cache. Added §7.6 Client-side security hygiene: CSP + hardening headers baseline, never caching private/side-effect API responses in the PWA service worker, and output encoding.
 

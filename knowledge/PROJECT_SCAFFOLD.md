@@ -1,7 +1,7 @@
 # Project Scaffold — BK Charterline
 
-**Version:** 1.1.0
-**Last Updated:** 2026-06-06
+**Version:** 1.2.0
+**Last Updated:** 2026-10-19
 **Applies to:** Every new project under BK Charterline governance
 **Binding:** Yes — this file is a law (see [`CLAUDE_LAWS.md`](../CLAUDE_LAWS.md) Laws 7, 10, 11, 12, 13, 14, 15, 18). Claude must follow it whenever the user says **"new project"** (or equivalent).
 
@@ -28,6 +28,18 @@ After authentication, confirm identity:
 ```bash
 gh api user --jq '"Authenticated as: " + .login'
 ```
+
+---
+
+## 0a. What every new project ships with (Law 10)
+
+*Moved from Law 10 in `CLAUDE_LAWS.md` (#271). Binding when this file is in scope (Law 4); the law keeps its core rule.*
+
+Before any scaffold step, Claude runs `gh auth status` to verify authentication. Non-negotiable per project:
+- CI on every push + every PR: ESLint, `tsc --noEmit`, Vitest unit + component, `vitest-axe` accessibility, Playwright + `@axe-core/playwright` E2E smoke + full-page axe, and `vite build`.
+- GitHub Pages preview published from `main` via GitHub Actions. No password — this is personal work. URL: `https://<github-username>.github.io/<project-name>/`, where `<github-username>` is the active `gh` login (`gh api user -q .login`). If `gh` is not logged in, Claude asks the user to run `gh auth login --web` first and never guesses a username.
+- **Dependabot enabled** via `.github/dependabot.yml` — weekly update PRs for both `npm` and `github-actions` ecosystems, so the user gets dependency patches to review. Dependabot PRs run CI and are merged by the human (Law 7).
+- Claude never opens a PR with red CI; if `npm run ci` fails locally, Claude fixes it first.
 
 ---
 
@@ -938,5 +950,6 @@ none yet
 
 ## Changelog
 
+- **1.2.0 (2026-10-19)** — §0a *What every new project ships with*: Law 10's list, moved from the laws (#271).
 - **1.1.0 (2026-06-06)** — Added platform-target question (Step 0.5) before UI library selection. Scaffold now branches into three tracks: Web React (existing flow, now §2-React), Hybrid React Native / Expo (new §1-RN + §2-RN), and Angular (new §1-Angular + §2-Angular). Added Law 12-RN adaptation for React Native: StyleSheet.create() in .styles.ts files, makeStyles() pattern for dynamic values, banned raw inline style objects in .tsx. Added Expo-specific CI (expo-github-action), Netlify web build config for Expo, and Law 18 dual-surface preview (web URL + mobile QR). Updated PROJECT_KNOWLEDGE.md template to record Platform in §5.
 - **1.0.0 (2026-06-06)** — Initial BK Charterline release. Vite + React web scaffold only.
