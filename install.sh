@@ -259,7 +259,7 @@ if text != original:  # a second run writes nothing
         f.write(text)
 PYEOF
 then
-  ok "Registered Law 32 guardrail hook in $GLOBAL_SETTINGS"
+  ok "Registered the Law 32 guardrail hook and the session-start hook in $GLOBAL_SETTINGS"
 else
   warn "Could not update $GLOBAL_SETTINGS automatically — add the hook entries manually (see .claude/settings.json in $LOCAL_DIR)."
 fi

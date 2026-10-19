@@ -15,6 +15,7 @@ import sys
 import tempfile
 import time
 import unittest
+import uuid
 
 sys.dont_write_bytecode = True
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -327,7 +328,13 @@ class RegistrationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
         self.home = os.path.join(self.tmp.name, "home")
-        os.makedirs(self.home)
+        self.bin = os.path.join(self.tmp.name, "bin")
+        for d in (self.home, self.bin):
+            os.makedirs(d)
+        gh = os.path.join(self.bin, "gh")  # no network in these tests: gh fails at once
+        with open(gh, "w") as f:
+            f.write("#!/bin/sh\nexit 1\n")
+        os.chmod(gh, 0o755)
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
@@ -340,9 +347,10 @@ class RegistrationTests(unittest.TestCase):
         return entry["hooks"][0]
 
     def run_command(self, command: str, **env: str) -> subprocess.CompletedProcess:
-        event = json.dumps({"session_id": f"reg-{len(env)}-{os.getpid()}", "source": "startup", "cwd": REPO})
+        event = json.dumps({"session_id": f"reg-{uuid.uuid4().hex}", "source": "startup", "cwd": REPO})
         return subprocess.run(["sh", "-c", command], input=event, capture_output=True, text=True, timeout=30,
-                              env={**os.environ, "HOME": self.home, "TMPDIR": self.tmp.name, **env})
+                              env={**os.environ, "HOME": self.home, "TMPDIR": self.tmp.name,
+                                   "PATH": self.bin + os.pathsep + os.environ.get("PATH", ""), **env})
 
     def test_repo_settings_fall_back_to_the_repo_copy(self) -> None:
         done = self.run_command(self.entry(".claude/settings.json")["command"], CLAUDE_PROJECT_DIR=REPO)
@@ -357,6 +365,15 @@ class RegistrationTests(unittest.TestCase):
         done = self.run_command(self.entry("hooks/hooks.json")["command"], CLAUDE_PLUGIN_ROOT=REPO)
         self.assertEqual(done.returncode, 0)
         self.assertIn("Ready.", json.loads(done.stdout)["hookSpecificOutput"]["additionalContext"])
+
+    def test_repo_settings_stay_quiet_when_python_fails(self) -> None:
+        broken = os.path.join(self.tmp.name, "proj", ".claude", "hooks")
+        os.makedirs(broken)
+        with open(os.path.join(broken, "session_start.py"), "w") as f:
+            f.write("raise SystemExit(1)\n")
+        done = self.run_command(self.entry(".claude/settings.json")["command"],
+                                CLAUDE_PROJECT_DIR=os.path.join(self.tmp.name, "proj"))
+        self.assertEqual((done.returncode, done.stdout, done.stderr), (0, "", ""))
 
     def test_installed_command_stays_quiet_when_the_script_is_missing(self) -> None:
         with open(os.path.join(REPO, "install.sh")) as f:
