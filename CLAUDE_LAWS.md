@@ -9,12 +9,12 @@
 
 ## Prime Directives
 
-1. **Reply language — one global setting.** At session start, Claude reads `settings.language` from `~/.bk-charterline/projects.yaml` (the same file Law 18 reads for the port).
+1. **Reply language — one global setting.** The session-start hook reads `settings.language` from `~/.bk-charterline/projects.yaml` (the same file Law 18 reads for the port) and tells Claude which applies.
    - **`english-only`** — Claude replies only in English and does not translate. If the user writes in any other language, Claude responds:
      > *"Please provide instructions in English only."*
      and does nothing else until the user complies.
    - **`any`** — Claude replies in the language the user writes in.
-   - **Not set** (missing, empty, or any other value) — Claude asks once, in English, as its whole first reply of the session, before the session-start confirmation (CLAUDE.md step 4.9):
+   - **Not set** (missing, empty, or any other value) — Claude asks once, in English, as its whole first reply of the session, before the session-start confirmation (CLAUDE.md, Session-start behavior):
      > **Do you want English to be the only language we communicate in?**
      > - **Yes** — English only
      > - **No** — any language
@@ -107,7 +107,7 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
     - **Report cleanup in every response after a merge**, e.g.: `Branch \`feat/my-feature\` deleted (remote + local). Issue #N closed.`
     - **Assigned branch (Law 5).** Step 2 (deleting the remote branch) is skipped for a branch the environment assigned. GitHub usually deletes it on merge, and the next push recreates it from the latest default branch.
     - **Never delete an unmerged branch.** If the ancestor check fails and the PR is not `MERGED`, leave the branch and report it.
-    - At session start (Law 25), Claude also sweeps for orphaned merged branches and clears them without being asked.
+    - When code work starts (Law 25), Claude also sweeps for orphaned merged branches and clears them without being asked.
     - **Pull the default branch immediately after, unprompted.** The moment a PR merges, Claude runs `git checkout <default-branch> && git pull origin <default-branch>` right away as part of the same cleanup — not just at the next branch-creation moment (Law 5). This keeps local `main` continuously current as work lands instead of going stale between sessions. In a folder another session may use, Claude only fetches (Law 5, parallel sessions).
     - **Then refresh the private dashboard (#120).** Right after that pull or fetch, Claude starts `python3 ~/.bk-charterline/scripts/my_metrics.py` in the background, so its pull request numbers include the merge. Claude doesn't wait for it, and a failure never stops the cleanup. The same refresh follows every pull of the default branch in Laws 5 and 25. Skipped on claude.ai web.
 
@@ -125,7 +125,7 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
 
     **Auto-wiring for existing projects.** If Claude is about to do code work in a project that has no local `CLAUDE.md`, Claude creates the one-line file (`@./PROJECT_KNOWLEDGE.md`) automatically — and scaffolds `PROJECT_KNOWLEDGE.md` from the template if it is also missing. Wiring is never a manual step the user performs.
 
-    **Claude reads `PROJECT_KNOWLEDGE.md` at every session start** and adds a `Knowledge:` line to the confirmation if found.
+    **The session-start hook reads `PROJECT_KNOWLEDGE.md`** and gives the confirmation its `Knowledge:` line when the file exists.
 
     **Claude maintains `PROJECT_KNOWLEDGE.md` throughout the project lifetime** — updating before opening PRs for new components, when making architectural decisions, and when Claude is blocked.
 
@@ -165,20 +165,20 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
     | Company names | Real company names | `Acme Corp`, `Globex Systems` |
     | IP addresses | Real IPs | `192.0.2.x` (RFC 5737) |
 
-16. **Every operation uses the current user's own credentials — no shared accounts.** At every session start, Claude runs `gh auth status` (skip on claude.ai web) and reports the active GitHub username.
+16. **Every operation uses the current user's own credentials — no shared accounts.** The session-start hook reports the active GitHub login: `via connector` in a cloud session without a `gh` login, `unknown` when GitHub is slow, `unauthenticated` when `gh` isn't logged in. Without the hook, Claude runs `gh auth status` (skip on claude.ai web).
 
 17. **Triage-first — ask before building non-trivial UI.** Before implementing any UI that hits a non-trivial signal (multi-step flow, drawer/panel layout decision, component state with multiple plausible implementations, behaviour not fully specified), Claude runs **one `AskUserQuestion` call with up to 4 focused questions** on: (1) Layout/sizing · (2) Interaction · (3) Visual treatment · (4) Flow pacing. Trivial UI (one-line CSS, copy edit, token swap) skips the triage.
 
 18. **Localhost preview runs on a locked port per project.** Once Claude starts editing source in a project, `npm run dev` runs in the background on the port assigned to that project in `projects.yaml` in the BK Charterline repo (`~/.bk-charterline/projects.yaml`). Every response ends with `Preview: http://localhost:<port>/ · status: <up|down|restarting|compile-error>`. Forgetting the line is a violation.
 
-    - At session start, Claude reads `~/.bk-charterline/projects.yaml`, finds the current project by repo name, and reads its `port`.
+    - The session-start hook finds the current project in `~/.bk-charterline/projects.yaml` and gives its `port`.
     - If the project is not yet registered, Claude registers it first (see Law 20) before starting the preview.
     - `vite.config.ts` must have `server: { port: <locked-port>, strictPort: true }` so Vite never silently falls back to another port.
     - **A second worktree** (Law 5, parallel sessions): the main folder keeps the locked port. A session in a worktree runs `npm run dev -- --port <locked + 100>` (up to +109 if taken; ports +1 … +9 belong to other projects) and writes `(worktree)` after the URL in its footer. It finds the project by the main folder's name, the parent of `git rev-parse --git-common-dir`, not the worktree's.
 
 19. **Design fidelity — only add elements explicitly present in the design.** When implementing from a Figma link or any design, never invent icons, color accents, borders, or other visual elements not present in the design. Source `iconId` from Figma before writing any icon reference. When in doubt, implement less.
 
-20. **Every project must be registered in `~/.bk-charterline/projects.yaml` (auto-registration).** `projects.yaml` is local and gitignored, so registration is a local file edit — no issue, branch, commit, or PR. At session start, Claude checks if the current project is in `projects.yaml`. If not, Claude **automatically**:
+20. **Every project must be registered in `~/.bk-charterline/projects.yaml` (auto-registration).** `projects.yaml` is local and gitignored, so registration is a local file edit — no issue, branch, commit, or PR. When code work starts in a project that isn't in `projects.yaml` (the session-start hook names it, with the next free port), Claude **automatically**:
     1. If `projects.yaml` is missing, copies `projects.example.yaml` from the BK Charterline root (`~/.bk-charterline/`, or the plugin's install directory) to `~/.bk-charterline/projects.yaml`, creating the folder if needed.
     2. Adds the project entry under `projects:` with the next available port (increment from the highest port already in the file; start at 5173 if there are none).
     3. Reports it in one line, e.g. `Registered <project-name> on port 5174.`
@@ -220,10 +220,9 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
 
 ---
 
-25. **Session start — pull main, check open PRs, sweep stale branches.** At the start of every session, before any code work:
+25. **Open PRs at session start; pull and sweep when code work starts.** The session-start hook lists the open PRs (without it, Claude runs `gh pr list --repo <owner/repo>`). When code work starts, before the first edit:
     1. `git checkout main && git pull origin main` — never work on stale local state. In a folder another session may use, fetch only (Law 5, parallel sessions). Then refresh the dashboard (Law 9).
-    2. `gh pr list --repo <owner/repo>` — surface any open PRs and report them in the confirmation line.
-    3. `git fetch --prune origin` and delete any local/remote branch already merged into `main` (Law 9 cleanup duty).
+    2. `git fetch --prune origin` and delete any local/remote branch already merged into `main` (Law 9 cleanup duty).
 
     If a PR exists, flag it before starting new work. Never push to a branch that has already been merged.
 
@@ -240,7 +239,7 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
     - **Version sync on every release:** when bumping the version, update **all four** in the same PR — `plugin.json`, `marketplace.json`, the `CLAUDE_LAWS.md` header, and `RELEASES.md`. `scripts/release_version.py check` confirms they agree. After the merge, the Release Tag workflow tags `vX.Y.Z` on `main`; Claude doesn't push release tags, and the workflow never moves an existing tag.
     - **Quality + security gate (for official directory submission):** an open source `LICENSE` present (GPL-3.0), professional `README.md`, no secrets in the repo or history (Law 14), no personal data shipped (`projects.yaml` gitignored), CI green. Submit to `anthropics/claude-plugins-official` only when these hold.
 
-28. **Notify consuming sessions when a new rules version ships.** BK Charterline loads globally — every project shares one `~/.bk-charterline` clone — so a single update reaches all consuming projects at once. At session start (Law 25 / the `CLAUDE.md` rules-update check), Claude compares the loaded version against the newest release tag (`vX.Y.Z`) on the remote and, if a newer release exists, surfaces **one line** before proceeding:
+28. **Notify consuming sessions when a new rules version ships.** BK Charterline loads globally — every project shares one `~/.bk-charterline` clone — so a single update reaches all consuming projects at once. The session-start hook compares the loaded version against the newest release tag (`vX.Y.Z`) on the remote and, if a newer release exists, Claude surfaces **one line** before proceeding:
 
     ```
     BK Charterline update available: v<loaded> → v<remote>. Run `update rules` to pull and reload.
@@ -296,8 +295,8 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
 
     - **Delete merged branches immediately** (Law 9 already covers this via auto-delete settings).
     - **Squash-merge by default** — one atomic commit per PR on the default branch keeps `git log` scannable. Configure via repo settings: `Settings → General → Pull Requests → Allow squash merging` (default merge message: PR title + number).
-    - **No stale branches.** Law 25 already sweeps stale branches at session start. Any branch with no activity for 14+ days and no open PR is flagged for deletion.
-    - **No orphaned issues.** Every open issue must have either an active branch/PR or a comment explaining the delay. Claude flags orphaned issues at session start.
+    - **No stale branches.** Law 25 already sweeps merged branches when code work starts. Any branch with no activity for 14+ days and no open PR is flagged for deletion.
+    - **No orphaned issues.** Every open issue must have either an active branch/PR or a comment explaining the delay. Claude flags orphaned issues when code work starts.
     - **Clean PR list.** Draft PRs older than 7 days without activity are flagged. Abandoned PRs are closed with a comment explaining why.
 
     **README and documentation standards:**
