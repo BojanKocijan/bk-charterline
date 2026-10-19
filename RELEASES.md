@@ -4,10 +4,15 @@
 
 ## Unreleased
 
+### Claude stops running the session-start checks itself ([#270](https://github.com/BojanKocijan/bk-charterline/issues/270))
+- **`CLAUDE.md` session start, rewritten:** with the hook's block, Claude makes no tool calls for the checks. It shows the block's notices first (an update, or the Law 1 question when the language isn't set), prints its confirmation, and does its "when code work starts" steps only then. Without the block (claude.ai web, or no hook), Claude runs the hook once by hand where there's a shell, or prints what it knows.
+- **The laws say who checks:** Laws 1, 11, 16, 18 and 28 now take their session-start facts from the hook. Law 20's registration and Law 25's pull and branch sweep move to when code work starts, so a session that only answers a question changes nothing. Law 25's title changes to match.
+- **Rules: 26,803 tokens** (estimate; down 466 from 27,269), plus 5 to 10 fewer tool calls before the first reply.
+
 ### The session-start checks as a hook, part 1 ([#270](https://github.com/BojanKocijan/bk-charterline/issues/270))
 - **New `.claude/hooks/session_start.py`:** on a new session or `/clear`, it reads the rules version, the project, the language and port in `projects.yaml` and `PROJECT_KNOWLEDGE.md`, and gives Claude the confirmation to print plus the steps to take when code work starts. It only reads, and runs once per session.
 - **The network checks:** the newest release tag, the GitHub login (`via connector` in a cloud session, `unknown` when GitHub is slow) and the open PRs, in parallel with a 3-second limit each. A check that fails or times out is left out, so a slow network never holds up the first reply.
-- **Switched on:** `install.sh` registers it in `~/.claude/settings.json`, the plugin ships it in its first `hooks/hooks.json`, and this repo's `.claude/settings.json` runs the installed copy or falls back to the repo's own. A missing script stays quiet. `update rules` now also asks before a change to `hooks/hooks.json` (Law 28). Claude still runs its own checks until the rule text changes (next).
+- **Switched on:** `install.sh` registers it in `~/.claude/settings.json`, the plugin ships it in its first `hooks/hooks.json`, and this repo's `.claude/settings.json` runs the installed copy or falls back to the repo's own. A missing script stays quiet. `update rules` now also asks before a change to `hooks/hooks.json` (Law 28). Claude still runs its own checks until the rule text changes (below).
 
 ### Every plan gets a plan page ([#285](https://github.com/BojanKocijan/bk-charterline/issues/285))
 - **See how a plan will work before you approve it:** each time Claude writes or changes a `plan.md` (Standard and Significant work, Law 37), it also publishes a private HTML Artifact: a summary, the user flow (or how it works) as a diagram, each step in plain language, how it's proven, the risks and what was ruled out.

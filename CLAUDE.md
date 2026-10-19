@@ -39,28 +39,20 @@ If a task spans several scopes, read each file as you reach it — never preload
 
 ## Session-start behavior
 
-When Claude Code loads this file (via `~/.claude/CLAUDE.md` global memory, or the local project `CLAUDE.md`, or claude.ai Custom Instructions), do the following **before** responding to the user's first request:
+The `SessionStart` hook (`.claude/hooks/session_start.py`, #270) runs the session-start checks before your first reply and adds a block that starts with **"BK Charterline session start"**. This is for your first reply only; after `/compact` or a resumed session, don't redo it. Don't read the knowledge files yet: each loads when its scope fires (Law 4).
 
-1. **Check for rule updates (Law 28).** Quietly list the remote's release tags with `git -C ~/.bk-charterline ls-remote --tags origin 'v*'`, take the highest `vX.Y.Z` (ignore `^{}` lines and any other tag shape) and compare it with the loaded `CLAUDE_LAWS.md` version header. If a **newer release exists**, surface one line — *"BK Charterline update available: v<loaded> → v<remote>. Run `update rules` to pull and reload."* — and proceed on the current version. Fallback if the remote can't be reached: use `git -C ~/.bk-charterline log -1 --format=%ct`; if >24 h since the last pull, suggest `update rules`. Never auto-pull without the user's go-ahead.
-   - Skip step 1 entirely on claude.ai web (no shell, no clone).
-2. Load `CLAUDE_LAWS.md` (the only auto-imported file). **Do not** read the knowledge files yet — load each on demand when its scope/trigger fires (see "Knowledge — loaded on demand").
-3. Extract the version number from `CLAUDE_LAWS.md`'s header.
-4. Detect the current project — the `basename` of `git rev-parse --show-toplevel`, or "not a git repo" if there is no repo.
-4.5. **Check for project knowledge (Law 11).** Look for `PROJECT_KNOWLEDGE.md` in the project root. If found, read it and note the one-line project description from §1. Skip on claude.ai web if there is no project root.
-4.6. **Auto-wire if needed (Law 11).** Laws already load from global memory (`~/.claude/CLAUDE.md` → `@~/.bk-charterline/CLAUDE.md`) — never wire them per project. If the project root has no local `CLAUDE.md`, Claude creates a one-line file containing exactly `@./PROJECT_KNOWLEDGE.md` the first time code work begins (scaffolding `PROJECT_KNOWLEDGE.md` from the template too if it is missing). If a local `CLAUDE.md` already contains a redundant `@~/.bk-charterline/CLAUDE.md` import, note it for cleanup — don't fail. Skip on claude.ai web.
-4.8. **Read the active feature (FEATURE_WORKFLOW.md).** Look for `PROJECT_KNOWLEDGE.md §11 Active feature`. If a row is set and its status isn't `handed-off`, add a `Feature:` line to the confirmation (`<id> · <title> · <status>`) and resume that context. If no active feature is set and the user's first instruction is a non-trivial UI change (scaffold, mockup, Figma), ask: *"Are you starting a new feature, continuing a paused one, or just exploring?"* — options `start feature` / `resume feature` / `keep going`. Skip the question for two-line scratch fixes and non-code work.
-4.9. **Reply language (Law 1).** Read `settings.language` from `~/.bk-charterline/projects.yaml`. If it is `english-only` or `any`, apply it. If it is not set, make the Law 1 question your whole first reply, save the answer, then continue with steps 5–6 in the next reply.
-4.95. **Refresh the private dashboard (#120).** Quietly run `python3 ~/.bk-charterline/scripts/my_metrics.py --local-only --if-changed`: local files only, skipped when nothing changed, and a failure is ignored. Skip on claude.ai web.
-5. **Verify GitHub identity (Law 16).** Run `gh auth status 2>&1 | grep 'Logged in'` to get the active account. Skip on claude.ai web.
-   - If authenticated: note the username for the confirmation line.
-   - If unauthenticated: print `GitHub: unauthenticated` on the confirmation line. Block every GitHub / `gh` CLI operation and ask the user to run `gh auth login --web`.
-6. Reply **once** with exactly this format:
+- **With that block:** make no tool calls for these checks. Its "Before it" items come first: the update notice (Law 28; never pull without the user's go-ahead), and the Law 1 question as your whole first reply when the language isn't set (save the answer, then print the confirmation next). Then print its confirmation, name its open PRs in one line after it, apply its "Apply this session" lines, and do its "When code work starts" steps only when code work starts (Laws 5, 9, 11, 20, 25).
+- **Without it** (claude.ai web, or the hook is missing or failed): where there's a shell, run it once from the installed rules or this repo's copy (`echo '{"source":"startup"}' | python3 ~/.bk-charterline/.claude/hooks/session_start.py`, else `.claude/hooks/session_start.py`) and follow its block. With no shell or no script, print the confirmation from what you know: the version from the loaded `CLAUDE_LAWS.md` header, `GitHub: unknown`, and the Law 1 question first unless the language is known.
+- **`GitHub: unauthenticated`:** before the first `gh` operation, confirm with `gh auth status`, since the hook can't tell an offline network from a logged-out `gh`. If it's logged out, block every GitHub / `gh` CLI operation and ask the user to run `gh auth login --web` (Law 16). `via connector` and `unknown` don't block.
+- **Active feature:** with a `Feature:` line, resume that context. With none, when the first instruction is a non-trivial UI change (scaffold, mockup, Figma), ask: *"Are you starting a new feature, continuing a paused one, or just exploring?"* — options `start feature` / `resume feature` / `keep going`. Skip the question for two-line scratch fixes and non-code work.
+
+The confirmation, printed **once**:
 
 ```
 Rules loaded: BK CHARTERLINE v1.0.0
 Project: <repo-name>
 Persona: <Frontend | Fullstack | Design | Research | Analyst | Incident>
-GitHub: <username | unauthenticated>
+GitHub: <username | via connector | unknown | unauthenticated>
 Knowledge: PROJECT_KNOWLEDGE.md — <one-line §1 summary>   ← omit if file absent
 Feature: <id · title · status>   ← omit if no active feature set in §11
 Dashboard: ~/.bk-charterline/dashboard/index.html   ← omit if it isn't built
