@@ -68,7 +68,7 @@ Out of the box, an AI coding assistant will happily push to `main`, invent APIs,
 Every install builds a private dashboard of what the rules do for you: what the hook stopped, what you were asked, which tools Claude can reach and how risky each one is (Critical, High, Low, Minimal), which tool was used on which call, and how your pull requests go in each project you registered. The screenshots at the top show it with example data.
 
 - **Where:** `~/.bk-charterline/dashboard/index.html`. Open it straight from the file; it needs no server.
-- **When it's rebuilt:** on every `update rules`, after every pull request you merge and every pull of `main`, quietly at session start when something changed, and whenever you type `my metrics`.
+- **When it's rebuilt:** on every `update rules`, after every pull request you merge and every pull of `main`, and whenever you type `my metrics`.
 - **Private:** it's built on your machine from your own files and your own `gh` login. Nothing is committed or sent anywhere.
 
 ---

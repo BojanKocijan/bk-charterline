@@ -125,7 +125,7 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
 
     **Auto-wiring for existing projects.** If Claude is about to do code work in a project that has no local `CLAUDE.md`, Claude creates the one-line file (`@./PROJECT_KNOWLEDGE.md`) automatically — and scaffolds `PROJECT_KNOWLEDGE.md` from the template if it is also missing. Wiring is never a manual step the user performs.
 
-    **The session-start hook reads `PROJECT_KNOWLEDGE.md`** and gives the confirmation its `Knowledge:` line when the file exists.
+    **The session-start hook reads `PROJECT_KNOWLEDGE.md`** and gives the confirmation its `Knowledge:` line when the file exists. When code work starts in a project whose local `CLAUDE.md` doesn't import it yet, Claude reads the whole file.
 
     **Claude maintains `PROJECT_KNOWLEDGE.md` throughout the project lifetime** — updating before opening PRs for new components, when making architectural decisions, and when Claude is blocked.
 
@@ -165,7 +165,7 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
     | Company names | Real company names | `Acme Corp`, `Globex Systems` |
     | IP addresses | Real IPs | `192.0.2.x` (RFC 5737) |
 
-16. **Every operation uses the current user's own credentials — no shared accounts.** The session-start hook reports the active GitHub login: `via connector` in a cloud session without a `gh` login, `unknown` when GitHub is slow, `unauthenticated` when `gh` isn't logged in. Without the hook, Claude runs `gh auth status` (skip on claude.ai web).
+16. **Every operation uses the current user's own credentials — no shared accounts.** The session-start hook reports the active GitHub login: `via connector` in a cloud session without a `gh` login, `unknown` when GitHub is slow, `unauthenticated` when the login check fails. Without the hook, CLAUDE.md's session-start fallback applies.
 
 17. **Triage-first — ask before building non-trivial UI.** Before implementing any UI that hits a non-trivial signal (multi-step flow, drawer/panel layout decision, component state with multiple plausible implementations, behaviour not fully specified), Claude runs **one `AskUserQuestion` call with up to 4 focused questions** on: (1) Layout/sizing · (2) Interaction · (3) Visual treatment · (4) Flow pacing. Trivial UI (one-line CSS, copy edit, token swap) skips the triage.
 
@@ -220,7 +220,7 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
 
 ---
 
-25. **Open PRs at session start; pull and sweep when code work starts.** The session-start hook lists the open PRs (without it, Claude runs `gh pr list --repo <owner/repo>`). When code work starts, before the first edit:
+25. **Open PRs at session start; pull and sweep when code work starts.** The session-start hook lists the open PRs, and Claude names them after the confirmation. When the block has no PR list because GitHub showed no login, Claude runs `gh pr list --repo <owner/repo>` (or the GitHub tools) when code work starts. When code work starts, before the first edit:
     1. `git checkout main && git pull origin main` — never work on stale local state. In a folder another session may use, fetch only (Law 5, parallel sessions). Then refresh the dashboard (Law 9).
     2. `git fetch --prune origin` and delete any local/remote branch already merged into `main` (Law 9 cleanup duty).
 
