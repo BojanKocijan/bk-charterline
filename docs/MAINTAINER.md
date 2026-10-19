@@ -100,7 +100,7 @@ The installer does five things:
 
 - clones the repo to `~/.bk-charterline`
 - injects the import into `~/.claude/CLAUDE.md`
-- registers the Law 32 hook in `~/.claude/settings.json`
+- registers the Law 32 hook and the session-start hook in `~/.claude/settings.json`
 - links `agents/*.md` and `skills/*/` into `~/.claude/agents` and `~/.claude/skills`
 - writes the `charterline-update` function
 

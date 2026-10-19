@@ -49,6 +49,18 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$HOME/.bk-charterline/.claude/hooks/session_start.py\"; [ -f \"$f\" ] || f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/session_start.py\"; if [ -f \"$f\" ]; then python3 \"$f\" 2>/dev/null || true; fi",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }

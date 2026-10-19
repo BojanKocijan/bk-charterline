@@ -120,7 +120,8 @@ class PersonaLogTests(unittest.TestCase):
         settings = os.path.join(self.tmp.name, "settings.json")
         with open(settings, "w") as f:
             json.dump({"hooks": {"UserPromptSubmit": [{"hooks": [{"type": "command", "command": "other"}]}]}}, f)
-        args = [settings, 'python3 "/x/enforce-laws.py"', 'python3 "/old/enforce-laws.py"', 'python3 "/x/persona_log.py"']
+        args = [settings, 'python3 "/x/enforce-laws.py"', 'python3 "/old/enforce-laws.py"', 'python3 "/x/persona_log.py"',
+                'python3 "/x/session_start.py"']
         for _ in range(2):
             subprocess.run([sys.executable, "-", *args], input=script, text=True, check=True)
         with open(settings) as f:
@@ -129,6 +130,8 @@ class PersonaLogTests(unittest.TestCase):
             {"hooks": [{"type": "command", "command": "other"}]},
             {"hooks": [{"type": "command", "command": 'python3 "/x/persona_log.py"'}]}])
         self.assertEqual([e["matcher"] for e in hooks["PreToolUse"]], ["Bash", "Edit|Write|MultiEdit|NotebookEdit", "mcp__.*"])
+        self.assertEqual(hooks["SessionStart"], [{"matcher": "startup|clear", "hooks": [
+            {"type": "command", "command": 'python3 "/x/session_start.py"', "timeout": 10}]}])  # #270
 
 
 if __name__ == "__main__":

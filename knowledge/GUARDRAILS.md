@@ -1,7 +1,7 @@
 # Guardrails — BK Charterline
 
-**Version:** 1.2.0
-**Last Updated:** 2026-10-09
+**Version:** 1.3.0
+**Last Updated:** 2026-10-19
 **Binding:** Yes — the detail behind Law 32 (the hook) and the hook's part in Law 38. Read on demand when a block or a permission prompt needs explaining, when changing the hook, or when the user asks what the hook does.
 
 > Moved here from `CLAUDE_LAWS.md` Law 32 in v3.5.0 (#239) so every session loads less; the law keeps what Claude must do. Nothing here was loosened.
@@ -48,6 +48,8 @@
 
 **The persona log (#256).** A second, separate script, `.claude/hooks/persona_log.py`, runs as a `UserPromptSubmit` hook (registered by `install.sh` the same way). When the whole prompt is one of CLAUDE.md's mode commands, it appends the time, the session id and the persona to `~/.bk-charterline/persona-log.jsonl` (rotated to `persona-log.1.jsonl` at 1 MB, like the block log) for the private dashboard; the prompt's text is never written, and any other prompt writes nothing. It never blocks, never prints and ignores every error, so it can't stop a prompt.
 
+**The session-start checks (#270).** A third script, `.claude/hooks/session_start.py`, runs as a `SessionStart` hook on a new session or `/clear` (matcher `startup|clear`, 10 s limit). It reads the rules version, the newest release tag, the project, `projects.yaml`, `PROJECT_KNOWLEDGE.md`, the GitHub login and the open PRs, and gives Claude the confirmation to print. It changes no project file and no git state; its one write is a marker in the system temp folder, so the hook answers once per session even when it's registered more than once. Each network check has a 3 s limit. A `SessionStart` hook can't block, and any error means no output. It's registered three ways: by `install.sh` in `~/.claude/settings.json`; by the plugin's `hooks/hooks.json`; and by this repo's `.claude/settings.json`, which falls back to the repo copy as the Law 32 hook does (#268) and stays quiet when no copy is found. Removing its `SessionStart` entry from `~/.claude/settings.json` turns it off only until the next `update rules`, which re-runs `install.sh` and adds it back, as it does for the Law 32 hook; the plugin and this repo's own registration run regardless. Like the other hooks, a change to it, or to `hooks/hooks.json`, asks for your approval in `update rules` (Law 28).
+
 **Block log.** Every block appends one line to `~/.bk-charterline/hook-log.jsonl`: the time, law, a fixed check id (`commit-on-default`, `commit-message`, …), the repo and branch the hook judged, and a SHA-256 of the command. It never stores the command, the commit message or the block reason. The log rotates to `hook-log.1.jsonl` at 1 MB. Writes hold an exclusive lock on `hook-log.lock` for at most 200 ms, so concurrent sessions never interleave lines. The code lives in `.claude/hooks/hook_log.py`, which the hook imports in a guarded way: a missing module, an unwritable log or a busy lock skips the line and never changes the decision. The log stays local and gitignored. `hook log` runs `python3 ~/.bk-charterline/.claude/hooks/hook_log.py --summary` (blocks per law and check for the last 30 days, plus false positives and permission prompts). Asks are logged as type `ask`.
 
 ---
@@ -64,6 +66,7 @@
 
 ## Changelog
 
+- **1.3.0 (2026-10-19)** — §1: the `SessionStart` hook for the session-start checks, and where it's registered (#270).
 - **1.2.0 (2026-10-09)** — §1: the `UserPromptSubmit` persona log for the dashboard (#256).
 - **1.1.0 (2026-10-08)** — §2: why the hook exists, Law 38's known limits and sources, moved from the laws (#239).
 - **1.0.0 (2026-10-08)** — Law 32's mechanism, the blocks and asks tables, the block log and where the hook lives, moved from `CLAUDE_LAWS.md` (#239).

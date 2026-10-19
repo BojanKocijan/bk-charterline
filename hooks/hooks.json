@@ -1,0 +1,17 @@
+{
+  "description": "BK Charterline: the session-start checks (#270). install.sh registers the Law 32 guardrail hook.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/.claude/hooks/session_start.py 2>/dev/null || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

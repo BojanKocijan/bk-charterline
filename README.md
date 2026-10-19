@@ -119,7 +119,7 @@ curl -fsSL https://raw.githubusercontent.com/BojanKocijan/bk-charterline/main/in
 
 1. Clones this repo to `~/.bk-charterline`
 2. Adds `@~/.bk-charterline/CLAUDE.md` to `~/.claude/CLAUDE.md` (Claude's global memory)
-3. Registers the Law 32 guardrail hook in `~/.claude/settings.json`
+3. Registers the Law 32 guardrail hook and the session-start hook in `~/.claude/settings.json`
 4. Links each agent into `~/.claude/agents/`, each skill into `~/.claude/skills/` and each output style into `~/.claude/output-styles/` (off until you pick one). Your own files with the same name are never overwritten.
 5. Installs the `charterline-update` shell function, which moves the clone to the newest release and re-runs the installer
 
@@ -359,7 +359,7 @@ For professional work we recommend one language, so code, commits, PRs and docs 
 | Manual (Path B) | `git -C ~/.bk-charterline fetch --tags`, then `git -C ~/.bk-charterline checkout --detach <newest vX.Y.Z>` |
 | In any session | `update rules` |
 
-- **A hook change asks first.** When `charterline-update` would change anything the Law 32 hook runs (`.claude/hooks/`, `scripts/ai_tools.py`, `install.sh`, `.claude/settings.json`), `charterline-update` shows the diff (no pager) and asks `Apply this hook change? [y/N]`. In a Claude session, `update rules` shows you the diff in chat and runs `charterline-update --approve <commit>` instead: the app's permission prompt asks, and your click is the approval, so no terminal is needed. Either way, it checks out exactly the commit whose diff you saw; if a newer one appears in between, nothing changes. `--approve` works only when the Law 32 hook is registered. Git commands run by hand in `~/.bk-charterline` skip this check, so the Law 32 hook asks you before any that would change the clone (`checkout`, `pull`, `reset` and the like).
+- **A hook change asks first.** When `charterline-update` would change anything the Law 32 hook runs (`.claude/hooks/`, `hooks/hooks.json`, `scripts/ai_tools.py`, `install.sh`, `.claude/settings.json`), `charterline-update` shows the diff (no pager) and asks `Apply this hook change? [y/N]`. In a Claude session, `update rules` shows you the diff in chat and runs `charterline-update --approve <commit>` instead: the app's permission prompt asks, and your click is the approval, so no terminal is needed. Either way, it checks out exactly the commit whose diff you saw; if a newer one appears in between, nothing changes. `--approve` works only when the Law 32 hook is registered. Git commands run by hand in `~/.bk-charterline` skip this check, so the Law 32 hook asks you before any that would change the clone (`checkout`, `pull`, `reset` and the like).
 - **The clone sits on a release tag** (a detached HEAD), so a plain `git pull` in `~/.bk-charterline` doesn't work. Use `charterline-update`, or `charterline-update --main` to go back to following `main`.
 - **It never downgrades** a clone that's ahead of the latest release, and it refuses to run over local edits to tracked files.
 - **One run is enough**, even from v2.27.0 or older: the old function pulls `main`, and the installer then moves the clone onto the release tag when `main` is at it. If the tag isn't published yet, the next run moves it. In a Claude session, `update rules` always runs the current function from your rc file.
