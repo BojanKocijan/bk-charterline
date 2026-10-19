@@ -3,7 +3,7 @@
 Spec: [#271](https://github.com/BojanKocijan/bk-charterline/issues/271), part of epic [#267](https://github.com/BojanKocijan/bk-charterline/issues/267), follows [#239](./../issue-239/plan.md) · Gate tier: Significant (it restructures the laws; the issue is the intent, this plan carries the spec) · Branch: `claude/intelligent-johnson-0hdbwq` (assigned) · Issue: #271
 Work pile: judgment-heavy (choosing which sentences stay binding at session start), built in this session
 Plan page: https://claude.ai/artifact/X2FfuceCMBAS7K2yhFsQW7
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-19, chat
 
 ## Why
 
