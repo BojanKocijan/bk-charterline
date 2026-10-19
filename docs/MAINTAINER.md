@@ -58,7 +58,7 @@ This repo uses Conventional Commits. Version bumps in `CLAUDE_LAWS.md` header:
 
 ## Plugin compliance (Law 27)
 
-*Moved from Law 27 in `CLAUDE_LAWS.md` (#271). Binding when this file is in scope (Law 4); the law keeps its core rule.*
+*Moved from Law 27 in `CLAUDE_LAWS.md` (#271). Binding through Law 27, which keeps its core rule.*
 
 The repository must remain installable both as a global memory import (`install.sh`) and as a Claude Code plugin. Claude must preserve plugin compliance at all times, per the [official plugin reference](https://code.claude.com/docs/en/plugins-reference):
 - **Manifest:** `.claude-plugin/plugin.json` is the only manifest. `name` is required; `version` is a semantic version (`MAJOR.MINOR.PATCH`). Keep `author`, `license`, `homepage`, `repository`, and `keywords` populated.

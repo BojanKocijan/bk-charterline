@@ -10,7 +10,7 @@ Run `"$SHELL" -ic 'if command -v charterline-update >/dev/null; then charterline
 
 ## How updates work (Law 28)
 
-*Moved from Law 28 in `CLAUDE_LAWS.md` (#271). Binding when this file is in scope (Law 4); the law keeps its core rule.*
+*Moved from Law 28 in `CLAUDE_LAWS.md` (#271). Binding through Law 28, which keeps its core rule.*
 
 BK Charterline loads globally — every project shares one `~/.bk-charterline` clone — so a single update reaches all consuming projects at once. The session-start hook compares the loaded version against the newest release tag (`vX.Y.Z`) on the remote and, if a newer release exists, Claude surfaces **one line** before proceeding:
 

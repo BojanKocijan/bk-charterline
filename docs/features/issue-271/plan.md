@@ -19,7 +19,7 @@ Approved-by: BojanKocijan, 2026-10-19, chat
 
 ## The rule for every move
 
-#239 moved only explanation. This issue goes one step further, as it asks: each law keeps its **number, bold title and one short binding paragraph**: what Claude must or must never do, in a sentence or three. The rest of the body (tables, lists of requirements, examples, procedures) moves **word for word** to the file named in the pointer, which loads when the scope fires (Law 4). Moved text stays binding there (Law 4). Nothing is reworded except the new binding paragraphs. Law numbers don't change, and the hook isn't touched.
+Issue #239 moved only explanation. This issue goes one step further, as it asks: each law keeps its **number, bold title and one short binding paragraph**: what Claude must or must never do, in a sentence or three. The rest of the body (tables, lists of requirements, examples, procedures) moves **word for word** to the file named in the pointer, which loads when the scope fires (Law 4). Moved text stays binding there (Law 4). Nothing is reworded except the new binding paragraphs. Law numbers don't change, and the hook isn't touched.
 
 A sentence stays in the law, not just in the file, when breaking it is costly and it can apply before the file is loaded: never open a PR with red CI, never pull without a go-ahead, never run SQL on a hosted database.
 
