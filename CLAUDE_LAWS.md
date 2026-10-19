@@ -111,11 +111,7 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
     - **Pull the default branch immediately after, unprompted.** The moment a PR merges, Claude runs `git checkout <default-branch> && git pull origin <default-branch>` right away as part of the same cleanup — not just at the next branch-creation moment (Law 5). This keeps local `main` continuously current as work lands instead of going stale between sessions. In a folder another session may use, Claude only fetches (Law 5, parallel sessions).
     - **Then refresh the private dashboard (#120).** Right after that pull or fetch, Claude starts `python3 ~/.bk-charterline/scripts/my_metrics.py` in the background, so its pull request numbers include the merge. Claude doesn't wait for it, and a failure never stops the cleanup. The same refresh follows every pull of the default branch in Laws 5 and 25. Skipped on claude.ai web.
 
-10. **Every new project Claude builds ships with CI and tests.** Before any scaffold step, Claude runs `gh auth status` to verify authentication. Non-negotiable per project:
-    - CI on every push + every PR: ESLint, `tsc --noEmit`, Vitest unit + component, `vitest-axe` accessibility, Playwright + `@axe-core/playwright` E2E smoke + full-page axe, and `vite build`.
-    - GitHub Pages preview published from `main` via GitHub Actions. No password — this is personal work. URL: `https://<github-username>.github.io/<project-name>/`, where `<github-username>` is the active `gh` login (`gh api user -q .login`). If `gh` is not logged in, Claude asks the user to run `gh auth login --web` first and never guesses a username.
-    - **Dependabot enabled** via `.github/dependabot.yml` — weekly update PRs for both `npm` and `github-actions` ecosystems, so the user gets dependency patches to review. Dependabot PRs run CI and are merged by the human (Law 7).
-    - Claude never opens a PR with red CI; if `npm run ci` fails locally, Claude fixes it first.
+10. **Every new project Claude builds ships with CI and tests.** CI on every push and PR, a GitHub Pages preview, and Dependabot, as listed in [PROJECT_SCAFFOLD.md §0a](./knowledge/PROJECT_SCAFFOLD.md). Claude never opens a PR with red CI, in any project; if `npm run ci` fails locally, Claude fixes it first.
 
 11. **Every new project has a living `PROJECT_KNOWLEDGE.md` and a local `CLAUDE.md`.** During `new project`, Claude creates two files in the project root:
     1. **`PROJECT_KNOWLEDGE.md`** — records project purpose, target users, project-specific components, architectural decisions, open questions, and the data layer.
@@ -232,79 +228,15 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
 
     Read-only git (`git status`, `git diff`, `git log`) is still allowed when genuinely needed to build the command block, but Claude keeps it minimal. `dry run` never overrides Law 7 — even when running the printed commands, Claude never merges. This mode exists so the user can run fast local operations themselves rather than spending model tokens on them.
 
-27. **BK Charterline stays a valid, submittable Claude Code plugin.** The repository must remain installable both as a global memory import (`install.sh`) and as a Claude Code plugin. Claude must preserve plugin compliance at all times, per the [official plugin reference](https://code.claude.com/docs/en/plugins-reference):
-    - **Manifest:** `.claude-plugin/plugin.json` is the only manifest. `name` is required; `version` is a semantic version (`MAJOR.MINOR.PATCH`). Keep `author`, `license`, `homepage`, `repository`, and `keywords` populated.
-    - **Marketplace:** `.claude-plugin/marketplace.json` lists this plugin with `source: "./"` so the repo is installable via `/plugin marketplace add <owner>/<repo>`.
-    - **Component layout:** skills live in `skills/<name>/SKILL.md`; agents in `agents/`; (commands/, hooks/ if added) — all at the **plugin root**, never inside `.claude-plugin/`. Every `SKILL.md` has `name` + `description` frontmatter.
-    - **Version sync on every release:** when bumping the version, update **all four** in the same PR — `plugin.json`, `marketplace.json`, the `CLAUDE_LAWS.md` header, and `RELEASES.md`. `scripts/release_version.py check` confirms they agree. After the merge, the Release Tag workflow tags `vX.Y.Z` on `main`; Claude doesn't push release tags, and the workflow never moves an existing tag.
-    - **Quality + security gate (for official directory submission):** an open source `LICENSE` present (GPL-3.0), professional `README.md`, no secrets in the repo or history (Law 14), no personal data shipped (`projects.yaml` gitignored), CI green. Submit to `anthropics/claude-plugins-official` only when these hold.
+27. **BK Charterline stays a valid, submittable Claude Code plugin.** Every change keeps the repo installable through `install.sh` and as a plugin. A version bump updates `plugin.json`, `marketplace.json`, this file's header and `RELEASES.md` in the same PR; Claude never pushes release tags. Before changing the manifest, layout or version, Claude reads [`docs/MAINTAINER.md` → Plugin compliance](./docs/MAINTAINER.md#plugin-compliance-law-27).
 
-28. **Notify consuming sessions when a new rules version ships.** BK Charterline loads globally — every project shares one `~/.bk-charterline` clone — so a single update reaches all consuming projects at once. The session-start hook compares the loaded version against the newest release tag (`vX.Y.Z`) on the remote and, if a newer release exists, Claude surfaces **one line** before proceeding:
-
-    ```
-    BK Charterline update available: v<loaded> → v<remote>. Run `update rules` to pull and reload.
-    ```
-
-    - The update command is **`update rules`** in-session (runs `charterline-update`, or `dforge-update` on an install from before v3.0.0, which moves it to the new name; then re-imports the rules and reprints the confirmation with the new version). The shell equivalent is **`charterline-update`**; `dforge-update` points to it for v3.0.0 only.
-    - **`charterline-update` installs the newest release tag** (the clone sits on a detached HEAD); `charterline-update --main` follows `main` instead. Before switching, it diffs everything the Law 32 hook runs (`.claude/hooks/`, `hooks/hooks.json`, `scripts/ai_tools.py`, `install.sh`, `.claude/settings.json`). A change there needs the user's yes: a `y` typed in their own terminal (the diff prints without a pager), or their click in the app's permission prompt for `charterline-update --approve <commit>`, which the Law 32 hook raises. Without a terminal and without `--approve`, it shows the diff, applies nothing, names the commit to approve and exits 1. `--approve` installs only that exact commit, and only when the hook is registered in `~/.claude/settings.json`; otherwise it changes nothing. It never downgrades, refuses when the clone has local edits, and checks out exactly the commit whose diff was shown. Git commands run by hand in `~/.bk-charterline` skip that gate, so the Law 32 hook asks before any that would change the clone's files (#170).
-    - Claude **never auto-pulls** without the user's go-ahead — it notifies and continues on the current version until the user runs the command.
-    - On claude.ai web (no clone) this check is skipped.
+28. **Notify consuming sessions when a new rules version ships.** When the session-start hook reports a newer release, Claude shows its one update line and carries on with the loaded version. Claude never pulls or installs without the user's go-ahead, and an update that changes the hook installs only after the user's own approval in their terminal or the app's prompt. How `update rules` and `charterline-update` work: [`skills/update-rules/SKILL.md`](./skills/update-rules/SKILL.md).
 
 29. **Agents obey the rules; when tempted to act outside them, ask first.** Every persona/role (Lead, Frontend, Backend, Tester, Docs, Design, Research, Analyst, Incident) is fully bound by these laws — the laws override any role-specific instinct. If an agent believes the right move is something the rules don't allow or don't cover — skip a gate, merge, delete a file, push to `main`, take an undocumented shortcut, add a dependency/DB/pattern, deviate from the announced plan — it **stops and asks the human** with its reasoning, rather than acting on its own. A better idea is raised as a question, not executed unilaterally. The rules are binding, not advisory; "I thought it was better" never justifies a deviation.
 
 30. **Resolve every UI to the project's chosen component library — never invent or import foreign components.** Once a project's component library is chosen (recorded in `PROJECT_KNOWLEDGE.md §5` at scaffold), **every** UI Claude builds is composed from *that* library's components — no matter what the input is. A paper sketch, a Figma frame, or a **screenshot of another app** is a description of *intent*, not a component source. Claude maps each element to the nearest primitive in the project's library (a screenshot's custom dropdown → the library's `Select`; a hand-drawn card → the library's `Card`; another app's tab bar → the library's `Tabs`). Claude **never hallucinates components**, never silently introduces a second UI library, and never hand-rolls a primitive the library already provides (Law 12). Visual intent (layout, hierarchy, copy) is honored only insofar as the library + theme tokens allow — pixel-copying another app's bespoke styling is not a goal. If the chosen library genuinely lacks a needed primitive, Claude **says so and asks** before adding a dependency or building custom (Law 29) — it does not improvise.
 
-31. **Small, atomic PRs — split work into the smallest shippable chunks.** Every PR Claude opens must be **small, focused, and independently shippable**. Claude treats the sizing rules below as hard constraints, not guidelines.
-
-    **Sizing rules:**
-
-    | Metric | Target | Hard ceiling |
-    |---|---|---|
-    | Lines changed (additions + deletions) | < 200 | 400 — if a PR exceeds this, Claude must split it before opening |
-    | Files touched | < 5 | 10 |
-    | Review time | Minutes, not hours | — |
-    | Work unit | 30–60 min of focused work | Never exceed 4 hours of work in a single PR |
-
-    **Splitting strategies — how Claude breaks work down:**
-
-    1. **Separate by type.** Refactoring, bug fixes, new features, test additions, and documentation are **never mixed** in the same PR. A refactor that enables a feature ships as PR 1 (refactor) → PR 2 (feature).
-    2. **Vertical slices over horizontal layers.** One complete slice of functionality (e.g., "add the CSV export button + handler + test") beats a horizontal layer ("add all buttons across the app").
-    3. **Infrastructure first.** Types/interfaces, utility functions, config changes, and migrations ship in their own PR before the code that uses them.
-    4. **Tests travel with their code.** Never isolate tests into a separate PR — the code and its tests are one atomic unit. Exception: adding tests to previously untested code (test-only PR is fine).
-    5. **Sequential stacking when needed.** For large features, Claude plans a numbered sequence of PRs upfront (e.g., `feat/csv-export-1-types`, `feat/csv-export-2-ui`, `feat/csv-export-3-integration`) and announces the plan in the first PR's description. Each PR in the stack is independently mergeable and leaves the codebase in a valid, green state.
-
-    **Every commit within a PR is atomic.** Each commit represents one logical change, passes all tests, and leaves the codebase buildable. No "WIP" commits, no commented-out code, no TODOs that break the build. Commits tell a clear story of how the change evolved — a reviewer reading commit-by-commit should understand the progression.
-
-    **Pre-PR self-check (Claude runs this before `gh pr create`):**
-
-    - [ ] Total diff is under 400 lines changed?
-    - [ ] PR does one thing — can I describe it in one sentence without "and"?
-    - [ ] Every commit passes CI independently?
-    - [ ] No mixed concerns (refactor + feature, fix + new code)?
-    - [ ] Could this be split further without losing coherence?
-
-    If any check fails, Claude splits the work into multiple PRs and opens them sequentially, linking each to the tracking issue.
-
-    **PR description discipline.** Every PR body includes:
-    - **What** — one sentence, no "and"
-    - **Why** — the motivation or issue link
-    - **How to test** — specific steps a reviewer can follow
-    - **Sequence** — if part of a stacked series: "PR 2/4 for #<issue>" with links to the others
-
-    **Repository hygiene — keep the repo clean:**
-
-    - **Delete merged branches immediately** (Law 9 already covers this via auto-delete settings).
-    - **Squash-merge by default** — one atomic commit per PR on the default branch keeps `git log` scannable. Configure via repo settings: `Settings → General → Pull Requests → Allow squash merging` (default merge message: PR title + number).
-    - **No stale branches.** Law 25 already sweeps merged branches when code work starts. Any branch with no activity for 14+ days and no open PR is flagged for deletion.
-    - **No orphaned issues.** Every open issue must have either an active branch/PR or a comment explaining the delay. Claude flags orphaned issues when code work starts.
-    - **Clean PR list.** Draft PRs older than 7 days without activity are flagged. Abandoned PRs are closed with a comment explaining why.
-
-    **README and documentation standards:**
-
-    - The project README must always reflect the **current** state of the project — not aspirational features, not stale install instructions.
-    - Every PR that changes user-facing behavior, CLI commands, configuration, or install steps **must update the README in the same PR** — never in a follow-up.
-    - README structure follows the professional standard: project title + one-line description, badges (CI status, version, license), table of contents, install/quickstart, usage, configuration, contributing, license. No empty sections. No broken links.
-    - `RELEASES.md` / changelog is updated with every `feat:` and `fix:` PR — not batched.
+31. **Small, atomic PRs — split work into the smallest shippable chunks.** Every PR does one thing: at most 400 lines changed and 10 files (target under 200 and 5), no mixed concerns, tests in the same PR as their code, every commit atomic. Bigger work is split into a numbered stack of PRs that each leave the default branch green. A PR that changes user-facing behavior, commands, configuration or install steps updates the README in the same PR, and every `feat:` and `fix:` PR updates the changelog. Sizing table, splitting strategies, pre-PR self-check, PR body and repo hygiene: [HUMAN_IN_THE_LOOP.md §7a](./knowledge/HUMAN_IN_THE_LOOP.md).
 
 32. **Hook-enforced guardrails — a `PreToolUse` hook mechanically blocks the tool calls that would break Law 5, 7, 13, 14 or 34, and asks you before Claude changes its own guardrails, deletes tracked files (Law 8) or calls a tier 3 or 4 MCP tool (Law 38).**
 
@@ -320,32 +252,7 @@ Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; De
 
     **Changed pages only, and fast.** Screenshots cover **only screens whose code the PR touched** — a screen qualifies when a file in `git diff --name-only <default-branch>...HEAD` appears in the import graph of that screen's root component. A touched file that reaches no screen produces **no screenshot and no fallback screen** (never a home-screen "just in case"); the PR body says `No screens affected` and lists the touched files. If more than 6 screens match, Claude captures the first 6 and says so in the PR. A screen that fails to render is reported as an error, never silently skipped; a new screen with no screenshot key gets a visible warning. The capture runs as a standalone, minimal Playwright spec — recipe in [`knowledge/SKILLS.md`](./knowledge/SKILLS.md) §3 *Changed-pages screenshots*.
 
-35. **Explicit, ordered deploy steps whenever a change needs more than "merge the PR."** Law 7's merge is not the end when a change still needs a manual step; done out of order, it breaks production.
-
-    Whenever a change involves **any** step beyond "click merge in the GitHub UI" — a migration, an env var, a dependent second PR, a required redeploy, a manual dashboard toggle — Claude's PR-ready summary (or an immediate follow-up message, if the extra steps only become clear after PRs are already open) includes a **numbered, ordered checklist** naming exactly what to do, in what order, with the literal command/SQL/dashboard path whenever it's knowable — not a vague category ("apply the migration," "set the env vars"). For example:
-
-    ```
-    1. Merge PR #191 (API). Undo: revert #191.
-    2. Run this SQL in the Supabase SQL editor (project: basketball):
-       alter table pageviews add column if not exists visitor_hash text;
-       Undo: none needed; the new column is unused once #356 is reverted.
-    3. Merge PR #356 (UI) — depends on step 2 being done first. Undo: revert #356.
-    4. Set PAGEVIEW_INGEST_SECRET to the same value on both Netlify sites.
-       Undo: set the old value back from your password manager.
-    5. Redeploy both sites. Undo: publish the previous deploy in Netlify.
-    Roll back if: the check query fails, or 5xx errors start after step 5.
-    Undo in reverse order: 5, 4, 3, then 1.
-    ```
-
-    The PR steps in this checklist follow Law 7's merge order.
-
-    **Say how to undo each step.** Every step names its undo: the migration's `down` SQL, where the old setting lives (never a secret's value), or the PR to revert and redeploy. Undos run in reverse order, code before schema. An undo that loses data says so, and when leaving a change in place is safe (an unused new column), the undo says that instead. The checklist ends with what means roll back, such as a check query that fails or errors that start after the deploy, so the owner decides it before deploying, not during an incident.
-
-    **Hand over SQL; never run it.** Claude never applies a migration or runs writing SQL on a hosted (shared or production) database, not even through a tool that allows it. It writes the migration in the repo (idempotent where possible) and puts in the checklist both the SQL to run and a short **check query** with its expected result (for example `select count(*) from plans where active;` → `1 row: 13`). A PR that depends on the migration is merged only after the owner confirms the check result. Law 38's tier 4 still applies to any read-only call Claude makes to that database.
-
-    **Show it in chat, every time.** The moment Claude writes SQL or a manual deploy step (in a spec, a plan, a migration or a checklist), it pastes the complete SQL in a fenced `sql` block, plus the numbered steps, in that same chat reply. A link to a file that holds the SQL never counts as showing it. Only complete, paste-safe SQL is shown as runnable; anything shortened or illustrative is labelled `NOT TO RUN`.
-
-    If a step genuinely can't be fully specified yet (the exact project/site isn't identified, a value needs to be generated first), Claude says so explicitly and offers to resolve it (e.g. "want me to generate this secret now?") rather than silently omitting the step. This checklist is not optional ceremony on top of the PR-ready summary — for a multi-step change it **is** the part the human actually needs, so it must be complete: every manual step across every repo involved in the change, not only the one Claude happens to be focused on at that moment. When new steps are discovered later (e.g. a follow-up PR's migration), Claude restates the full remaining sequence rather than mentioning only the new step in isolation, so the human never has to reconstruct order from scattered messages.
+35. **Explicit, ordered deploy steps whenever a change needs more than "merge the PR."** Claude's PR-ready summary then includes a numbered checklist in merge order with the literal command, SQL or dashboard path, an undo for each step, and what means roll back. Claude never applies a migration or runs writing SQL on a hosted database: it writes the migration in the repo and pastes the complete SQL and a check query in chat the moment it writes them (a link to a file never counts). A PR that depends on a migration is merged only after the owner confirms the check result, and when new steps appear Claude restates the whole remaining sequence. Example, undo rules and details: [FULLSTACK_WORKFLOW.md §9](./knowledge/FULLSTACK_WORKFLOW.md).
 
 36. **Cross-project pattern catalogue — read it, surface it, ask before applying.** `knowledge/PATTERNS.md` is a running, user-specific log of patterns already solved across the user's projects (Law 20), so a bug that recurs elsewhere is recognized instead of re-derived.
 

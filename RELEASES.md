@@ -2,6 +2,15 @@
 
 ---
 
+## Unreleased
+
+### Five scoped laws load only when their work starts ([#271](https://github.com/BojanKocijan/bk-charterline/issues/271))
+- **Laws 10, 27, 28, 31 and 35 keep their number, title and a short binding paragraph.** The rest of each moves word for word to the file that loads when its work starts: Law 10 to `PROJECT_SCAFFOLD.md` §0a, Law 27 to `docs/MAINTAINER.md`, Law 28 to the `update-rules` skill, Law 31 to `HUMAN_IN_THE_LOOP.md` §7a and Law 35 to `FULLSTACK_WORKFLOW.md` §9.
+- **What every session still sees:** never open a PR with red CI, never pull a rules update without a go-ahead, keep the four version files in sync, keep PRs small and one concern, and never run SQL on a hosted database.
+- **Rules: 22,971 tokens** (estimate; down 3,832 from 26,803). The hook is unchanged.
+
+---
+
 ## v3.7.0 — October 19, 2026
 
 A session-start hook does the checks Claude used to run itself before its first reply, and every plan now comes with a page that shows how it will work. On this update, `update rules` asks you to approve one hook change: the new session-start hook and its registration.

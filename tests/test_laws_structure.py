@@ -26,6 +26,11 @@ class LawsStructureTests(unittest.TestCase):
         for path in set(re.findall(r"\]\(\./(knowledge/[A-Z_]+\.md)", self.text)):
             self.assertTrue(os.path.exists(os.path.join(ROOT, path)), path)
 
+    def test_relative_links_resolve(self) -> None:
+        # Laws that moved their text out point to it (#271), so every pointer must resolve.
+        for path in set(re.findall(r"\]\(\./([^)#\s]+)", self.text)):
+            self.assertTrue(os.path.exists(os.path.join(ROOT, path)), path)
+
 
 if __name__ == "__main__":
     unittest.main()

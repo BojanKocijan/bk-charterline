@@ -56,6 +56,17 @@ This repo uses Conventional Commits. Version bumps in `CLAUDE_LAWS.md` header:
 - `chore:` → no bump (docs, tooling)
 - `BREAKING CHANGE:` → major bump
 
+## Plugin compliance (Law 27)
+
+*Moved from Law 27 in `CLAUDE_LAWS.md` (#271). Binding through Law 27, which keeps its core rule.*
+
+The repository must remain installable both as a global memory import (`install.sh`) and as a Claude Code plugin. Claude must preserve plugin compliance at all times, per the [official plugin reference](https://code.claude.com/docs/en/plugins-reference):
+- **Manifest:** `.claude-plugin/plugin.json` is the only manifest. `name` is required; `version` is a semantic version (`MAJOR.MINOR.PATCH`). Keep `author`, `license`, `homepage`, `repository`, and `keywords` populated.
+- **Marketplace:** `.claude-plugin/marketplace.json` lists this plugin with `source: "./"` so the repo is installable via `/plugin marketplace add <owner>/<repo>`.
+- **Component layout:** skills live in `skills/<name>/SKILL.md`; agents in `agents/`; (commands/, hooks/ if added) — all at the **plugin root**, never inside `.claude-plugin/`. Every `SKILL.md` has `name` + `description` frontmatter.
+- **Version sync on every release:** when bumping the version, update **all four** in the same PR — `plugin.json`, `marketplace.json`, the `CLAUDE_LAWS.md` header, and `RELEASES.md`. `scripts/release_version.py check` confirms they agree. After the merge, the Release Tag workflow tags `vX.Y.Z` on `main`; Claude doesn't push release tags, and the workflow never moves an existing tag.
+- **Quality + security gate (for official directory submission):** an open source `LICENSE` present (GPL-3.0), professional `README.md`, no secrets in the repo or history (Law 14), no personal data shipped (`projects.yaml` gitignored), CI green. Submit to `anthropics/claude-plugins-official` only when these hold.
+
 ## Making changes
 
 1. Always branch from `main`: `git checkout -b feat/<description>`
