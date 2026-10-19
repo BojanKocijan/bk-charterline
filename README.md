@@ -100,6 +100,8 @@ GitHub: <your-username>
 Ready.
 ```
 
+A session-start hook does the checks behind this confirmation, so Claude prints it without running any tools first.
+
 That's it. Every session on your machine now follows the laws and has the BK Charterline agents and skills. Check the agents with `claude agents`.
 
 ---
@@ -184,7 +186,7 @@ BK Charterline has three layers:
 
 ### Laws — [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md)
 
-38 binding rules, about 30,000 tokens that every session loads ([measured in #188](./docs/features/issue-188/report.md)). Key highlights:
+38 binding rules, about 27,000 tokens that every session loads (an estimate from `scripts/laws_cost.py`; the first measurement is in [#188](./docs/features/issue-188/report.md)). Key highlights:
 
 - **Transparency** — pre-execution announcement before any change; Claude waits for explicit approval
 - **Git discipline** — pull default branch, branch + issue before code, PRs only, never push to default branch, never merge
@@ -377,6 +379,7 @@ bk-charterline/
 ├── install.sh                   # One-line installer
 ├── projects.example.yaml        # Project registry template
 ├── .claude-plugin/              # Claude Code plugin manifest
+├── hooks/hooks.json             # The plugin's session-start hook
 ├── output-styles/               # Optional voices, off by default (coworker.md)
 ├── agents/                      # 9 persona definitions
 │   ├── frontend.md
