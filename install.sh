@@ -193,14 +193,17 @@ OLD_HOOK_COMMAND="python3 \"${OLD_DIR}/.claude/hooks/enforce-laws.py\""
 # Fails open: exit 2 from a UserPromptSubmit hook would erase the prompt, and
 # python3 exits 2 when the script is missing (#256).
 PERSONA_COMMAND="python3 \"${LOCAL_DIR}/.claude/hooks/persona_log.py\" >/dev/null 2>&1 || true"
+# The session-start checks (#270). Its stdout is the context Claude gets; a
+# missing script or an error stays quiet instead of a hook-error notice.
+START_COMMAND="python3 \"${LOCAL_DIR}/.claude/hooks/session_start.py\" 2>/dev/null || true"
 
 mkdir -p "$(dirname "$GLOBAL_SETTINGS")"
 [ -f "$GLOBAL_SETTINGS" ] || printf '{}\n' > "$GLOBAL_SETTINGS"
-if python3 - "$GLOBAL_SETTINGS" "$HOOK_COMMAND" "$OLD_HOOK_COMMAND" "$PERSONA_COMMAND" <<'PYEOF'
+if python3 - "$GLOBAL_SETTINGS" "$HOOK_COMMAND" "$OLD_HOOK_COMMAND" "$PERSONA_COMMAND" "$START_COMMAND" <<'PYEOF'
 import json
 import sys
 
-path, hook_command, old_command, persona_command = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+path, hook_command, old_command, persona_command, start_command = sys.argv[1:6]
 
 with open(path) as f:
     original = f.read()
@@ -225,15 +228,17 @@ if moved:
 # guardrail files themselves (#117), and MCP tools for Law 38's tier 3
 # and 4 asks (#138). PostToolUse on MCP tools records tier 3 approvals.
 # UserPromptSubmit logs mode commands for the dashboard (#256); it has no
-# matcher. Each entry is added once.
+# matcher. SessionStart runs the session-start checks on a new session or
+# /clear, with a 10 s limit (#270). Each entry is added once.
 wanted = [
-    ("PreToolUse", "Bash", hook_command),
-    ("PreToolUse", "Edit|Write|MultiEdit|NotebookEdit", hook_command),
-    ("PreToolUse", "mcp__.*", hook_command),
-    ("PostToolUse", "mcp__.*", hook_command),
-    ("UserPromptSubmit", None, persona_command),
+    ("PreToolUse", "Bash", hook_command, None),
+    ("PreToolUse", "Edit|Write|MultiEdit|NotebookEdit", hook_command, None),
+    ("PreToolUse", "mcp__.*", hook_command, None),
+    ("PostToolUse", "mcp__.*", hook_command, None),
+    ("UserPromptSubmit", None, persona_command, None),
+    ("SessionStart", "startup|clear", start_command, 10),
 ]
-for event, matcher, command in wanted:
+for event, matcher, command, timeout in wanted:
     entries = hooks.setdefault(event, [])
     already = any(
         entry.get("matcher") == matcher
@@ -242,6 +247,8 @@ for event, matcher, command in wanted:
     )
     if not already:
         entry = {"hooks": [{"type": "command", "command": command}]}
+        if timeout is not None:
+            entry["hooks"][0]["timeout"] = timeout
         if matcher is not None:
             entry = {"matcher": matcher, **entry}
         entries.append(entry)
@@ -438,10 +445,10 @@ charterline-update() {
 
   # A change to anything the hook runs needs the user's yes: typed in a real
   # terminal, or clicked in the app's prompt for --approve (#170).
-  if [ -n "$(command git -C "$rules_dir" diff --stat "$head" "$new" -- .claude/hooks scripts/ai_tools.py install.sh .claude/settings.json)" ]; then
+  if [ -n "$(command git -C "$rules_dir" diff --stat "$head" "$new" -- .claude/hooks hooks/hooks.json scripts/ai_tools.py install.sh .claude/settings.json)" ]; then
     echo "charterline: this update changes the Law 32 hook:"
-    command git -C "$rules_dir" --no-pager diff --stat "$head" "$new" -- .claude/hooks scripts/ai_tools.py install.sh .claude/settings.json
-    command git -C "$rules_dir" --no-pager diff "$head" "$new" -- .claude/hooks scripts/ai_tools.py install.sh .claude/settings.json
+    command git -C "$rules_dir" --no-pager diff --stat "$head" "$new" -- .claude/hooks hooks/hooks.json scripts/ai_tools.py install.sh .claude/settings.json
+    command git -C "$rules_dir" --no-pager diff "$head" "$new" -- .claude/hooks hooks/hooks.json scripts/ai_tools.py install.sh .claude/settings.json
     if [ -n "$approve" ]; then
       # The app only asks when the hook is registered; without it, --approve
       # would be nobody's approval.

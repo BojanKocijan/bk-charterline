@@ -339,7 +339,7 @@ class UpdateFunctionTests(unittest.TestCase):
             self.assertFalse(os.path.exists(marker), "the diff went through a pager")
 
     def test_other_hook_paths_count(self) -> None:
-        for path in ("scripts/ai_tools.py", "install.sh", ".claude/settings.json"):
+        for path in ("scripts/ai_tools.py", "install.sh", ".claude/settings.json", "hooks/hooks.json"):
             for shell, fx in self.each_shell():
                 fx.release("2.0.0")
                 fx.make_clone(at="v2.0.0")

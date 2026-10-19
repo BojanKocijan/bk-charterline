@@ -7,6 +7,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -318,6 +319,50 @@ class SessionStartTests(unittest.TestCase):
         tree = os.path.join(self.tmp.name, "demo-app-tree")
         git(self.repo, "worktree", "add", "-q", "-b", "feat/x", tree)
         self.assertIn("Project: demo-app", self.context(cwd=tree))
+
+
+class RegistrationTests(unittest.TestCase):
+    """The three registrations (#270, PR 2): this repo's settings, install.sh and the plugin."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.home = os.path.join(self.tmp.name, "home")
+        os.makedirs(self.home)
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def entry(self, path: str) -> dict:
+        with open(os.path.join(REPO, path)) as f:
+            [entry] = json.load(f)["hooks"]["SessionStart"]
+        self.assertEqual(entry["matcher"], "startup|clear")
+        self.assertEqual(entry["hooks"][0]["timeout"], 10)
+        return entry["hooks"][0]
+
+    def run_command(self, command: str, **env: str) -> subprocess.CompletedProcess:
+        event = json.dumps({"session_id": f"reg-{len(env)}-{os.getpid()}", "source": "startup", "cwd": REPO})
+        return subprocess.run(["sh", "-c", command], input=event, capture_output=True, text=True, timeout=30,
+                              env={**os.environ, "HOME": self.home, "TMPDIR": self.tmp.name, **env})
+
+    def test_repo_settings_fall_back_to_the_repo_copy(self) -> None:
+        done = self.run_command(self.entry(".claude/settings.json")["command"], CLAUDE_PROJECT_DIR=REPO)
+        self.assertEqual(done.returncode, 0)
+        self.assertIn("Ready.", json.loads(done.stdout)["hookSpecificOutput"]["additionalContext"])
+
+    def test_repo_settings_stay_quiet_without_any_copy(self) -> None:
+        done = self.run_command(self.entry(".claude/settings.json")["command"], CLAUDE_PROJECT_DIR=self.tmp.name)
+        self.assertEqual((done.returncode, done.stdout, done.stderr), (0, "", ""))
+
+    def test_plugin_hook_runs_from_the_plugin_root(self) -> None:
+        done = self.run_command(self.entry("hooks/hooks.json")["command"], CLAUDE_PLUGIN_ROOT=REPO)
+        self.assertEqual(done.returncode, 0)
+        self.assertIn("Ready.", json.loads(done.stdout)["hookSpecificOutput"]["additionalContext"])
+
+    def test_installed_command_stays_quiet_when_the_script_is_missing(self) -> None:
+        with open(os.path.join(REPO, "install.sh")) as f:
+            command = re.search(r'^START_COMMAND="(.*)"$', f.read(), re.M).group(1).replace('\\"', '"')
+        done = self.run_command(command.replace("${LOCAL_DIR}", "$HOME/.bk-charterline"))
+        self.assertEqual((done.returncode, done.stdout, done.stderr), (0, "", ""))
 
 
 if __name__ == "__main__":
