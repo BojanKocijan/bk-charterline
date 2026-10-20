@@ -3,7 +3,7 @@
 Spec: [#272](https://github.com/BojanKocijan/bk-charterline/issues/272), part of epic [#267](https://github.com/BojanKocijan/bk-charterline/issues/267), follows [#271](./../issue-271/plan.md) · Gate tier: Significant (it changes the always-loaded entry point; the issue is the intent, this plan carries the spec) · Branch: `claude/intelligent-johnson-0hdbwq` (assigned) · Issue: #272
 Work pile: judgment-heavy (deciding which copy is the one to keep), built in this session
 Plan page: https://claude.ai/artifact/A6P1iYDc21ztf5or79myts
-Approved-by: <pending>
+Approved-by: BojanKocijan, 2026-10-20, chat
 
 ## Why
 
