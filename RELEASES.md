@@ -9,6 +9,13 @@
 - **What every session still sees:** never open a PR with red CI, never pull a rules update without a go-ahead, keep the four version files in sync, keep PRs small and one concern, and never run SQL on a hosted database.
 - **Rules: 22,971 tokens** (estimate; down 3,832 from 26,803). The hook is unchanged.
 
+### `CLAUDE.md` keeps one copy of each list ([#272](https://github.com/BojanKocijan/bk-charterline/issues/272))
+- **Gone: *Non-negotiables*, *What Claude will refuse* and the two persona tables.** The laws load right above them and already say all of it. The laws' persona line now also says that `fullstack mode` activates the Lead, that Design starts on Figma or design tasks, and where each persona's scope lives (`agents/`).
+- **Six trigger rows that repeated their skill are now a line and a link:** `update rules`, `disarm`, `arm`, `handoff <id>`, `ai inventory` and `ai classify`, each keeping its safeguards.
+- **claude.ai web:** the header now says to paste `CLAUDE_LAWS.md` with `CLAUDE.md`, since the `@` import doesn't load there.
+- **Deploy steps load their runbook:** `FULLSTACK_WORKFLOW.md` also loads for a change with steps beyond merging the PR (Law 35).
+- **Rules: 21,809 tokens** (estimate; down 1,162 more, 4,994 in all from 26,803).
+
 ---
 
 ## v3.7.0 — October 19, 2026

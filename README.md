@@ -186,7 +186,7 @@ BK Charterline has three layers:
 
 ### Laws — [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md)
 
-38 binding rules, about 27,000 tokens that every session loads (an estimate from `scripts/laws_cost.py`; the first measurement is in [#188](./docs/features/issue-188/report.md)). Key highlights:
+38 binding rules, about 22,000 tokens that every session loads (an estimate from `scripts/laws_cost.py`; the first measurement is in [#188](./docs/features/issue-188/report.md)). Key highlights:
 
 - **Transparency** — pre-execution announcement before any change; Claude waits for explicit approval
 - **Git discipline** — pull default branch, branch + issue before code, PRs only, never push to default branch, never merge

@@ -19,7 +19,8 @@ This repository is governed by **BK Charterline**. Any AI coding agent that read
 | Topic | File |
 |---|---|
 | All binding laws | [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) |
-| Session behavior, personas, triggers | [`CLAUDE.md`](./CLAUDE.md) |
+| Session behavior, triggers | [`CLAUDE.md`](./CLAUDE.md) |
+| Personas | [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md) *The Personas*, and each one's file in [`agents/`](./agents/) |
 | Frontend standards | [`knowledge/FRONTEND_GUIDE.md`](./knowledge/FRONTEND_GUIDE.md) |
 | New-project scaffold | [`knowledge/PROJECT_SCAFFOLD.md`](./knowledge/PROJECT_SCAFFOLD.md) |
 | Fullstack PR runbook + backend checklist | [`knowledge/FULLSTACK_WORKFLOW.md`](./knowledge/FULLSTACK_WORKFLOW.md) |
