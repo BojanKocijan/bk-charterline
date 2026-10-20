@@ -14,7 +14,7 @@
 - **Six trigger rows that repeated their skill are now a line and a link:** `update rules`, `disarm`, `arm`, `handoff <id>`, `ai inventory` and `ai classify`, each keeping its safeguards.
 - **claude.ai web:** the header now says to paste `CLAUDE_LAWS.md` with `CLAUDE.md`, since the `@` import doesn't load there.
 - **Deploy steps load their runbook:** `FULLSTACK_WORKFLOW.md` also loads for a change with steps beyond merging the PR (Law 35).
-- **Rules: 21,719 tokens** (estimate; down 1,252 more, 5,084 in all from 26,803).
+- **Rules: 21,809 tokens** (estimate; down 1,162 more, 4,994 in all from 26,803).
 
 ---
 

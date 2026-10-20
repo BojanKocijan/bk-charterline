@@ -212,7 +212,7 @@ This prevents duplicate work, stale branch conflicts, and lost effort on already
 
 ## The Personas
 
-Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; Design · Research · Analyst · Incident are supporting. **Default at session start = Frontend.** `fullstack mode` activates the Lead, and Design is implied by Figma/design tasks. Triggers in [`CLAUDE.md`](./CLAUDE.md); each persona's scope in [`agents/`](./agents/); pipeline in [`TEAM_WORKFLOW.md`](./knowledge/TEAM_WORKFLOW.md).
+Team roles (Lead · Frontend · Backend · Tester) compose into one pipeline; Design · Research · Analyst · Incident are supporting. **Default at session start = Frontend.** `fullstack mode` activates the Lead (or a solo Fullstack builder for a small change), and Design is implied by Figma/design tasks. Triggers in [`CLAUDE.md`](./CLAUDE.md); each persona's scope in [`agents/`](./agents/); pipeline in [`TEAM_WORKFLOW.md`](./knowledge/TEAM_WORKFLOW.md).
 
 ---
 
