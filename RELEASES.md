@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+### Law 39: every feature works on seeded and demo data
+- **New law.** Claude tests each feature against seeded, demo, imported or migrated rows too, not only rows it just created: at least one test uses a row shaped like that data, and a manual check covers a demo record when the project has one. Values that come from the database are validated by shape (for example `z.guid()`, not Zod 4's strict `z.uuid()`). A project with demo data says how it differs in `PROJECT_KNOWLEDGE.md`.
+- **Why:** a parent couldn't save a holiday for a demo player because demo ids are `md5(...)::uuid` and the API's `z.uuid()` rejected them (sports-training-api#298).
+
 ### Five scoped laws load only when their work starts ([#271](https://github.com/BojanKocijan/bk-charterline/issues/271))
 - **Laws 10, 27, 28, 31 and 35 keep their number, title and a short binding paragraph.** The rest of each moves word for word to the file that loads when its work starts: Law 10 to `PROJECT_SCAFFOLD.md` §0a, Law 27 to `docs/MAINTAINER.md`, Law 28 to the `update-rules` skill, Law 31 to `HUMAN_IN_THE_LOOP.md` §7a and Law 35 to `FULLSTACK_WORKFLOW.md` §9.
 - **What every session still sees:** never open a PR with red CI, never pull a rules update without a go-ahead, keep the four version files in sync, keep PRs small and one concern, and never run SQL on a hosted database.

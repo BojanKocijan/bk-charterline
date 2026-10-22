@@ -3,7 +3,7 @@
   <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License: GPL-3.0" />
   <img src="https://img.shields.io/github/actions/workflow/status/BojanKocijan/bk-charterline/markdown-lint.yml?branch=main&style=flat-square&label=lint" alt="CI" />
   <img src="https://img.shields.io/badge/claude_code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin" />
-  <img src="https://img.shields.io/badge/laws-38-orange?style=flat-square" alt="38 Laws" />
+  <img src="https://img.shields.io/badge/laws-39-orange?style=flat-square" alt="39 Laws" />
   <a href="https://ko-fi.com/bojaforjelena"><img src="https://img.shields.io/badge/buy_her_a_coffee-Ko--fi-6f4e37?style=flat-square&logo=kofi" alt="Buy her a coffee on Ko-fi" /></a>
 </p>
 
@@ -48,14 +48,14 @@ It's not only for developers. BK Charterline carries the full product craft, fro
 
 ## Why BK Charterline
 
-Out of the box, an AI coding assistant will happily push to `main`, invent APIs, ship 1000-line PRs, over-engineer, and forget your conventions between sessions. BK Charterline fixes that with **38 binding laws** and knowledge files that travel with you to every project.
+Out of the box, an AI coding assistant will happily push to `main`, invent APIs, ship 1000-line PRs, over-engineer, and forget your conventions between sessions. BK Charterline fixes that with **39 binding laws** and knowledge files that travel with you to every project.
 
 | Problem | BK Charterline solution |
 |---|---|
 | Pushes directly to `main` | Branch + issue before code; PRs only; Claude never merges |
 | Giant, unreviewable PRs | **Law 31** — every PR under 400 lines, one concern per PR, stacked sequences for large features |
 | Over-engineered code | YAGNI enforcement, edge-case analysis upfront, verify-before-claiming |
-| Forgets your conventions | 38 laws + 10 knowledge files that load on demand |
+| Forgets your conventions | 39 laws + 10 knowledge files that load on demand |
 | Inconsistent components | 4-file component folders, no inline styles, TypeScript, accessibility baked in |
 | No audit trail | Pre-execution announcements, Conventional Commits, living `PROJECT_KNOWLEDGE.md` |
 | Stale repos | Auto branch cleanup, orphaned issue detection, README kept current with every PR |
@@ -168,7 +168,7 @@ BK Charterline has three layers:
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  CLAUDE_LAWS.md — 38 binding rules              │
+│  CLAUDE_LAWS.md — 39 binding rules              │
 │  (loaded every session)                         │
 ├─────────────────────────────────────────────────┤
 │  agents/ — 9 specialized personas               │
@@ -186,7 +186,7 @@ BK Charterline has three layers:
 
 ### Laws — [`CLAUDE_LAWS.md`](./CLAUDE_LAWS.md)
 
-38 binding rules, about 22,000 tokens that every session loads (an estimate from `scripts/laws_cost.py`; the first measurement is in [#188](./docs/features/issue-188/report.md)). Key highlights:
+39 binding rules, about 22,000 tokens that every session loads (an estimate from `scripts/laws_cost.py`; the first measurement is in [#188](./docs/features/issue-188/report.md)). Key highlights:
 
 - **Transparency** — pre-execution announcement before any change; Claude waits for explicit approval
 - **Git discipline** — pull default branch, branch + issue before code, PRs only, never push to default branch, never merge
@@ -196,6 +196,7 @@ BK Charterline has three layers:
 - **Repo hygiene** — immediate branch cleanup, stale branch sweeps, orphaned issue detection, README always current
 - **Human gates** — gate tier from severity, committed `intent.md` → `spec.md` → `plan.md` approvals, risk-scaled review, cap of 3 AI PRs awaiting review (Law 37)
 - **AI tool risk tiers** — every MCP server, extension and plugin has a tier (1–4) and an owner; the Law 32 hook asks you in the app before a tier 3 tool's first call each session and before every tier 4 call (Law 38)
+- **Demo data counts** — every feature is tested against seeded and demo rows too, not only rows Claude just created (Law 39)
 - **Safety controls** — `arm` / `disarm` toggle; `dry run` mode; three hard-safety rails always survive (never merge, no secrets, no PII)
 
 ### Personas
@@ -373,7 +374,7 @@ For professional work we recommend one language, so code, commits, PRs and docs 
 ```
 bk-charterline/
 ├── CLAUDE.md                    # Entry point — imports laws, maps knowledge triggers
-├── CLAUDE_LAWS.md               # 38 binding rules (loaded every session)
+├── CLAUDE_LAWS.md               # 39 binding rules (loaded every session)
 ├── AGENTS.md                    # Agent architecture overview
 ├── RELEASES.md                  # Version history
 ├── install.sh                   # One-line installer
