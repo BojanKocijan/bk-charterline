@@ -5,7 +5,7 @@
 ## Unreleased
 
 ### Anthropic's code-review plugin reviews every open PR ([#307](https://github.com/BojanKocijan/bk-charterline/issues/307))
-- **Law 37 §4:** once a Standard or Significant PR is open and not a draft, Claude runs `/code-review:code-review <PR>` from Anthropic's `code-review@claude-plugins-official`, then fixes or answers each finding before handing the PR over. Two of its agents check the change against the CLAUDE.md files, where the laws load; two look for bugs; a second pass keeps only high-confidence findings.
+- **Law 37 §4:** once a Standard or Significant PR is open and not a draft, Claude runs `/code-review:code-review <PR>` from Anthropic's `code-review@claude-plugins-official`, then fixes or answers each finding before handing the PR over. Two of its agents check the change against the repository's own CLAUDE.md files (for a BK Charterline project, its `PROJECT_KNOWLEDGE.md`; not the global laws); two look for bugs; a second pass keeps only high-confidence findings.
 - **Unchanged:** the built-in `/code-review` still runs before the PR, the independent reviewer still runs on Significant work, and `--comment` still needs your yes.
 - **Not installed:** Claude offers `/plugin install code-review@claude-plugins-official` once per session and carries on with the built-in review; the PR says the plugin didn't run.
 

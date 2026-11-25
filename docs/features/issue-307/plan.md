@@ -12,7 +12,7 @@ Every session under BK Charterline runs Anthropic's official **Code Review** plu
 
 The owner asked for "a plugin from Anthropic, code reviewer" and chose the official plugin over the engineering plugin's `engineering:code-review` (2026-11-25).
 
-- **4 agents on the PR:** two check the change against the CLAUDE.md files, which is where the BK Charterline laws load; two look for bugs and logic errors in the changed code.
+- **4 agents on the PR:** two check the change against the repository's own CLAUDE.md files (for a BK Charterline project, its `PROJECT_KNOWLEDGE.md`; corrected 2026-11-25: the global laws in `~/.claude/CLAUDE.md` aren't in the repository, so the plugin doesn't read them); two look for bugs and logic errors in the changed code.
 - **A validation pass:** each bug is checked again by its own agent, and only high-confidence findings are reported. Pre-existing issues, nitpicks and what a linter catches are dropped.
 - **It reads the PR, not the working tree** (`gh pr view`, `gh pr diff`), so it runs once the PR is open. It skips closed and draft PRs.
 
