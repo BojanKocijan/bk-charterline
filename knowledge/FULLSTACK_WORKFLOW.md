@@ -155,7 +155,7 @@ gh pr create \
 
 ### Phase 7 — Review
 
-The PR's Decision log lists each `/code-review` finding as fixed or skipped with the reason; Significant work adds the independent reviewer (HUMAN_IN_THE_LOOP §5). The human reviews and requests changes if needed.
+Once the PR is open and not a draft, run Anthropic's code-review plugin on Standard and Significant work, `/code-review:code-review <PR>`, before posting any comment of your own, and push the fixes to the same branch. The PR's Decision log lists each `/code-review` and plugin finding as fixed or skipped with the reason, or why the plugin didn't run; Significant work adds the independent reviewer (HUMAN_IN_THE_LOOP §5). The human reviews and requests changes if needed.
 
 ### Phase 8 — Merge (human action — Law 7)
 

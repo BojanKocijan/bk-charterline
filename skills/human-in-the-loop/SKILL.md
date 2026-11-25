@@ -1,6 +1,6 @@
 ---
 name: human-in-the-loop
-description: "Law 37 playbook: gate tiers (Trivial / Standard / Significant), the intent → spec → plan artifacts and owner approvals, the PR Intake block and Decision log, risk-tiered review (/code-review, a fresh reviewer with engineering:code-review on Significant work, ultra offered for auth, data, migrations and the hook), the review cap and queue, and delegable vs judgment-heavy triage. Auto-load before any Medium-or-High change, before drafting any non-chore PR, and on \"review queue\", \"approve intent\", \"approve spec\", \"approve plan\", \"review cap\" or \"skip gates\"."
+description: "Law 37 playbook: gate tiers (Trivial / Standard / Significant), the intent → spec → plan artifacts and owner approvals, the PR Intake block and Decision log, risk-tiered review (/code-review, Anthropic's code-review plugin on the open PR, a fresh reviewer with engineering:code-review on Significant work, ultra offered for auth, data, migrations and the hook), the review cap and queue, and delegable vs judgment-heavy triage. Auto-load before any Medium-or-High change, before drafting any non-chore PR, and on \"review queue\", \"approve intent\", \"approve spec\", \"approve plan\", \"review cap\" or \"skip gates\"."
 license: GPL-3.0-only
 ---
 
