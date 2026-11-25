@@ -129,16 +129,17 @@ Re-running the script is safe. Use one install method only: installing the plugi
 
 </details>
 
-**Optional: Anthropic's plugins.** The team uses Anthropic's design, engineering and frontend-design plugins when they're installed ([TEAM_WORKFLOW §8](knowledge/TEAM_WORKFLOW.md#8-which-skill-for-which-job)), and works without them. To add them, in Claude Code:
+**Optional: Anthropic's plugins.** The team uses Anthropic's design, engineering, frontend-design and code-review plugins when they're installed ([TEAM_WORKFLOW §8](knowledge/TEAM_WORKFLOW.md#8-which-skill-for-which-job)), and works without them. To add them, in Claude Code:
 
 ```
 /plugin marketplace add anthropics/knowledge-work-plugins
 /plugin install design@knowledge-work-plugins
 /plugin install engineering@knowledge-work-plugins
 /plugin install frontend-design@claude-plugins-official
+/plugin install code-review@claude-plugins-official
 ```
 
-Skip any you already have, for example through your claude.ai organization: two copies of a plugin list its skills twice. `claude-plugins-official` comes with Claude Code; if the last command says the marketplace is missing, add it with `/plugin marketplace add anthropics/claude-plugins-official`.
+Skip any you already have, for example through your claude.ai organization: two copies of a plugin list its skills twice. `claude-plugins-official` comes with Claude Code; if the last two commands say the marketplace is missing, add it with `/plugin marketplace add anthropics/claude-plugins-official`.
 
 ### Path B — Manual clone
 
@@ -298,7 +299,7 @@ build feature: add CSV export to the invoices page
 
 The **Lead** runs it end-to-end — scope, build, test, document, review, PR — pausing for your approval on multi-file edits (Law 2) and stopping at "PR open, CI green" for you to merge (Law 7).
 
-**One team, any skill.** Each stage uses the right skill for the job, whether it's ours, built into Claude Code (`/code-review`, plan mode, worktrees) or in Anthropic's design, engineering and frontend-design plugins when you have them installed. The map is in [TEAM_WORKFLOW §8](knowledge/TEAM_WORKFLOW.md#8-which-skill-for-which-job); every stage works without the plugins.
+**One team, any skill.** Each stage uses the right skill for the job, whether it's ours, built into Claude Code (`/code-review`, plan mode, worktrees) or in Anthropic's design, engineering, frontend-design and code-review plugins when you have them installed. The map is in [TEAM_WORKFLOW §8](knowledge/TEAM_WORKFLOW.md#8-which-skill-for-which-job); every stage works without the plugins.
 
 **Or call a single role:**
 

@@ -1,7 +1,7 @@
 # Human in the loop — gates, artifacts, and review capacity
 
 **Binding for:** Law 37. **Loaded:** on demand, when Claude starts a Medium-or-higher change, drafts a PR, or the user types `review queue`, `approve <stage>`, or `review cap`.
-**Version:** 1.3.0 (2026-10-19)
+**Version:** 1.4.0 (2026-11-25)
 
 Agents now write code faster than people can check it. The slow, expensive part of delivery is the human judgment before the code (what to build, how) and after it (is it right, should it ship). This file organizes that judgment so it is spent once, on the right things, and leaves a record the next person or session can read.
 
@@ -202,8 +202,8 @@ Every non-`chore:` PR Claude drafts carries this block directly under `## Summar
 | Tier | Before Claude hands over the PR | What the human does |
 |---|---|---|
 | Trivial | CI green, Claude self-check | Glance and merge |
-| Standard | CI green, Claude compares the diff to `plan.md` and lists deviations, and runs `/code-review <default-branch>...HEAD` | Review the diff against the plan; read "For the reviewer" closely |
-| Significant | CI green, plan comparison, `/code-review`, **plus an independent review** by a fresh subagent that did not write the code (with `engineering:code-review` when installed), findings ranked by severity in the PR | Full review; on a team, a second named reviewer approves |
+| Standard | CI green, Claude compares the diff to `plan.md` and lists deviations, runs `/code-review <default-branch>...HEAD`, and once the PR is open runs the code-review plugin on it | Review the diff against the plan; read "For the reviewer" closely |
+| Significant | CI green, plan comparison, `/code-review`, the code-review plugin on the open PR, **plus an independent review** by a fresh subagent that did not write the code (with `engineering:code-review` when installed), findings ranked by severity in the PR | Full review; on a team, a second named reviewer approves |
 
 **Why a separate reviewer.** Agents grade their own work too kindly. The reviewing subagent gets the plan, the spec, and the diff, not the authoring conversation. Its findings are inputs for the human, not a verdict. AI review never replaces the human merge decision (Law 7). In the team pipeline, the Lead runs this reviewer after the Tester gate.
 
@@ -211,6 +211,7 @@ Every non-`chore:` PR Claude drafts carries this block directly under `## Summar
 
 - **`/code-review`** is built into Claude Code. Claude gives it the range, `/code-review <default-branch>...HEAD` (or the PR number): with no target it reviews only commits ahead of the upstream, which is nothing once the branch is pushed. It looks for correctness bugs in its own subagent and follows CLAUDE.md, so it knows the laws. Claude runs it on Standard and Significant work before opening the PR. `--fix` (apply the findings) and `--comment` (post them on the PR) run only with the owner's yes.
 - **The independent reviewer** on Significant work is a fresh subagent given only the plan, the spec and the diff (or the PR URL), passed to it explicitly, since it can't ask anyone what to review. When Anthropic's engineering plugin is installed, it reviews with `engineering:code-review` (security, performance, correctness, maintainability); otherwise with the same four lenses on its own. Its "Approve" or "Request changes" verdict is dropped: the human decides.
+- **Anthropic's code-review plugin** (`code-review@claude-plugins-official`) reviews the open PR with four agents: two check the change against the CLAUDE.md files, where the laws load, and two look for bugs in the changed code; a second pass keeps only high-confidence findings. Its command is `/code-review:code-review <PR>`, with the plugin prefix, because the built-in `/code-review` has the same name. It reads the PR from GitHub, so Claude runs it on Standard and Significant work once the PR is open and not a draft (it skips drafts), pushes the fixes to the same branch, and only then gives the PR-ready summary. Findings go to the terminal; `--comment` posts them on the PR, so it runs only with the owner's yes. When the plugin isn't in Claude's skill list, Claude offers the install once per session (TEAM_WORKFLOW §8), and the Decision log says it didn't run.
 - **`/code-review ultra`** runs a fleet of reviewers in the cloud, takes 5–10 minutes and costs usage credits, so only the owner starts it. For any change to auth, data, migrations or the hook, at any tier, Claude adds it to the merge order (Law 7) as an optional step before merging: `/code-review ultra <PR>`.
 
 Each finding ends up in the PR's Decision log as fixed, or skipped with the reason.
@@ -344,11 +345,11 @@ If any check fails, Claude splits the work into multiple PRs and opens them sequ
 
 ## 8. Surface support
 
-| Surface | Artifacts | Plan page (§2.6) | Review queue and cap | `/code-review` | Independent review subagent |
-|---|---|---|---|---|---|
-| Claude Code CLI / IDE / desktop | ✅ Writes and commits | ✅ When the session has the Artifact tool, else skipped (§2.6) | ✅ Via read-only `gh` | ✅ | ✅ `Agent` tool |
-| Global-memory install without subagents | ✅ Writes and commits | ✅ When the session has the Artifact tool, else skipped (§2.6) | ✅ Where `gh` is available | ✅ | ⚠️ Main-thread fresh pass only; state the limitation |
-| Claude.ai web | ⚠️ Drafts in chat; the user commits | ❌ No stable link to put in the plan; skipped (§2.6) | ❌ The user runs the listed `gh` command | ❌ A main-thread review; the PR says `/code-review` didn't run | ❌ |
+| Surface | Artifacts | Plan page (§2.6) | Review queue and cap | `/code-review` | Code-review plugin | Independent review subagent |
+|---|---|---|---|---|---|---|
+| Claude Code CLI / IDE / desktop | ✅ Writes and commits | ✅ When the session has the Artifact tool, else skipped (§2.6) | ✅ Via read-only `gh` | ✅ | ✅ When installed (README › Installation) | ✅ `Agent` tool |
+| Global-memory install without subagents | ✅ Writes and commits | ✅ When the session has the Artifact tool, else skipped (§2.6) | ✅ Where `gh` is available | ✅ | ⚠️ Needs subagents; without them the PR says it didn't run | ⚠️ Main-thread fresh pass only; state the limitation |
+| Claude.ai web | ⚠️ Drafts in chat; the user commits | ❌ No stable link to put in the plan; skipped (§2.6) | ❌ The user runs the listed `gh` command | ❌ A main-thread review; the PR says `/code-review` didn't run | ❌ No plugins; the PR says it didn't run | ❌ |
 
 ---
 
@@ -373,6 +374,7 @@ If any check fails, Claude splits the work into multiple PRs and opens them sequ
 
 ## Changelog
 
+- **1.4.0 (2026-11-25)** — §5 and §8: Anthropic's code-review plugin reviews every open Standard and Significant PR, `/code-review:code-review <PR>` (#307).
 - **1.3.0 (2026-10-19)** — §7a *PR size and shape*: Law 31's sizing table, splitting strategies, self-check, PR body and repo hygiene, moved from the laws (#271).
 - **1.2.0 (2026-10-14)** — §2.6: every `plan.md` gets a plan page, a private HTML Artifact that walks the owner through how the plan will work (#285).
 - **1.1.0 (2026-10-08)** — §9: why Law 37 exists and its sources, moved from the law (#239).

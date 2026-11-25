@@ -1,7 +1,7 @@
 # Team Workflow — BK Charterline
 
-**Version:** 1.3.0
-**Last Updated:** 2026-10-08
+**Version:** 1.4.0
+**Last Updated:** 2026-11-25
 **Binding:** Yes — this file governs the agent **team pipeline** (triggers: `team` / `build feature`). It composes the existing personas into one collaborating team rather than mutually-exclusive modes.
 
 > Most work still uses a single persona. The **team pipeline** is for a complete feature you want carried end-to-end — planned, built, tested, documented, and reviewed — with one shared thread of context and a human merge at the end.
@@ -34,7 +34,7 @@ Lead: scope + acceptance criteria → pull main → branch + issue (Law 5)
         │   (builders document their own change inline — README / API / PROJECT_KNOWLEDGE)
         └─► Tester: write + run tests, axe gate, verify acceptance criteria
               ├─[fail]──► back to the Builder with the failing case
-              └─[pass]──► Lead: verify docs (§6) + /code-review (+ independent reviewer on Significant), run pre-PR checks → open PR → STOP
+              └─[pass]──► Lead: verify docs (§6) + /code-review (+ independent reviewer on Significant), run pre-PR checks → open PR → code-review plugin on the PR → STOP
                             └─► Human merges (Law 7). Lead does post-merge cleanup (Law 9).
 ```
 
@@ -103,7 +103,7 @@ The team pipeline is for features substantial enough that the plan→build→tes
 
 ## 8. Which skill for which job
 
-BK Charterline doesn't compete with Claude's own skills: the team uses the right one for each job, wherever it comes from. **Claude Code** skills are built in. **Anthropic plugin** skills are used only when that plugin is installed (`design`, `engineering`, `frontend-design`); every stage works without them, with our own skill doing the job.
+BK Charterline doesn't compete with Claude's own skills: the team uses the right one for each job, wherever it comes from. **Claude Code** skills are built in. **Anthropic plugin** skills are used only when that plugin is installed (`design`, `engineering`, `frontend-design`, `code-review`); every stage works without them, with our own skill doing the job.
 
 | Stage | Who leads | BK Charterline | Claude Code | Anthropic plugins, when installed |
 |---|---|---|---|---|
@@ -112,7 +112,7 @@ BK Charterline doesn't compete with Claude's own skills: the team uses the right
 | Design | Design | `design-critique`, `figma-craft`, `ux-writing`, `design-resources` | | `design:accessibility-review`, `design:design-system` |
 | Build | Frontend, Backend | `frontend-guide`, `project-scaffold`, `scaffold-react-project`, `parallel-sessions` | worktrees | `frontend-design:frontend-design` for visual direction, `engineering:debug` |
 | Test | Tester | `skills-matrix`, the Tester gate (§5) | | `engineering:testing-strategy` |
-| Review | Lead, then you | the hook (Law 32), the gates (Law 37) | `/code-review`; `/code-review ultra` for auth, data, migrations or the hook, which only you start | `engineering:code-review`, on Significant work, by the independent reviewer (Law 37) |
+| Review | Lead, then you | the hook (Law 32), the gates (Law 37) | `/code-review`; `/code-review ultra` for auth, data, migrations or the hook, which only you start | `/code-review:code-review` on every open Standard and Significant PR; `engineering:code-review`, on Significant work, by the independent reviewer (Law 37) |
 | Ship and run | Lead, Incident | `developer-handoff`, the deploy checklist and merge order (Laws 35, 7) | | `engineering:deploy-checklist` for pre-deploy checks, `engineering:incident-response` for a postmortem you ask for, `engineering:documentation` |
 
 **When two skills fit the same request:**
@@ -126,6 +126,7 @@ BK Charterline doesn't compete with Claude's own skills: the team uses the right
 
 ## Changelog
 
+- **1.4.0 (2026-11-25)** — §2 and §8: Anthropic's code-review plugin reviews every open Standard and Significant PR (#307).
 - **1.3.0 (2026-10-08)** — §8: when a job's preferred Anthropic skill isn't installed, Claude asks once per session per plugin, gives the commands, and carries on with our own skill (#247).
 - **1.2.0 (2026-10-08)** — §8 *Which skill for which job*: the team's skills by stage, from BK Charterline, Claude Code and Anthropic's plugins (when installed), and which one goes first when two fit (#231).
 
