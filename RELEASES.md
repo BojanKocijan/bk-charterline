@@ -2,7 +2,9 @@
 
 ---
 
-## Unreleased
+## v3.8.0 — November 25, 2026
+
+Anthropic's code-review plugin now reviews every open Standard and Significant PR, a new Law 39 has every feature tested on seeded and demo data, and the rules each session loads are about 4,500 tokens smaller. No hook file changed, so `update rules` installs it without asking for a hook approval.
 
 ### Anthropic's code-review plugin reviews every open PR ([#307](https://github.com/BojanKocijan/bk-charterline/issues/307))
 - **Law 37 §4:** once a Standard or Significant PR is open and not a draft, Claude runs `/code-review:code-review <PR>` from Anthropic's `code-review@claude-plugins-official`, then fixes or answers each finding before handing the PR over. Two of its agents check the change against the repository's own CLAUDE.md files (for a BK Charterline project, its `PROJECT_KNOWLEDGE.md`; not the global laws); two look for bugs; a second pass keeps only high-confidence findings.
@@ -24,6 +26,10 @@
 - **claude.ai web:** the header now says to paste `CLAUDE_LAWS.md` with `CLAUDE.md`, since the `@` import doesn't load there.
 - **Deploy steps load their runbook:** `FULLSTACK_WORKFLOW.md` also loads for a change with steps beyond merging the PR (Law 35).
 - **Rules: 21,809 tokens** (estimate; down 1,162 more, 4,994 in all from 26,803).
+
+- **Dependency updates** (Dependabot; nothing installed changes): `@playwright/test` 1.65.1 and `@axe-core/playwright` 4.14.0 for the site's checks, `actions/setup-python` 7.1.0 and `DavidAnson/markdownlint-cli2-action` 25.0.0 in CI.
+- **Rules: 22,254 tokens** (estimate; down 4,549 from v3.7.0).
+- The Laws, `plugin.json` and `marketplace.json` are at 3.8.0.
 
 ---
 
